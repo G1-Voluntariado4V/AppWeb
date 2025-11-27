@@ -1,0 +1,24 @@
+<div class="md:hidden flex items-center">
+  <label class="hamburger">
+    <input type="checkbox" [checked]="isOpen()" (change)="toggleMenu()">
+    <svg viewBox="0 0 32 32">
+      <path class="line line-top-bottom"
+        d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22">
+      </path>
+      <path class="line" d="M7 16 27 16"></path>
+    </svg>
+  </label>
+
+  <!-- Mobile Menu Dropdown -->
+  <div *ngIf="isOpen()"
+    class="absolute top-full left-0 right-0 mt-3 mx-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 flex flex-col space-y-3 menu-sweep z-50">
+    <a *ngFor="let section of sections()" [href]="section.route" (click)="closeMenu()"
+      class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 rounded-xl transition-colors">
+      {{ section.name }}
+    </a>
+    <div class="pt-2 border-t border-gray-100">
+      <a class="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors"
+        href="#">Acceder</a>
+    </div>
+  </div>
+</div>

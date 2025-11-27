@@ -1,3 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+
+html {
+  /* overflow-y: hidden; */
+  /* overflow-x: hidden; */
+  scroll-behavior: smooth;
+}
