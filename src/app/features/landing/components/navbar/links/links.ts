@@ -10,7 +10,7 @@ interface NavSection {
 @Component({
   selector: 'navbar-links',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule],
   templateUrl: './links.html',
 })
 export class Links {

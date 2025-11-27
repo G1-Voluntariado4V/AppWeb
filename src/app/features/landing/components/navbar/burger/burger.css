@@ -14,12 +14,10 @@
 
 .line {
   fill: none;
-  /* COLOR SVG */
-  stroke: rgb(0, 0, 0);
+  stroke: #2563eb;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 3;
-  /* Define the transition for transforming the Stroke */
   transition: stroke 600ms cubic-bezier(0.4, 0, 0.2, 1),
     stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
     stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -39,7 +37,6 @@
   stroke-dashoffset: -32.42;
 }
 
-/* MENU ANIMATION */
 @keyframes sweep {
   0% {
     opacity: 0;

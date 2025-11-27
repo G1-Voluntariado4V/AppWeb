@@ -17,8 +17,9 @@ interface NavSection {
 })
 export class Navbar {
   sections = signal<NavSection[]>([
-    { name: 'Inicio', route: '#' },
-    { name: 'Programas', route: '#' },
+    { name: 'Inicio', route: 'Inicio' },
+    { name: 'Sobre Nosotros', route: 'quienessomos' },
+    { name: 'Sectores', route: 'sectores' },
     { name: 'FAQ', route: '#' },
     { name: 'Contacto', route: '#' }
   ]);
