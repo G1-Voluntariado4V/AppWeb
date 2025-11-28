@@ -13,7 +13,7 @@ export class Inicio implements AfterViewInit {
 
   ngAfterViewInit() {
     const textElements = this.el.nativeElement.querySelectorAll('.text-center > *');
-    const image = this.el.nativeElement.querySelector('img');
+    const image = this.el.nativeElement.querySelector('.imagen');
 
     gsap.from(textElements, {
       duration: 1,
@@ -29,7 +29,7 @@ export class Inicio implements AfterViewInit {
       x: 50,
       opacity: 0,
       ease: 'power3.out',
-      delay: 0.5
+      delay: 0.2
     });
   }
 }

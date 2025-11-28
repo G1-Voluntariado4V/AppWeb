@@ -1,7 +1,14 @@
-<div class="hidden md:flex items-center text-center gap-3 rounded-4xl bg-gray-100/30 shadow-md mx-2">
+<div class="hidden md:flex relative items-center gap-3 rounded-4xl bg-gray-100/30 shadow-md mx-2 p-1">
+  <!-- Pill -->
+  <div class="absolute bg-white rounded-full shadow-sm transition-all duration-300 ease-out"
+    [style.left.px]="pillLeft()" [style.top.px]="pillTop()" [style.width.px]="pillWidth()"
+    [style.height.px]="pillHeight()" [style.opacity]="pillOpacity()">
+  </div>
+
   @for (section of sections(); track $index) {
-  <a [href]="'#' + section.route" [class.section_current]="activeSection() === section.route"
-    class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 px-3 py-2 rounded-md">
+  <a #navLink [href]="'#' + section.route"
+    class="relative z-10 text-sm font-medium transition-colors duration-200 px-4 py-2 rounded-full"
+    [class.text-blue-600]="activeSection() === section.route" [class.text-gray-600]="activeSection() !== section.route">
     {{ section.name }}
   </a>
   }
