@@ -9,16 +9,21 @@
     </svg>
   </label>
 
-  <!-- Mobile Menu Dropdown -->
-  <div *ngIf="isOpen()"
+  @if (isOpen()) {
+
+  <div
     class="bg-white/90 absolute top-full left-0 right-0 mt-3 mx-2 rounded-2xl shadow-xl border border-gray-100 p-4 flex flex-col space-y-3 menu-sweep z-50">
-    <a *ngFor="let section of sections()" [href]="section.route" (click)="closeMenu()"
+    @for (section of sections(); track $index) {
+
+    <a [href]="section.route" (click)="closeMenu()"
       class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 rounded-xl transition-colors">
       {{ section.name }}
     </a>
+    }
     <div class="pt-2 border-t border-gray-100">
       <a class="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-[#2563eb] rounded-xl hover:bg-[#2444af] transition-colors"
         href="#">Acceder</a>
     </div>
   </div>
+  }
 </div>

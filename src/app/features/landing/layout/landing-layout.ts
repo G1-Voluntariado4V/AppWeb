@@ -5,6 +5,8 @@ import { QuienesSomos } from "../pages/quienessomos/quienessomos";
 import { LandingContacto } from "../pages/contacto/contacto";
 import { LandingSectores } from "../pages/sectores/sectores";
 import { LandingFaq } from "../pages/faq/faq";
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 @Component({
   selector: 'app-landing-layout',
@@ -12,4 +14,8 @@ import { LandingFaq } from "../pages/faq/faq";
   templateUrl: './landing-layout.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LandingLayout { }
+export class LandingLayout {
+  constructor() {
+    gsap.registerPlugin(ScrollTrigger);
+  }
+}

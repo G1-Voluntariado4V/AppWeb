@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-
+import { ChangeDetectionStrategy, Component, ElementRef, AfterViewInit, inject } from '@angular/core';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 interface FaqItem {
   question: string;
@@ -13,7 +14,8 @@ interface FaqItem {
   templateUrl: './faq.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LandingFaq {
+export class LandingFaq implements AfterViewInit {
+  private el = inject(ElementRef);
   faqItems: FaqItem[] = [
     {
       question: '¿Cómo puedo registrarme como voluntario?',
@@ -36,4 +38,48 @@ export class LandingFaq {
       answer: 'Si encuentras algún problema técnico, puedes contactarnos a través del formulario de contacto o enviarnos un correo electrónico a soporte@voluntariado4v.com.'
     }
   ];
+
+  ngAfterViewInit() {
+    gsap.registerPlugin(ScrollTrigger);
+    const title = this.el.nativeElement.querySelector('h1');
+    const description = this.el.nativeElement.querySelector('p');
+    const items = this.el.nativeElement.querySelectorAll('.faq-item');
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: this.el.nativeElement,
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      }
+    });
+
+    if (title) {
+      tl.from(title, {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power3.out'
+      });
+    }
+
+    if (description) {
+      tl.from(description, {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power3.out'
+      }, '-=0.6');
+    }
+
+    if (items.length > 0) {
+      tl.from(items, {
+        y: 30,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power3.out',
+        clearProps: 'opacity,transform' // Ensure visibility after animation
+      }, '-=0.6');
+    }
+  }
 }

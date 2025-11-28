@@ -1,29 +1,28 @@
-<section id="faq" class="md:mx-20 lg:mx-40 pt-20">
-    <h1 class="text-5xl font-bold py-3 text-center text-[#155dfc] pt-8">Preguntas Frecuentes</h1>
-    <p class="text-gray-600 text-center mb-12 px-6">
-        Resolvemos tus dudas sobre el voluntariado en Cuatrovientos. Si no encuentras lo que buscas, contáctanos.
-    </p>
+<section id="faq" class=" pt-20 bg-white">
+  <h1 class="text-5xl font-bold py-3 text-center text-[#155dfc] pt-8">Preguntas Frecuentes</h1>
+  <p class="text-gray-600 text-center mb-12 px-6">
+    Resolvemos tus dudas sobre el voluntariado en Cuatrovientos. Si no encuentras lo que buscas, contáctanos.
+  </p>
 
-    <div class="max-w-3xl mx-auto space-y-4 px-6 pb-20">
-        @for (item of faqItems; track item.question) {
-        <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
-            <details class="group">
-                <summary
-                    class="flex justify-between items-center font-semibold cursor-pointer list-none p-6 text-gray-800 hover:bg-gray-50 transition-colors">
-                    <span>{{ item.question }}</span>
-                    <span class="transition-transform duration-300 group-open:rotate-180 text-[#155dfc]">
-                        <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor"
-                            stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24"
-                            width="24">
-                            <path d="M6 9l6 6 6-6"></path>
-                        </svg>
-                    </span>
-                </summary>
-                <div class="text-gray-600 p-6 pt-0 animate-fadeIn">
-                    <p>{{ item.answer }}</p>
-                </div>
-            </details>
+  <div class="max-w-3xl mx-auto space-y-4 px-6 pb-20">
+    @for (item of faqItems; track item.question) {
+    <div class="faq-item bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+      <details class="group">
+        <summary
+          class="flex justify-between items-center font-semibold cursor-pointer list-none p-6 text-gray-800 hover:bg-gray-50 transition-colors">
+          <span>{{ item.question }}</span>
+          <span class="transition-transform duration-300 group-open:rotate-180 text-[#155dfc]">
+            <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor"
+              stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </span>
+        </summary>
+        <div class="text-gray-600 p-6 pt-0 animate-fadeIn">
+          <p>{{ item.answer }}</p>
         </div>
-        }
+      </details>
     </div>
+    }
+  </div>
 </section>
