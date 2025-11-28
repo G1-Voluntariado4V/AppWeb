@@ -7,3 +7,36 @@ html {
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
+
+.cardSector {
+  @apply bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow duration-300 flex flex-col items-center;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .cardSector {
+    width: calc(50% - 1rem);
+  }
+}
+
+@media (min-width: 1280px) {
+  .cardSector {
+    width: calc(33.333% - 1.333rem);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}

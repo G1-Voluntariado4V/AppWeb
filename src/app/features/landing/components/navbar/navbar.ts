@@ -18,10 +18,10 @@ interface NavSection {
 export class Navbar {
   sections = signal<NavSection[]>([
     { name: 'Inicio', route: 'Inicio' },
-    { name: 'Sobre Nosotros', route: 'quienessomos' },
+    { name: 'Sobre Nosotros', route: 'sobre-nosotros' },
     { name: 'Sectores', route: 'sectores' },
-    { name: 'FAQ', route: '#' },
-    { name: 'Contacto', route: '#' }
+    { name: 'FAQ', route: 'faq' },
+    { name: 'Contacto', route: 'contacto' }
   ]);
 
   logoUrl = signal<string>('assets/LogoCuatrovientos.png');
