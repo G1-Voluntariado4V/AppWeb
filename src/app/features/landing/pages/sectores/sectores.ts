@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, AfterViewInit, inject } from '@angular/core';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 @Component({
   selector: 'landing-sectores',

@@ -15,4 +15,5 @@ interface NavSection {
 })
 export class Links {
   sections = input<NavSection[]>([]);
+  activeSection = input<string>('');
 }

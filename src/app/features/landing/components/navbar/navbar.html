@@ -7,7 +7,7 @@
   </div>
 
   <!-- Desktop Links -->
-  <navbar-links [sections]="sections()" class="max-md:hidden"></navbar-links>
+  <navbar-links [sections]="sections()" [activeSection]="activeSection()" class="max-md:hidden"></navbar-links>
 
   <!-- CTA Button (Desktop) -->
   <div class="hidden md:block">
@@ -16,5 +16,5 @@
   </div>
 
   <!-- Mobile Burger -->
-  <navbar-burger [sections]="sections()" class="md:hidden"></navbar-burger>
+  <navbar-burger [sections]="sections()" [activeSection]="activeSection()" class="md:hidden"></navbar-burger>
 </nav>

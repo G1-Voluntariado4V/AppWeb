@@ -1,7 +1,7 @@
-<div class="hidden md:flex items-center gap-8">
+<div class="hidden md:flex items-center text-center gap-3 rounded-4xl bg-gray-100/30 shadow-md mx-2">
   @for (section of sections(); track $index) {
-  <a [href]="'#' + section.route" routerLinkActive="'active"
-    class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200">
+  <a [href]="'#' + section.route" [class.section_current]="activeSection() === section.route"
+    class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200 px-3 py-2 rounded-md">
     {{ section.name }}
   </a>
   }

@@ -15,6 +15,7 @@ interface NavSection {
 })
 export class Burger {
   sections = input<NavSection[]>([]);
+  activeSection = input<string>('');
   isOpen = signal(false);
   menuStateChanged = output<boolean>();
 
