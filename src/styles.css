@@ -42,6 +42,10 @@ html {
 }
 
 
-.section_current{
+.section_current {
   @apply bg-gray-300/50 py-3 px-3 rounded-3xl border border-white/50 text-blue-500;
+}
+
+.landing-section {
+  @apply pt-20 ;
 }

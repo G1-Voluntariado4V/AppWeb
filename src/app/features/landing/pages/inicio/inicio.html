@@ -1,24 +1,33 @@
-<section class="grid lg:grid-cols-2 -mt-30 lg:gap-12 items-center h-screen lg:-mt-25 mx-5 md:mx-15 lg:mx-25 gap-10">
-  <div class="text-center lg:text-left order-last lg:order-first lg:mt-0 min-[480px]:-mt-20">
+<div class="flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-12 xl:px-20 items-center mx-5 md:mx-15 lg:mx-25">
+  <!-- Contenido: Título, Descripción y Botones -->
+  <div class="text-center lg:text-left order-first lg:order-first">
     <p class="max-lg:hidden inline-flex items-center space-x-2 text-sm font-medium text-green-600 mb-4 border border-green-200 bg-green-100/80 px-3 py-1 rounded-full">
       <span class="w-2 h-2 bg-green-500 rounded-full"></span>
       <span>Inscripciones abiertas {{ anio }}</span>
     </p>
-    <h1 class="text-4xl md:text-6xl font-bold text-gray-900 leading-tight lg:text-7xl">Tu tiempo es <br /><span
+    <h1 class="text-5xl max-sm:mt-10 lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-tight ">Tu tiempo es <br /><span
       class="text-blue-600">el cambio.</span></h1>
-    <p class="mt-6 md:text-2xl text-gray-600">Únete a la red de voluntariado de Cuatrovientos. Conecta con personas, aprende
+    <!-- Imagen en móvil y tablet (entre título y descripción) -->
+    <div class="flex justify-center lg:hidden my-6">
+      <div class="imagen overflow-hidden rounded-3xl shadow-2xl transform rotate-3 w-[260px] h-[300px] sm:w-[320px] sm:h-[400px]">
+        <img alt="Volunteers helping an elderly person" class="w-full h-full object-cover"
+          src="/assets/landing/inicio.jpg" />
+      </div>
+    </div>
+    <p class="mt-6 text-[1rem] xl:text-2xl text-gray-600">Únete a la red de voluntariado de Cuatrovientos. Conecta con personas, aprende
       nuevas habilidades y mejora tu comunidad.</p>
     <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-      <a class="px-8 py-3.5 text-base font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 shadow-md"
+      <a class="text-[0.8rem] xl:text-2xl px-7 py-3 text-base font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 shadow-md"
         href="#sobre-nosotros">¿Quienes somos?</a>
-      <a class="px-8 py-3.5 text-base font-semibold text-gray-800 bg-white rounded-full hover:bg-gray-100 ring-1 ring-gray-200"
+      <a class="text-[0.8rem] xl:text-2xl px-7 py-3 text-base font-semibold text-gray-800 bg-white rounded-full hover:bg-gray-100 ring-1 ring-gray-200"
       href="#sectores">Explorar Sectores</a>
     </div>
   </div>
-  <div class="flex justify-center order-first lg:order-last lg:justify-end max-lg:mt-30 ">
-    <div class="imagen overflow-hidden rounded-3xl shadow-2xl transform rotate-3 w-[260px] max-[480]:h-[580px]  sm:w-[320px] sm:h-[420px] md:w-[420px] md:h-[520px] lg:w-[520px] lg:h-[620px]">
-      <img alt="Volunteers helping an elderly person" class="w-full h-full object-cover"
+  <!-- Imagen en desktop (derecha) -->
+  <div class="hidden lg:flex justify-center lg:order-last lg:justify-end w-full lg:w-auto">
+    <div class="imagen overflow-hidden rounded-3xl shadow-2xl transform rotate-3 w-80 xl:w-120 hover:rotate-4 transition-all duration-300">
+      <img alt="Volunteers helping an elderly person" class="object-cover"
         src="/assets/landing/inicio.jpg" />
     </div>
   </div>
-</section>
+</div>

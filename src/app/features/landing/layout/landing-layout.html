@@ -1,10 +1,28 @@
-<header class="fixed top-0 left-0 right-0 z-50 flex justify-center px-3 py-3 md:p-4">
-  <navbar class="w-full"></navbar>
+<header class="fixed top-0 left-0 right-0 z-50 w-screen flex justify-center items-center h-20 px-5">
+  <navbar></navbar>
 </header>
-<main class="mt-30 flex flex-col gap-15">
-  <landing-inicio id="Inicio" class="scroll-mt-32 block"></landing-inicio>
+<main class="w-screen">
+  <section id="Inicio" class="landing-section h-screen flex items-center">
+    <landing-inicio></landing-inicio>
+  </section>
+  <section id="sobre-nosotros" class="landing-section bg-white pb-5 xl:pb-10">
+    <landing-quienes-somos></landing-quienes-somos>
+  </section>
+  <section id="sectores" class="landing-section">
+    <landing-sectores></landing-sectores>
+  </section>
+  <section id="faq" class="landing-section">
+    <landing-faq></landing-faq>
+  </section>
+  <section id="contacto" class="landing-section bg-white pb-10">
+    <landing-contacto></landing-contacto>
+  </section>
+</main>
+
+<!-- <main class="mt-30 flex flex-col justify-center items-center content-center w-screen">
+  <landing-inicio id="Inicio"></landing-inicio>
   <landing-quienes-somos></landing-quienes-somos>
   <landing-sectores></landing-sectores>
   <landing-faq></landing-faq>
   <landing-contacto></landing-contacto>
-</main>
+</main> -->
