@@ -4,6 +4,7 @@ import { Logo } from './logo/logo';
 import { Links } from './links/links';
 import { Burger } from './burger/burger';
 import gsap from 'gsap';
+import { RouterLink } from "@angular/router";
 
 interface NavSection {
   name: string;
@@ -13,10 +14,10 @@ interface NavSection {
 @Component({
   selector: 'navbar',
   // standalone: true,
-  imports: [CommonModule, Logo, Links, Burger],
+  imports: [CommonModule, Logo, Links, Burger, RouterLink],
   templateUrl: './navbar.html',
 })
-export class Navbar implements AfterViewInit, OnDestroy {
+export class Navbar implements AfterViewInit {
   private el = inject(ElementRef);
   sections = signal<NavSection[]>([
     { name: 'Inicio', route: 'Inicio' },
@@ -32,15 +33,15 @@ export class Navbar implements AfterViewInit, OnDestroy {
 
   private visibleSections = new Map<string, IntersectionObserverEntry>();
 
-  private onScroll = () => {
-    const isAtBottom = (window.innerHeight + Math.round(window.scrollY)) >= document.documentElement.scrollHeight - 50;
-    if (isAtBottom) {
-      const lastSection = this.sections()[this.sections().length - 1];
-      this.activeSection.set(lastSection.route);
-    } else {
-      this.determineActiveSection();
-    }
-  };
+  // private onScroll = () => {
+  //   const isAtBottom = (window.innerHeight + Math.round(window.scrollY)) >= document.documentElement.scrollHeight - 50;
+  //   if (isAtBottom) {
+  //     const lastSection = this.sections()[this.sections().length - 1];
+  //     this.activeSection.set(lastSection.route);
+  //   } else {
+  //     this.determineActiveSection();
+  //   }
+  // };
 
   private determineActiveSection() {
     let maxRatio = 0;
@@ -48,13 +49,7 @@ export class Navbar implements AfterViewInit, OnDestroy {
 
     this.visibleSections.forEach((entry, id) => {
       if (entry.isIntersecting) {
-        // We prioritize the section with the largest visible portion relative to the viewport height
-        // But intersectionRatio is relative to the target element size.
-        // We might want to check which one covers the middle of the screen?
-        // Or just stick to simple ratio for now.
-
-        // Let's try finding the one that is closest to the top of the viewport, 
-        // but not above it (unless it covers the whole screen).
+        // We prioritize the
 
         if (entry.intersectionRatio > maxRatio) {
           maxRatio = entry.intersectionRatio;
@@ -106,10 +101,10 @@ export class Navbar implements AfterViewInit, OnDestroy {
       }
     });
 
-    window.addEventListener('scroll', this.onScroll);
+    // window.addEventListener('scroll', this.onScroll);
   }
 
-  ngOnDestroy() {
-    window.removeEventListener('scroll', this.onScroll);
-  }
+  // ngOnDestroy() {
+  //   window.removeEventListener('scroll', this.onScroll);
+  // }
 }

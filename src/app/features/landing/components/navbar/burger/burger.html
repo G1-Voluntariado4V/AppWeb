@@ -1,4 +1,4 @@
-<div class="md:hidden flex items-center">
+<div class="lg:hidden flex items-center">
   <label class="hamburger">
     <input type="checkbox" [checked]="isOpen()" (change)="toggleMenu()">
     <svg viewBox="0 0 32 32">
@@ -22,7 +22,7 @@
     }
     <div class="pt-2 border-t border-gray-100">
       <a class="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-[#2563eb] rounded-xl hover:bg-[#2444af] transition-colors"
-        href="#">Acceder</a>
+        routerLink="/auth">Acceder</a>
     </div>
   </div>
   }

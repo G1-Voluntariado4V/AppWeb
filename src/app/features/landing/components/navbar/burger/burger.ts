@@ -1,5 +1,6 @@
 import { Component, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from "@angular/router";
 
 interface NavSection {
   name: string;
@@ -9,7 +10,7 @@ interface NavSection {
 @Component({
   selector: 'navbar-burger',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './burger.html',
   styleUrl: './burger.css'
 })

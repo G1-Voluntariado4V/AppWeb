@@ -1,5 +1,5 @@
 <nav
-  class="bg-white/60 backdrop-blur-sm rounded-4xl shadow-md flex items-center justify-between border-gray-100 w-[calc(100vw-2rem)] h-15 px-5 md:w-12/12 md:gap-15 lg:gap-30 text-center">
+  class="bg-white/60 backdrop-blur-sm rounded-4xl shadow-md flex items-center justify-between border-gray-100 w-[calc(100vw-3rem)] md:w-[calc(100vw-10rem)] h-15 px-5 lg:w-12/12 md:gap-15 lg:gap-30 text-center">
 
   <!-- Logo -->
   <div>
@@ -7,14 +7,14 @@
   </div>
 
   <!-- Desktop Links -->
-  <navbar-links [sections]="sections()" [activeSection]="activeSection()" class="max-md:hidden"></navbar-links>
+  <navbar-links [sections]="sections()" [activeSection]="activeSection()" class="max-lg:hidden"></navbar-links>
 
   <!-- CTA Button (Desktop) -->
-  <div class="hidden md:block">
+  <div class="hidden lg:block">
     <a class="px-6 py-2.5 text-sm font-semibold text-white bg-[#2563eb] rounded-full hover:bg-[#2444af] transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-      href="#">Acceder</a>
+      routerLink="/auth">Acceder</a>
   </div>
 
   <!-- Mobile Burger -->
-  <navbar-burger [sections]="sections()" [activeSection]="activeSection()" class="md:hidden"></navbar-burger>
+  <navbar-burger [sections]="sections()" [activeSection]="activeSection()" class="lg:hidden mt-1"></navbar-burger>
 </nav>
