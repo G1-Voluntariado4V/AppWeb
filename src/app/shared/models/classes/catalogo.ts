@@ -23,7 +23,7 @@ export class Curso {
   id_curso!: number;
   nombre_curso!: string;
   abreviacion_curso!: string;
-  grado!: 'Grado Superior' | 'Grado Medio' | 'Grado Básico' | 'Especial';
+  grado!: 'Grado Superior' | 'Grado Medio' | 'Grado Básico';
   nivel!: 1 | 2;
   constructor(init?: Partial<Curso>) { Object.assign(this, init); }
 }
