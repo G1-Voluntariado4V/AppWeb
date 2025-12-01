@@ -1,0 +1,29 @@
+<div class="min-h-screen w-full flex items-center justify-center bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+    <div
+        class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden relative flex flex-col items-center p-10 animate-fade-in-up text-center">
+
+        <!-- Loading Spinner -->
+        <div class="relative w-20 h-20 mb-8">
+            <div class="absolute top-0 left-0 w-full h-full border-4 border-blue-100 rounded-full"></div>
+            <div
+                class="absolute top-0 left-0 w-full h-full border-4 border-blue-600 rounded-full border-t-transparent animate-spin">
+            </div>
+        </div>
+
+        <!-- Text Content -->
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Procesando...</h2>
+        <p class="text-gray-500">
+            Estamos verificando tus credenciales. <br>
+            Por favor, espera un momento.
+        </p>
+
+        <!-- Optional: Manual redirect link in case it hangs (good UX) -->
+        <div class="mt-8 opacity-0 animate-fade-in" style="animation-delay: 3s; animation-fill-mode: forwards;">
+            <p class="text-xs text-gray-400">
+                ¿Tarda demasiado?
+                <a href="/" class="text-blue-600 hover:underline">Volver al inicio</a>
+            </p>
+        </div>
+
+    </div>
+</div>

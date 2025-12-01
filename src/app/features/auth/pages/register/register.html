@@ -1,0 +1,369 @@
+<div class="min-h-screen w-full flex items-center justify-center bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+  <a routerLink="/auth"
+    class="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors duration-300 font-medium group w-fit">
+    <div
+      class="flex gap-4 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm group-hover:shadow-md transition-all border border-gray-200/50">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+        class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
+      <span class="">Volver al login</span>
+    </div>
+  </a>
+  <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20 items-center">
+
+    <!-- Left Side: Welcome / Info -->
+    <div class="order-1 space-y-8 text-center lg:text-left animate-fade-in-up">
+      <div>
+        <h1 class="text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight mb-4">
+          <span class="block">Comienza tu viaje</span>
+          <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
+            de impacto social
+          </span>
+        </h1>
+        <p class="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+          Únete a nuestra comunidad. Ya sea que busques ayudar o necesites manos amigas, aquí encontrarás tu lugar.
+        </p>
+      </div>
+
+      <div class="hidden lg:grid gap-6">
+        <div
+          class="flex items-start gap-4 p-4 rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="p-3 rounded-full bg-blue-50 text-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-gray-900">Para Voluntarios</h3>
+            <p class="text-sm text-gray-500">Encuentra proyectos que te apasionen y desarrolla nuevas habilidades.</p>
+          </div>
+        </div>
+
+        <div
+          class="flex items-start gap-4 p-4 rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="p-3 rounded-full bg-cyan-50 text-cyan-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-gray-900">Para Organizaciones</h3>
+            <p class="text-sm text-gray-500">Publica actividades, gestiona inscripciones y conecta con voluntarios
+              comprometidos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side: Action Area (Card) -->
+    <div class="order-2 w-full max-w-xl mx-auto lg:mr-0">
+      <div
+        class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden relative min-h-[500px] flex flex-col">
+
+        <!-- Header of the Card -->
+        <div class="p-6 sm:p-8 border-b border-gray-100 bg-gray-50/30">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">Registro</h2>
+              <p class="text-sm text-gray-500 mt-1">
+                @if (!selectedRole) {
+                <span>Paso 1: Elige tu perfil</span>
+                }@else {
+                <span>Paso 2: Completa tus datos</span>
+                }
+              </p>
+            </div>
+            <!-- Back Button (Small) -->
+            @if (selectedRole) {
+            <button (click)="goBack()"
+              class="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-1 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                  clip-rule="evenodd" />
+              </svg>
+              Atrás
+            </button>
+            }
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-6 sm:p-8 flex-grow flex flex-col justify-center">
+
+          <!-- Step 1: Role Selection -->
+          @if (!selectedRole) {
+          <div class="space-y-4 animate-fadeIn">
+            <button (click)="selectRole('volunteer')"
+              class="w-full group relative p-5 border-2 border-gray-100 rounded-xl hover:border-blue-500 hover:bg-blue-50/30 transition-all duration-300 text-left flex items-center gap-4">
+              <div
+                class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-700">Soy Voluntario</h3>
+                <p class="text-sm text-gray-500">Quiero participar en actividades.</p>
+              </div>
+              <div class="absolute right-5 text-gray-300 group-hover:text-blue-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </button>
+
+            <button (click)="selectRole('organizer')"
+              class="w-full group relative p-5 border-2 border-gray-100 rounded-xl hover:border-cyan-500 hover:bg-cyan-50/30 transition-all duration-300 text-left flex items-center gap-4">
+              <div
+                class="w-12 h-12 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900 group-hover:text-cyan-700">Soy Organización</h3>
+                <p class="text-sm text-gray-500">Quiero gestionar actividades.</p>
+              </div>
+              <div class="absolute right-5 text-gray-300 group-hover:text-cyan-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+            </button>
+          </div>
+          }
+          <!-- Step 2: Form -->
+          @if (selectedRole) {
+          <div class="animate-fadeIn">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+
+              <!-- Volunteer Fields -->
+              @if (selectedRole === 'volunteer') {
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Nombre</label>
+                  <input type="text" formControlName="nombre" [class.border-red-500]="isFieldInvalid('nombre')"
+                    [class.focus:ring-red-500]="isFieldInvalid('nombre')"
+                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                    placeholder="Tu nombre">
+                  @if (isFieldInvalid('nombre')) {
+                  <p class="text-red-500 text-xs mt-1">
+                    @if (registerForm.get('nombre')?.hasError('required')) {
+                    <span>El nombre es obligatorio.</span>
+                    }
+                    @if (registerForm.get('nombre')?.hasError('pattern')) {
+                    <span>No se permiten números.</span>
+                    }
+                  </p>
+                  }
+                </div>
+                <div>
+                  <label
+                    class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Apellidos</label>
+                  <input type="text" formControlName="apellidos" [class.border-red-500]="isFieldInvalid('apellidos')"
+                    [class.focus:ring-red-500]="isFieldInvalid('apellidos')"
+                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                    placeholder="Tus apellidos">
+                  @if (isFieldInvalid('apellidos')) {
+                  <p class="text-red-500 text-xs mt-1">
+                    @if (registerForm.get('apellidos')?.hasError('required')) {
+                    <span>Los apellidos son obligatorios.</span>
+                    }
+                    @if (registerForm.get('apellidos')?.hasError('pattern')) {
+                    <span>No se permiten números.</span>
+                    }
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">DNI /
+                    NIE</label>
+                  <input type="text" formControlName="dni" [class.border-red-500]="isFieldInvalid('dni')"
+                    [class.focus:ring-red-500]="isFieldInvalid('dni')"
+                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                    placeholder="12345678A / X12345678A">
+                  @if (isFieldInvalid('dni')) {
+                  <p class="text-red-500 text-xs mt-1">
+                    @if (registerForm.get('dni')?.hasError('required')) {
+                    <span>El DNI/NIE es obligatorio.</span>
+                    }
+                    @if (registerForm.get('dni')?.hasError('pattern')) {
+                    <span>Formato inválido.</span>
+                    }
+                    @if (registerForm.get('dni')?.hasError('invalidDniChecksum')) {
+                    <span>La letra no coincide con el número.</span>
+                    }
+                  </p>
+                  }
+                </div>
+                <div>
+                  <label
+                    class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Teléfono</label>
+                  <input type="tel" formControlName="telefono" [class.border-red-500]="isFieldInvalid('telefono')"
+                    [class.focus:ring-red-500]="isFieldInvalid('telefono')"
+                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                    placeholder="+34 600 000 000">
+                  @if (isFieldInvalid('telefono')) {
+                  <p class="text-red-500 text-xs mt-1">
+                    @if (registerForm.get('telefono')?.hasError('required')) {
+                    <span>El teléfono es obligatorio.</span>
+                    }
+                    @if (registerForm.get('telefono')?.hasError('pattern')) {
+                    <span>Solo se permiten números.</span>
+                    }
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Fecha de
+                  Nacimiento</label>
+                <input type="date" formControlName="fecha_nac" [class.border-red-500]="isFieldInvalid('fecha_nac')"
+                  [class.focus:ring-red-500]="isFieldInvalid('fecha_nac')"
+                  class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white">
+                @if (isFieldInvalid('fecha_nac')) {
+                <p class="text-red-500 text-xs mt-1">La fecha es obligatoria.</p>
+                }
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Curso
+                  Actual</label>
+                <select formControlName="id_curso_actual" [class.border-red-500]="isFieldInvalid('id_curso_actual')"
+                  [class.focus:ring-red-500]="isFieldInvalid('id_curso_actual')"
+                  class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white">
+                  <option value="" disabled selected>Selecciona tu curso</option>
+                  <option *ngFor="let course of courses" [value]="course.id">{{ course.name }}</option>
+                </select>
+                @if (isFieldInvalid('id_curso_actual')) {
+                <p class="text-red-500 text-xs mt-1">Debes seleccionar un curso.</p>
+                }
+              </div>
+              }
+
+              <!-- Organizer Fields -->
+              @if (selectedRole === 'organizer') {
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Nombre de la
+                  Organización</label>
+                <input type="text" formControlName="nombre" [class.border-red-500]="isFieldInvalid('nombre')"
+                  [class.focus:ring-red-500]="isFieldInvalid('nombre')"
+                  class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                  placeholder="Nombre de la entidad">
+                @if (isFieldInvalid('nombre')) {
+                <p class="text-red-500 text-xs mt-1">El nombre es obligatorio.</p>
+                }
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">CIF</label>
+                  <input type="text" formControlName="cif" [class.border-red-500]="isFieldInvalid('cif')"
+                    [class.focus:ring-red-500]="isFieldInvalid('cif')"
+                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                    placeholder="G12345678">
+                  @if (isFieldInvalid('cif')) {
+                  <p class="text-red-500 text-xs mt-1">El CIF es obligatorio.</p>
+                  }
+                </div>
+                <div>
+                  <label
+                    class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Teléfono</label>
+                  <input type="tel" formControlName="telefono" [class.border-red-500]="isFieldInvalid('telefono')"
+                    [class.focus:ring-red-500]="isFieldInvalid('telefono')"
+                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                    placeholder="+34 900 000 000">
+                  @if (isFieldInvalid('telefono')) {
+                  <p class="text-red-500 text-xs mt-1">
+                    @if (registerForm.get('telefono')?.hasError('required')) {
+                    <span>El teléfono es obligatorio.</span>
+                    }
+                    @if (registerForm.get('telefono')?.hasError('pattern')) {
+                    <span>Solo se permiten números.</span>
+                    }
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Dirección</label>
+                <input type="text" formControlName="direccion" [class.border-red-500]="isFieldInvalid('direccion')"
+                  [class.focus:ring-red-500]="isFieldInvalid('direccion')"
+                  class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                  placeholder="Calle Ejemplo, 123">
+                @if (isFieldInvalid('direccion')) {
+                <p class="text-red-500 text-xs mt-1">La dirección es obligatoria.</p>
+                }
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Sitio
+                  Web</label>
+                <input type="url" formControlName="sitio_web" [class.border-red-500]="isFieldInvalid('sitio_web')"
+                  [class.focus:ring-red-500]="isFieldInvalid('sitio_web')"
+                  class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                  placeholder="https://www.ejemplo.org">
+                @if (isFieldInvalid('sitio_web')) {
+                <p class="text-red-500 text-xs mt-1">El sitio web es obligatorio.</p>
+                }
+              </div>
+
+              <div>
+                <label
+                  class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Descripción</label>
+                <textarea formControlName="descripcion" rows="3" [class.border-red-500]="isFieldInvalid('descripcion')"
+                  [class.focus:ring-red-500]="isFieldInvalid('descripcion')"
+                  class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
+                  placeholder="Breve descripción de la organización..."></textarea>
+                @if (isFieldInvalid('descripcion')) {
+                <p class="text-red-500 text-xs mt-1">La descripción es obligatoria.</p>
+                }
+              </div>
+              }
+
+              <!-- Submit Button -->
+              <div class="pt-4">
+                <button type="submit" [disabled]="registerForm.invalid"
+                  class="w-full py-3.5 px-6 rounded-xl text-white font-bold shadow-lg transform transition-all duration-200 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                  [ngClass]="selectedRole === 'volunteer' ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800' : 'bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800'">
+                  Completar Registro
+                </button>
+              </div>
+
+            </form>
+          </div>
+          }
+
+        </div>
+
+        <!-- Footer of Card -->
+        <div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
+          <p class="text-xs text-gray-500">
+            Al registrarte aceptas nuestros <a href="#" class="text-blue-600 hover:underline">Términos</a> y <a href="#"
+              class="text-blue-600 hover:underline">Política de Privacidad</a>.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

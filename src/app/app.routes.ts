@@ -10,5 +10,9 @@ export const routes: Routes = [
     path: 'auth', loadComponent: () => import('./features/auth/layout/auth-layout').then(m => m.AuthLayout),
     children: AUTH_CHILD_ROUTES
 
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./features/errors/pages/not-found/not-found').then(m => m.NotFoundPage)
   }
 ];
