@@ -1,6 +1,7 @@
-import { Component, signal, computed } from '@angular/core'; // <--- IMPORTANTE: añadir computed
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+import { VoluntarioService } from '../../services/voluntario.service';
 
 @Component({
   selector: 'app-historial',
@@ -8,48 +9,17 @@ import { RouterLink } from '@angular/router';
   imports: [CommonModule, RouterLink],
   templateUrl: './historial.html',
 })
-export class Historial {
+export class Historial implements OnInit {
   
-  // 1. Estado del menú desplegable (Abierto/Cerrado)
-  menuAbierto = signal(false);
+  private route = inject(ActivatedRoute);
+  private voluntarioService = inject(VoluntarioService);
 
-  // 2. Filtro seleccionado actualmente
+  menuAbierto = signal(false);
   filtroActual = signal<string>('Todos');
 
-  // 3. Lista COMPLETA de actividades (Base de datos)
-  actividades = signal([
-    {
-      id: 1,
-      titulo: 'Recogida de Alimentos',
-      organizacion: 'Cruz Roja',
-      fecha: '12 Ene 2025 - 14 Ene 2025',
-      estado: 'Finalizada'
-    },
-    {
-      id: 2,
-      titulo: 'Acompañamiento Mayores',
-      organizacion: 'Amavir',
-      fecha: '20 Feb 2025 - 20 Feb 2025',
-      estado: 'En curso'
-    },
-    {
-      id: 3,
-      titulo: 'Limpieza Río Arga',
-      organizacion: 'Ayuntamiento',
-      fecha: '05 Mar 2025',
-      estado: 'Cancelada'
-    },
-    {
-      id: 4,
-      titulo: 'Banco de Alimentos',
-      organizacion: 'Cruz Roja',
-      fecha: '10 Mar 2025',
-      estado: 'Finalizada'
-    }
-  ]);
+  actividades = signal<any[]>([]);
 
-  // 4. Lista COMPUTADA (La que se ve en pantalla)
-  // Angular recalcula esto automáticamente si cambia 'actividades' o 'filtroActual'
+  // AQUÍ ESTÁ EL CAMBIO IMPORTANTE:
   actividadesVisibles = computed(() => {
     const filtro = this.filtroActual();
     const lista = this.actividades();
@@ -57,10 +27,26 @@ export class Historial {
     if (filtro === 'Todos') {
       return lista;
     }
+
+    // NUEVO: Si el filtro es 'Activas', mostramos Aceptadas Y Pendientes
+    if (filtro === 'Activas') {
+      return lista.filter(act => act.estado === 'Aceptada' || act.estado === 'Pendiente');
+    }
+
+    // Para el resto de filtros individuales (Finalizada, Cancelada...)
     return lista.filter(act => act.estado === filtro);
   });
 
-  // --- MÉTODOS ---
+  ngOnInit() {
+    const datosAlDia = this.voluntarioService.getActividades();
+    this.actividades.set(datosAlDia);
+
+    this.route.queryParams.subscribe(params => {
+      if (params['filtro']) {
+        this.seleccionarFiltro(params['filtro']);
+      }
+    });
+  }
 
   toggleMenu() {
     this.menuAbierto.update(v => !v);
@@ -68,15 +54,17 @@ export class Historial {
 
   seleccionarFiltro(estado: string) {
     this.filtroActual.set(estado);
-    this.menuAbierto.set(false); // Cerramos el menú al elegir
+    this.menuAbierto.set(false);
   }
 
   getClassEstado(estado: string): string {
     switch (estado) {
-      case 'Finalizada': return 'bg-green-100 text-green-700 border-green-200';
-      case 'En curso': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'Aceptada': return 'bg-green-100 text-green-700 border-green-200';
+      case 'Finalizada': return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'Pendiente': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'Rechazada': return 'bg-red-50 text-red-600 border-red-100';
       case 'Cancelada': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700';
+      default: return 'bg-gray-50 text-gray-500';
     }
   }
 }

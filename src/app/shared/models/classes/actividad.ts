@@ -1,5 +1,7 @@
-import { ODS, TipoVoluntariado } from "@models/classes/catalogo";
-import { Organizacion, Voluntario } from "@models/classes/usuario";
+// NOTA: Asegúrate de que las rutas de importación (@models...) sean correctas en tu proyecto
+// Si te da error en '@models', usa rutas relativas como './catalogo' o '../catalogo'
+import { ODS, TipoVoluntariado } from "./catalogo"; 
+import { Organizacion, Voluntario } from "./usuario";
 
 export type EstadoPublicacion = 'En revision' | 'Publicada' | 'Cancelada' | 'En progreso' | 'Finalizada';
 

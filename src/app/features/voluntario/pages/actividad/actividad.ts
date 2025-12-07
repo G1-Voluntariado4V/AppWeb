@@ -1,6 +1,8 @@
-import { Component, input, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+// Importamos el servicio para que los datos estén sincronizados
+import { VoluntarioService } from '../../services/voluntario.service';
 
 @Component({
   selector: 'app-actividad',
@@ -9,45 +11,76 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
   templateUrl: './actividad.html',
 })
 export class Actividad implements OnInit {
-  // Input para recibir el ID desde la ruta (Angular 16+)
-  // Si usas una versión anterior, avísame y usamos ActivatedRoute clásico.
-  // Pero como configuramos withComponentInputBinding() en app.config (suponiendo), esto funciona:
-  id = input<string>(); 
+  
+  // Inyecciones
+  private route = inject(ActivatedRoute);
+  private voluntarioService = inject(VoluntarioService); 
 
-  // Datos completos de la actividad
-  actividad = signal({
-    titulo: 'Residencia Amavir Oblatas',
-    organizacion: 'Amavir',
-    tipo: 'Social', // Etiqueta azul
-    descripcion: 'Transmite tu pasión por ayudar a nuestros mayores a través de los residentes de Residencia Amavir Oblatas. Acompáñanos y disfruta de una tarde de ocio y juegos.',
-    requisitos: 'Se busca gente proactiva, con ganas de escuchar y compartir tiempo de calidad.',
-    fecha: '01 Jun 2025',
-    horario: '16:00 - 18:00',
-    ubicacion: 'Residencia Amavir, Pamplona',
-    plazasDisponibles: 5,
-    apuntado: true, // Para cambiar el texto del botón (Apuntarse vs Desapuntarse)
-    
-    // Iconos ODS (Simulados)
-    ods: [
-      { id: 3, nombre: 'Salud y Bienestar', color: 'bg-green-600' },
-      { id: 10, nombre: 'Reducción de Desigualdades', color: 'bg-pink-600' }
-    ]
+  // Señal para la vista
+  actividad = signal<any>({
+    titulo: 'Cargando...',
+    organizacion: '',
+    estado: '', 
+    ods: []
   });
 
+  // Guardamos el ID de la actividad que estamos viendo
+  currentId = '';
+
   ngOnInit() {
-    // Aquí haríamos la llamada al backend usando this.id()
-    console.log('Cargando actividad con ID:', this.id());
+    // 1. Obtenemos el ID de la URL
+    const idUrl = this.route.snapshot.paramMap.get('id');
+    
+    if (idUrl) {
+      this.currentId = idUrl;
+      this.cargarDatos();
+    }
   }
 
-  toggleInscripcion() {
-    // Lógica para apuntarse o desapuntarse
-    const actual = this.actividad();
-    this.actividad.set({ ...actual, apuntado: !actual.apuntado });
+  // Función para leer los datos del servicio (donde están guardados los cambios)
+  cargarDatos() {
+    const datos = this.voluntarioService.getActividadById(this.currentId);
     
-    if (actual.apuntado) {
-      alert('Te has desapuntado de la actividad');
+    if (datos) {
+      // Usamos {...datos} para crear una copia y refrescar la vista
+      this.actividad.set({ ...datos }); 
     } else {
-      alert('¡Te has apuntado correctamente!');
+      this.actividad.set({ 
+        titulo: 'Actividad no encontrada', 
+        estado: '-', 
+        ods: [] 
+      });
     }
+  }
+
+  // --- ACCIONES (Ahora guardan en el servicio) ---
+
+  aceptar() {
+    // 1. Guardamos el cambio en el servicio
+    this.voluntarioService.updateEstado(this.currentId, 'Aceptada');
+    // 2. Recargamos la vista local para ver el botón nuevo
+    this.cargarDatos();
+    alert('¡Has aceptado la actividad! Ahora estás inscrito.');
+  }
+
+  rechazar() {
+    if(confirm('¿Seguro que quieres rechazar esta invitación?')) {
+      this.voluntarioService.updateEstado(this.currentId, 'Rechazada');
+      this.cargarDatos();
+    }
+  }
+
+  desapuntarse() {
+    if(confirm('¿Seguro que quieres desapuntarte?')) {
+      this.voluntarioService.updateEstado(this.currentId, 'Cancelada');
+      this.cargarDatos();
+    }
+  }
+
+  inscribirse() {
+    // Si quiere volver a apuntarse
+    this.voluntarioService.updateEstado(this.currentId, 'Aceptada');
+    this.cargarDatos();
+    alert('¡Te has inscrito correctamente!');
   }
 }

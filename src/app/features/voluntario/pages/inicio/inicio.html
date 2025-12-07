@@ -7,8 +7,8 @@
       <h1 class="text-3xl font-bold mb-2">Hola, {{ usuario().nombre }}</h1>
       <p class="text-blue-100 mb-6 text-lg">{{ usuario().mensaje }}</p>
       
-      <button routerLink="/voluntario/historial" 
-        class="px-6 py-2.5 bg-white text-blue-600 font-semibold rounded-full shadow-sm hover:shadow-md hover:bg-gray-50 transition-all transform hover:-translate-y-0.5">
+      <button [routerLink]="['/voluntario/historial']" [queryParams]="{ filtro: 'Activas' }"
+        class="px-6 py-2.5 bg-white text-blue-600 font-semibold rounded-full shadow-sm hover:shadow-md hover:bg-gray-50 transition-all transform hover:-translate-y-0.5 cursor-pointer">
         Ver mis actividades
       </button>
     </div>
@@ -16,28 +16,46 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     
-    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[250px]">
       <h2 class="text-gray-800 font-bold text-lg mb-4">Próxima Actividad</h2>
       
-      <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-        <div class="flex flex-col items-center justify-center bg-purple-100 text-purple-700 rounded-xl w-16 h-16 flex-shrink-0">
-          <span class="text-2xl font-bold">{{ proximaActividad().dia }}</span>
-          <span class="text-[10px] uppercase font-bold tracking-wider">{{ proximaActividad().mes }}</span>
-        </div>
+      @if (proximaActividad(); as prox) {
         
-        <div>
-          <h3 class="font-bold text-gray-900">{{ proximaActividad().titulo }}</h3>
-          <p class="text-sm text-gray-500 mt-1 flex items-center gap-2">
-            <i class="fa-regular fa-clock"></i> {{ proximaActividad().horario }}
-          </p>
-          <p class="text-xs text-gray-400 mt-1">• {{ proximaActividad().organizacion }}</p>
+        <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <div class="flex flex-col items-center justify-center bg-purple-100 text-purple-700 rounded-xl w-16 h-16 flex-shrink-0">
+            <span class="text-2xl font-bold">{{ prox.fecha.split(' ')[0] }}</span> <span class="text-[10px] uppercase font-bold tracking-wider">{{ prox.fecha.split(' ')[1] }}</span> </div>
+          
+          <div class="overflow-hidden">
+            <h3 class="font-bold text-gray-900 truncate">{{ prox.titulo }}</h3>
+            <p class="text-sm text-gray-500 mt-1 flex items-center gap-2">
+              <i class="fa-regular fa-clock"></i> {{ prox.horario || 'Sin hora' }}
+            </p>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-xs text-gray-400">• {{ prox.organizacion }}</p>
+              
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ml-2"
+                [class.bg-orange-100]="prox.estado === 'Pendiente'"
+                [class.text-orange-700]="prox.estado === 'Pendiente'"
+                [class.bg-green-100]="prox.estado === 'Aceptada'"
+                [class.text-green-700]="prox.estado === 'Aceptada'">
+                {{ prox.estado }}
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <button [routerLink]="['/voluntario/actividad', proximaActividad().id]" 
-        class="mt-4 w-full py-3 bg-white border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors">
-        Ver Detalles
-      </button>
+        <button [routerLink]="['/voluntario/actividad', prox.id]" 
+          class="mt-4 w-full py-3 bg-white border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors">
+          Ver Detalles
+        </button>
+
+      } @else {
+        <div class="flex flex-col items-center justify-center h-full text-center py-4 text-gray-400">
+          <i class="fa-solid fa-calendar-check text-4xl mb-3 opacity-20"></i>
+          <p class="text-sm font-medium">No tienes actividades próximas.</p>
+          <p class="text-xs mt-1">¡Revisa las ofertas disponibles!</p>
+        </div>
+      }
     </div>
 
     <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">

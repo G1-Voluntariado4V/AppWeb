@@ -7,7 +7,8 @@
       <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
         <div class="relative mb-4">
           <div class="w-32 h-32 rounded-full bg-gray-200 overflow-hidden border-4 border-white shadow-md">
-            <img src="assets/avatar-placeholder.png" alt="" class="w-full h-full object-cover opacity-50"> </div>
+            <img src="assets/avatar-placeholder.png" alt="" class="w-full h-full object-cover opacity-50"> 
+          </div>
           <button class="absolute bottom-0 right-0 bg-[#2563eb] text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors">
             <i class="fa-solid fa-camera text-sm"></i>
           </button>
@@ -30,7 +31,7 @@
     </div>
 
     <div class="lg:col-span-8 space-y-6">
-      <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+      <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 h-full flex flex-col">
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
@@ -67,45 +68,7 @@
           </button>
         </div>
 
-        <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <i class="fa-regular fa-clock text-blue-600"></i> DISPONIBILIDAD SEMANAL
-        </h3>
-
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[500px]">
-            <thead>
-              <tr>
-                <th class="text-left text-xs font-medium text-gray-400 pb-4">Día</th>
-                @for (franja of franjas; track franja) {
-                  <th class="text-center text-xs font-medium text-gray-600 bg-gray-50 rounded-lg py-2 px-1 mx-1 border-b-4 border-white">{{ franja }}</th>
-                }
-              </tr>
-            </thead>
-            <tbody class="space-y-2">
-              @for (dia of diasSemana; track dia) {
-                <tr>
-                  <td class="text-sm font-medium text-gray-700 py-3">{{ dia }}</td>
-                  @for (franja of franjas; track franja) {
-                    <td class="p-1">
-                      <div (click)="toggleDisponibilidad(dia, franja)"
-                           class="h-10 rounded-lg cursor-pointer transition-all duration-200 border border-transparent flex items-center justify-center"
-                           [class.bg-[#2563eb]]="estaDisponible(dia, franja)"
-                           [class.text-white]="estaDisponible(dia, franja)"
-                           [class.bg-gray-50]="!estaDisponible(dia, franja)"
-                           [class.hover:border-blue-200]="!estaDisponible(dia, franja)">
-                        @if (estaDisponible(dia, franja)) {
-                          <i class="fa-solid fa-check text-sm"></i>
-                        }
-                      </div>
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        <div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
+        <div class="flex justify-between items-center mt-auto pt-6 border-t border-gray-100">
             <button class="px-6 py-2 text-red-500 font-medium hover:bg-red-50 rounded-xl transition-colors">
                 Cerrar sesión
             </button>

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { delay, Observable, of } from 'rxjs';
+import { Observable, of, delay } from 'rxjs';
 
-// Definimos interfaces para que TypeScript nos ayude (puedes moverlas a shared/models si prefieres)
+// --- INTERFACES ---
+
 export interface PerfilVoluntario {
   nombre: string;
   apellidos: string;
@@ -15,18 +16,18 @@ export interface PerfilVoluntario {
 }
 
 export interface Actividad {
-  id: number;
+  id: string; // Cambiado a String para facilitar comparación con URL
   titulo: string;
   organizacion: string;
-  fecha: string; // O Date
+  fecha: string;
   horario?: string;
-  estado: 'Finalizada' | 'En curso' | 'Cancelada' | 'Próxima';
+  // Estos son los 5 estados exactos de tu Base de Datos
+  estado: 'Pendiente' | 'Aceptada' | 'Rechazada' | 'Finalizada' | 'Cancelada';
   tipo?: string;
   descripcion?: string;
   requisitos?: string;
   ubicacion?: string;
   plazasDisponibles?: number;
-  apuntado?: boolean;
   ods?: { id: number; nombre: string; color: string }[];
 }
 
@@ -35,7 +36,7 @@ export interface Actividad {
 })
 export class VoluntarioService {
 
-  // --- MOCK DATA (Simulación de Base de Datos) ---
+  // --- MOCK DATA (Tu Base de Datos Maestra) ---
 
   private mockPerfil: PerfilVoluntario = {
     nombre: 'Juan',
@@ -48,108 +49,112 @@ export class VoluntarioService {
     experiencia: 'Voluntario en recogida de alimentos 2023.'
   };
 
-  private mockActividades: Actividad[] = [
+  private actividades: Actividad[] = [
     {
-      id: 1,
+      id: '1',
       titulo: 'Recogida de Alimentos',
       organizacion: 'Cruz Roja',
-      fecha: '12 Jun 2025',
-      horario: '16:00 - 18:00',
-      estado: 'Próxima',
+      estado: 'Aceptada',
+      fecha: '12 Ene 2025',
+      horario: '10:00 - 14:00',
       tipo: 'Social',
       descripcion: 'Ayuda en la clasificación y reparto de alimentos para familias desfavorecidas.',
       ubicacion: 'Banco de Alimentos',
+      requisitos: 'Ganas de trabajar en equipo.',
       plazasDisponibles: 10,
-      apuntado: false
+      ods: [{ id: 1, nombre: 'Fin de la Pobreza', color: 'bg-red-500' }]
     },
     {
-      id: 2,
+      id: '2',
       titulo: 'Acompañamiento Mayores',
       organizacion: 'Amavir',
+      estado: 'Pendiente', // Esta mostrará Aceptar/Rechazar
       fecha: '20 Feb 2025',
-      estado: 'En curso',
-      tipo: 'Acompañamiento',
-      ubicacion: 'Residencia Amavir',
-      descripcion: 'Transmite tu pasión por ayudar a nuestros mayores...',
+      horario: '16:00 - 18:00',
+      tipo: 'Social',
+      ubicacion: 'Residencia Amavir, Pamplona',
+      descripcion: 'Transmite tu pasión por ayudar a nuestros mayores a través de los residentes.',
+      requisitos: 'Se busca gente proactiva y empática.',
       ods: [
         { id: 3, nombre: 'Salud y Bienestar', color: 'bg-green-600' },
         { id: 10, nombre: 'Red. Desigualdades', color: 'bg-pink-600' }
       ],
-      plazasDisponibles: 5,
-      apuntado: true
+      plazasDisponibles: 5
     },
     {
-      id: 3,
+      id: '3',
       titulo: 'Limpieza Río Arga',
       organizacion: 'Ayuntamiento',
       fecha: '05 Mar 2025',
-      estado: 'Cancelada',
+      estado: 'Rechazada',
       ubicacion: 'Paseo del Arga',
-      tipo: 'Medioambiente'
+      tipo: 'Medioambiente',
+      descripcion: 'Jornada de limpieza de las orillas del río.',
+      requisitos: 'Ropa cómoda.',
+      plazasDisponibles: 20,
+      ods: [{ id: 13, nombre: 'Acción por el Clima', color: 'bg-green-700' }]
     },
     {
-      id: 4,
-      titulo: 'Recogida de Juguetes',
+      id: '4',
+      titulo: 'Banco de Alimentos',
       organizacion: 'Cruz Roja',
-      fecha: '10 Ene 2025',
+      fecha: '10 Mar 2025',
       estado: 'Finalizada',
-      tipo: 'Social'
+      tipo: 'Social',
+      descripcion: 'Recogida anual.',
+      plazasDisponibles: 0
+    },
+    {
+      id: '5',
+      titulo: 'Carrera Solidaria',
+      organizacion: 'Ayuntamiento',
+      fecha: '15 Abr 2025',
+      estado: 'Cancelada',
+      tipo: 'Deportivo',
+      descripcion: 'Carrera benéfica.',
+      plazasDisponibles: 50
     }
   ];
 
   constructor() { }
 
-  // --- MÉTODOS DEL SERVICIO ---
+  // --- MÉTODOS DE GESTIÓN DE ESTADO ---
 
   /**
-   * Obtiene el perfil del usuario logueado
+   * Devuelve la lista completa (para el Historial)
    */
+  getActividades(): Actividad[] {
+    return this.actividades;
+  }
+
+  /**
+   * Busca una actividad por ID (para el Detalle)
+   */
+  getActividadById(id: string): Actividad | undefined {
+    // Convertimos a string por seguridad
+    return this.actividades.find(a => String(a.id) === String(id));
+  }
+
+  /**
+   * ACTUALIZA el estado en la "Base de Datos"
+   * Esto hace que el cambio persista al salir y volver a entrar
+   */
+  updateEstado(id: string, nuevoEstado: 'Pendiente' | 'Aceptada' | 'Rechazada' | 'Finalizada' | 'Cancelada'): void {
+    const actividad = this.actividades.find(a => String(a.id) === String(id));
+    if (actividad) {
+      actividad.estado = nuevoEstado;
+      console.log(`[Servicio] Estado actualizado: ID ${id} -> ${nuevoEstado}`);
+    }
+  }
+
+  // --- MÉTODOS DE PERFIL (Mantenemos la compatibilidad) ---
+
   getPerfil(): Observable<PerfilVoluntario> {
-    // Usamos 'of' y 'delay' para simular que tarda un poco como una API real
     return of(this.mockPerfil).pipe(delay(500));
   }
 
-  /**
-   * Actualiza el perfil
-   */
   updatePerfil(datos: PerfilVoluntario): Observable<boolean> {
     this.mockPerfil = datos;
-    console.log('Servicio: Perfil actualizado', this.mockPerfil);
     return of(true).pipe(delay(500));
-  }
-
-  /**
-   * Obtiene todas las actividades (historial)
-   */
-  getActividades(): Observable<Actividad[]> {
-    return of(this.mockActividades).pipe(delay(300));
-  }
-
-  /**
-   * Obtiene la próxima actividad destacada (para el Dashboard)
-   */
-  getProximaActividad(): Observable<Actividad | undefined> {
-    const proxima = this.mockActividades.find(a => a.estado === 'Próxima');
-    return of(proxima).pipe(delay(300));
-  }
-
-  /**
-   * Obtiene el detalle de una actividad por ID
-   */
-  getActividadById(id: number): Observable<Actividad | undefined> {
-    const actividad = this.mockActividades.find(a => a.id === id);
-    return of(actividad).pipe(delay(200));
-  }
-
-  /**
-   * Simula apuntarse o desapuntarse
-   */
-  toggleInscripcion(id: number): Observable<boolean> {
-    const act = this.mockActividades.find(a => a.id === id);
-    if (act) {
-      act.apuntado = !act.apuntado;
-      return of(act.apuntado).pipe(delay(400));
-    }
-    return of(false);
   }
 }

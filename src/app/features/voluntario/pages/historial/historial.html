@@ -22,7 +22,7 @@
 
         @if (menuAbierto()) {
           <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-            <p class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Estado</p>
+            <p class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Estado Inscripción</p>
             
             <button (click)="seleccionarFiltro('Todos')" 
                     class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between group"
@@ -32,24 +32,36 @@
               @if (filtroActual() === 'Todos') { <i class="fa-solid fa-check text-blue-600"></i> }
             </button>
 
-            <button (click)="seleccionarFiltro('En curso')" 
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between"
-                    [class.text-blue-600]="filtroActual() === 'En curso'"
-                    [class.font-bold]="filtroActual() === 'En curso'">
-              En curso
-              @if (filtroActual() === 'En curso') { <i class="fa-solid fa-check text-blue-600"></i> }
+            <button (click)="seleccionarFiltro('Aceptada')" 
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between text-green-700"
+                    [class.font-bold]="filtroActual() === 'Aceptada'">
+              Aceptada
+              @if (filtroActual() === 'Aceptada') { <i class="fa-solid fa-check"></i> }
+            </button>
+
+            <button (click)="seleccionarFiltro('Pendiente')" 
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between text-orange-600"
+                    [class.font-bold]="filtroActual() === 'Pendiente'">
+              Pendiente
+              @if (filtroActual() === 'Pendiente') { <i class="fa-solid fa-check"></i> }
             </button>
 
             <button (click)="seleccionarFiltro('Finalizada')" 
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between"
-                    [class.text-blue-600]="filtroActual() === 'Finalizada'"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between text-gray-600"
                     [class.font-bold]="filtroActual() === 'Finalizada'">
               Finalizada
-              @if (filtroActual() === 'Finalizada') { <i class="fa-solid fa-check text-blue-600"></i> }
+              @if (filtroActual() === 'Finalizada') { <i class="fa-solid fa-check"></i> }
+            </button>
+
+            <button (click)="seleccionarFiltro('Rechazada')" 
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between text-red-400"
+                    [class.font-bold]="filtroActual() === 'Rechazada'">
+              Rechazada
+              @if (filtroActual() === 'Rechazada') { <i class="fa-solid fa-check"></i> }
             </button>
 
             <button (click)="seleccionarFiltro('Cancelada')" 
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between text-red-600 hover:text-red-700"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between text-red-700"
                     [class.font-bold]="filtroActual() === 'Cancelada'">
               Cancelada
               @if (filtroActual() === 'Cancelada') { <i class="fa-solid fa-check"></i> }

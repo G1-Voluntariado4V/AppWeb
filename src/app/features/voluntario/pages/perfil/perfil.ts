@@ -1,59 +1,43 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Necesario para los inputs (ngModel)
+import { FormsModule } from '@angular/forms'; 
+import { VoluntarioService } from '../../services/voluntario.service'; // Importamos el servicio
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule], // Importamos FormsModule para editar datos
+  imports: [CommonModule, FormsModule],
   templateUrl: './perfil.html',
 })
-export class Perfil {
-  // Datos personales editables
-  perfil = signal({
-    nombre: 'Juan',
-    apellidos: 'García López',
-    dni: '12345678X',
-    telefono: '600123456',
-    curso: '1º DAM',
-    horasTotales: 24,
-    cochePropio: true, // Toggle switch
-    experiencia: 'Voluntario en recogida de alimentos 2023.'
+export class Perfil implements OnInit {
+  
+  // Inyectamos el servicio para leer y escribir los datos reales
+  private voluntarioService = inject(VoluntarioService);
+
+  // Inicializamos el perfil vacío (se rellenará en el ngOnInit)
+  perfil = signal<any>({
+    nombre: '',
+    apellidos: '',
+    dni: '',
+    telefono: '',
+    curso: '',
+    horasTotales: 0,
+    cochePropio: false,
+    experiencia: ''
   });
 
-  // Configuración de la tabla de disponibilidad
-  diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-  franjas = ['08:00 - 12:00', '12:00 - 16:00', '16:00 - 20:00'];
-
-  // Matriz de disponibilidad (true = seleccionado/azul, false = vacío)
-  // Inicializamos todo en false o cargamos datos previos
-  disponibilidad = signal<Record<string, boolean>>({
-    'Lunes-12:00 - 16:00': true,
-    'Martes-08:00 - 12:00': true,
-    'Martes-16:00 - 20:00': true,
-    // ... el resto se asume false si no está aquí
-  });
-
-  // Función para activar/desactivar casillas al hacer click
-  toggleDisponibilidad(dia: string, franja: string) {
-    const key = `${dia}-${franja}`;
-    const currentMap = this.disponibilidad();
-    
-    // Creamos una copia y actualizamos el valor
-    this.disponibilidad.set({
-      ...currentMap,
-      [key]: !currentMap[key]
+  ngOnInit() {
+    // 1. Al entrar, pedimos los datos guardados en el servicio
+    this.voluntarioService.getPerfil().subscribe(datos => {
+      // Usamos {...datos} para crear una copia y que la reactividad funcione bien
+      this.perfil.set({ ...datos }); 
     });
   }
 
-  // Verificar si una casilla está activa
-  estaDisponible(dia: string, franja: string): boolean {
-    return !!this.disponibilidad()[`${dia}-${franja}`];
-  }
-
   guardarCambios() {
-    console.log('Guardando perfil...', this.perfil());
-    console.log('Nueva disponibilidad...', this.disponibilidad());
-    alert('Cambios guardados correctamente');
+    // 2. Enviamos los datos modificados al servicio para que se guarden "de verdad"
+    this.voluntarioService.updatePerfil(this.perfil()).subscribe(() => {
+      alert('¡Perfil actualizado correctamente!');
+    });
   }
 }
