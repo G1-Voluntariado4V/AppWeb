@@ -1,8 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 
 // --- INTERFACES ---
-
 export interface PerfilVoluntario {
   nombre: string;
   apellidos: string;
@@ -12,16 +11,15 @@ export interface PerfilVoluntario {
   horasTotales: number;
   cochePropio: boolean;
   experiencia: string;
-  foto?: string;
+  foto?: string; // La foto es opcional (string base64)
 }
 
 export interface Actividad {
-  id: string; // Cambiado a String para facilitar comparación con URL
+  id: string;
   titulo: string;
   organizacion: string;
   fecha: string;
   horario?: string;
-  // Estos son los 5 estados exactos de tu Base de Datos
   estado: 'Pendiente' | 'Aceptada' | 'Rechazada' | 'Finalizada' | 'Cancelada';
   tipo?: string;
   descripcion?: string;
@@ -36,9 +34,9 @@ export interface Actividad {
 })
 export class VoluntarioService {
 
-  // --- MOCK DATA (Tu Base de Datos Maestra) ---
-
-  private mockPerfil: PerfilVoluntario = {
+  // 1. ESTADO GLOBAL REACTIVO (Signal)
+  // Al guardarlo aquí como signal, cualquier componente que lo lea se actualizará solo.
+  perfilSignal = signal<PerfilVoluntario>({
     nombre: 'Juan',
     apellidos: 'García López',
     dni: '12345678X',
@@ -46,8 +44,9 @@ export class VoluntarioService {
     curso: '1º DAM',
     horasTotales: 24,
     cochePropio: true,
-    experiencia: 'Voluntario en recogida de alimentos 2023.'
-  };
+    experiencia: 'Voluntario en recogida de alimentos 2023.',
+    foto: '' // Empieza sin foto
+  });
 
   private actividades: Actividad[] = [
     {
@@ -58,9 +57,9 @@ export class VoluntarioService {
       fecha: '12 Ene 2025',
       horario: '10:00 - 14:00',
       tipo: 'Social',
-      descripcion: 'Ayuda en la clasificación y reparto de alimentos para familias desfavorecidas.',
-      ubicacion: 'Banco de Alimentos',
+      descripcion: 'Ayuda en la clasificación y reparto de alimentos.',
       requisitos: 'Ganas de trabajar en equipo.',
+      ubicacion: 'Banco de Alimentos',
       plazasDisponibles: 10,
       ods: [{ id: 1, nombre: 'Fin de la Pobreza', color: 'bg-red-500' }]
     },
@@ -68,12 +67,12 @@ export class VoluntarioService {
       id: '2',
       titulo: 'Acompañamiento Mayores',
       organizacion: 'Amavir',
-      estado: 'Pendiente', // Esta mostrará Aceptar/Rechazar
+      estado: 'Pendiente',
       fecha: '20 Feb 2025',
       horario: '16:00 - 18:00',
       tipo: 'Social',
       ubicacion: 'Residencia Amavir, Pamplona',
-      descripcion: 'Transmite tu pasión por ayudar a nuestros mayores a través de los residentes.',
+      descripcion: 'Transmite tu pasión por ayudar a nuestros mayores.',
       requisitos: 'Se busca gente proactiva y empática.',
       ods: [
         { id: 3, nombre: 'Salud y Bienestar', color: 'bg-green-600' },
@@ -89,7 +88,7 @@ export class VoluntarioService {
       estado: 'Rechazada',
       ubicacion: 'Paseo del Arga',
       tipo: 'Medioambiente',
-      descripcion: 'Jornada de limpieza de las orillas del río.',
+      descripcion: 'Jornada de limpieza.',
       requisitos: 'Ropa cómoda.',
       plazasDisponibles: 20,
       ods: [{ id: 13, nombre: 'Acción por el Clima', color: 'bg-green-700' }]
@@ -118,43 +117,34 @@ export class VoluntarioService {
 
   constructor() { }
 
-  // --- MÉTODOS DE GESTIÓN DE ESTADO ---
+  // --- MÉTODOS DE ACTIVIDADES ---
 
-  /**
-   * Devuelve la lista completa (para el Historial)
-   */
   getActividades(): Actividad[] {
     return this.actividades;
   }
 
-  /**
-   * Busca una actividad por ID (para el Detalle)
-   */
   getActividadById(id: string): Actividad | undefined {
-    // Convertimos a string por seguridad
     return this.actividades.find(a => String(a.id) === String(id));
   }
 
-  /**
-   * ACTUALIZA el estado en la "Base de Datos"
-   * Esto hace que el cambio persista al salir y volver a entrar
-   */
-  updateEstado(id: string, nuevoEstado: 'Pendiente' | 'Aceptada' | 'Rechazada' | 'Finalizada' | 'Cancelada'): void {
+  updateEstado(id: string, nuevoEstado: any): void {
     const actividad = this.actividades.find(a => String(a.id) === String(id));
     if (actividad) {
       actividad.estado = nuevoEstado;
-      console.log(`[Servicio] Estado actualizado: ID ${id} -> ${nuevoEstado}`);
     }
   }
 
-  // --- MÉTODOS DE PERFIL (Mantenemos la compatibilidad) ---
+  // --- MÉTODOS DE PERFIL (ACTUALIZADOS) ---
 
+  // Devuelve un observable del valor actual (para que Perfil.ts cargue al inicio)
   getPerfil(): Observable<PerfilVoluntario> {
-    return of(this.mockPerfil).pipe(delay(500));
+    return of(this.perfilSignal()); 
   }
 
+  // Actualiza la Signal globalmente
   updatePerfil(datos: PerfilVoluntario): Observable<boolean> {
-    this.mockPerfil = datos;
-    return of(true).pipe(delay(500));
+    this.perfilSignal.set(datos); // <--- AQUÍ OCURRE LA MAGIA. Se actualiza en todos lados.
+    console.log('Perfil actualizado globalmente:', datos);
+    return of(true);
   }
 }
