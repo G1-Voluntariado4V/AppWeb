@@ -3,7 +3,7 @@
 import { ODS, TipoVoluntariado } from "./catalogo"; 
 import { Organizacion, Voluntario } from "./usuario";
 
-export type EstadoPublicacion = 'En revision' | 'Publicada' | 'Cancelada' | 'En progreso' | 'Finalizada';
+export type EstadoPublicacion = 'En revision' | 'Publicada' | 'Cancelada' | 'Finalizada';
 
 export class ImagenActividad {
   id_imagen!: number;
@@ -32,7 +32,7 @@ export class Actividad {
   constructor(init?: Partial<Actividad>) { Object.assign(this, init); }
 }
 
-export type EstadoSolicitud = 'Pendiente' | 'Aceptado' | 'Rechazado' | 'Cancelado';
+export type EstadoSolicitud = 'Pendiente' | 'Aceptada' | 'Rechazada' | 'Cancelada' | 'Finalizada';
 
 export class Inscripcion {
   id_voluntario!: number;

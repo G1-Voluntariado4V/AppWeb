@@ -1,13 +1,13 @@
 import { Curso, Idioma, Rol, TipoVoluntariado } from "@models/classes/catalogo";
 
-export type EstadoUsuario = 'Pendiente' | 'Activa' | 'Rechazada' | 'Bloqueada' | 'Inactivo';
+export type EstadoUsuario = 'Pendiente' | 'Activa' | 'Rechazada' | 'Bloqueada' | 'Inactiva';
 
 export class Usuario {
   id_usuario!: number;
   correo!: string;
   google_id!: string;
   refresh_token?: string;  // Token OAuth2
-  id_rol?: number;
+  id_rol!: number;
   rol!: Rol;
   fecha_registro!: Date;
   estado_cuenta!: EstadoUsuario;
@@ -17,7 +17,9 @@ export class Usuario {
 }
 
 export class Voluntario extends Usuario {
+  dni!: string;
   nombre!: string;
+  apellidos!: string;
   telefono?: string;
   fecha_nac?: Date;
   carnet_conducir!: boolean;
@@ -64,6 +66,7 @@ export class Organizacion extends Usuario {
 
 export class Coordinador extends Usuario {
   nombre!: string;
+  apellidos!: string;
   telefono?: string;
   img_perfil?: string;
   constructor(init?: Partial<Coordinador>) { super(init); Object.assign(this, init); }
