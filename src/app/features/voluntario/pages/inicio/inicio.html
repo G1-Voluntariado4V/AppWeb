@@ -1,0 +1,62 @@
+<div class="flex flex-col gap-6">
+
+  <div class="relative overflow-hidden bg-gradient-to-r from-[#2563eb] to-[#4f46e5] rounded-3xl p-8 text-white shadow-lg shadow-blue-200">
+    <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+    
+    <div class="relative z-10 max-w-2xl">
+      <h1 class="text-3xl font-bold mb-2">Hola, {{ usuario().nombre }}</h1>
+      <p class="text-blue-100 mb-6 text-lg">{{ usuario().mensaje }}</p>
+      
+      <button routerLink="/voluntario/historial" 
+        class="px-6 py-2.5 bg-white text-blue-600 font-semibold rounded-full shadow-sm hover:shadow-md hover:bg-gray-50 transition-all transform hover:-translate-y-0.5">
+        Ver mis actividades
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+      <h2 class="text-gray-800 font-bold text-lg mb-4">Próxima Actividad</h2>
+      
+      <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+        <div class="flex flex-col items-center justify-center bg-purple-100 text-purple-700 rounded-xl w-16 h-16 flex-shrink-0">
+          <span class="text-2xl font-bold">{{ proximaActividad().dia }}</span>
+          <span class="text-[10px] uppercase font-bold tracking-wider">{{ proximaActividad().mes }}</span>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-gray-900">{{ proximaActividad().titulo }}</h3>
+          <p class="text-sm text-gray-500 mt-1 flex items-center gap-2">
+            <i class="fa-regular fa-clock"></i> {{ proximaActividad().horario }}
+          </p>
+          <p class="text-xs text-gray-400 mt-1">• {{ proximaActividad().organizacion }}</p>
+        </div>
+      </div>
+
+      <button [routerLink]="['/voluntario/actividad', proximaActividad().id]" 
+        class="mt-4 w-full py-3 bg-white border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors">
+        Ver Detalles
+      </button>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <h2 class="text-gray-800 font-bold text-lg mb-1">Mi Impacto</h2>
+      
+      <div class="flex items-baseline gap-2 mb-4">
+        <span class="text-5xl font-bold text-[#2563eb]">{{ impacto().horasTotales }}</span>
+        <span class="text-gray-500 font-medium">Horas totales</span>
+      </div>
+
+      <div class="w-full bg-gray-100 rounded-full h-3 mb-4 overflow-hidden">
+        <div class="bg-[#2563eb] h-3 rounded-full transition-all duration-1000 ease-out"
+             [style.width.%]="impacto().progreso"></div>
+      </div>
+
+      <p class="text-sm text-gray-500 leading-relaxed">
+        {{ impacto().mensaje }}
+      </p>
+    </div>
+
+  </div>
+</div>
