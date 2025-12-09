@@ -1,0 +1,94 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Resumen General</h1>
+      <p class="text-gray-500 text-sm">Estadísticas en tiempo real de la asociación.</p>
+    </div>
+    
+    <div class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium shadow-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors">
+      <i class="fa-regular fa-calendar"></i>
+      <span>{{ anioActual() }}</span>
+      <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <div class="bg-[#2563eb] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-blue-200">
+      <div class="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+      
+      <p class="text-xs font-bold uppercase tracking-wider text-blue-100 mb-1">Voluntarios Activos</p>
+      <div class="flex items-end gap-3 mb-2">
+        <span class="text-5xl font-bold">{{ stats().voluntariosActivos }}</span>
+        <div class="bg-white/20 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-sm">
+          +{{ stats().incrementoMensual }}% este mes
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Horas Totales</p>
+      <div class="flex items-baseline gap-2">
+        <span class="text-4xl font-bold text-gray-900">{{ stats().horasTotales }}</span>
+      </div>
+      <div class="w-full h-1.5 bg-gray-100 rounded-full mt-4 overflow-hidden">
+        <div class="h-full bg-purple-500 w-3/4 rounded-full"></div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Voluntariados Completados</p>
+      <div>
+        <span class="text-4xl font-bold text-gray-900">{{ stats().voluntariadosCompletados }}</span>
+        <p class="text-xs text-green-600 font-bold mt-1">Récord Mensual</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <div class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+      <h3 class="font-bold text-gray-900 mb-8">Actividad Semanal</h3>
+      
+      <div class="flex items-end justify-between h-48 px-4 gap-4">
+        @for (item of grafica(); track item.dia) {
+          <div class="flex flex-col items-center gap-3 w-full group cursor-pointer">
+            <div class="w-full max-w-[50px] bg-blue-50 rounded-t-xl relative overflow-hidden transition-all duration-300 group-hover:bg-blue-100" 
+                 style="height: 100%;">
+                 
+              <div class="absolute bottom-0 w-full bg-[#2563eb] rounded-t-xl transition-all duration-1000 ease-out group-hover:opacity-90"
+                   [style.height.%]="item.valor"></div>
+            </div>
+            <span class="text-xs font-bold text-gray-400 group-hover:text-blue-600">{{ item.dia }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <h3 class="font-bold text-gray-900 mb-6">Avisos</h3>
+      
+      <div class="space-y-4">
+        @for (aviso of avisos(); track aviso.id) {
+          <div class="p-4 rounded-2xl flex items-start gap-3 transition-colors"
+               [class.bg-orange-50]="aviso.tipo === 'alerta'"
+               [class.bg-blue-50]="aviso.tipo === 'info'">
+            
+            @if (aviso.tipo === 'alerta') {
+              <i class="fa-solid fa-circle-exclamation text-orange-500 mt-1"></i>
+            } @else {
+              <i class="fa-solid fa-circle-info text-blue-500 mt-1"></i>
+            }
+
+            <div>
+              <p class="text-sm font-bold text-gray-900">{{ aviso.titulo }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ aviso.subtitulo }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,90 @@
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Actividades</h1>
+      <p class="text-gray-500 text-sm">Gestión y supervisión de las actividades ofertadas.</p>
+    </div>
+    
+    <button (click)="abrirModalCrear()" 
+            class="bg-[#2563eb] hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2">
+      <i class="fa-solid fa-plus"></i> Nueva Actividad
+    </button>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+    <div class="relative w-full md:w-96">
+      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <input type="text" 
+             [(ngModel)]="busqueda"
+             placeholder="Buscar actividad..." 
+             class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
+    </div>
+
+    <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">
+      Filtros <i class="fa-solid fa-sliders text-xs"></i>
+    </button>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50/50 border-b border-gray-100">
+          <tr>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actividad</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Organizador</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (act of actividadesFiltradas(); track act.id) {
+            <tr class="hover:bg-gray-50/50 transition-colors group">
+              
+              <td class="px-6 py-4">
+                <div>
+                  <p class="font-bold text-gray-900 text-sm">{{ act.nombre }}</p>
+                  <p class="text-xs text-gray-400">Tipo: {{ act.tipo }}</p>
+                </div>
+              </td>
+
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold">
+                    {{ act.organizador.substring(0,2).toUpperCase() }}
+                  </div>
+                  <span class="text-sm font-medium text-gray-700">{{ act.organizador }}</span>
+                </div>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="text-sm text-gray-600">{{ act.fecha }}</span>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-bold"
+                  [class.bg-green-50]="act.estado === 'Active'"
+                  [class.text-green-600]="act.estado === 'Active'"
+                  [class.bg-orange-50]="act.estado === 'Pending'"
+                  [class.text-orange-600]="act.estado === 'Pending'"
+                  [class.bg-blue-50]="act.estado === 'In Progress'"
+                  [class.text-blue-600]="act.estado === 'In Progress'">
+                  {{ act.estado }}
+                </span>
+              </td>
+
+              <td class="px-6 py-4 text-right">
+                <button (click)="editar(act.id)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 text-gray-400 transition-colors">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

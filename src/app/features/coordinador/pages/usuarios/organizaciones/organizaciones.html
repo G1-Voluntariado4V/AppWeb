@@ -1,0 +1,100 @@
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Organizaciones</h1>
+      <p class="text-gray-500 text-sm">Gestiona las organizaciones colaboradoras.</p>
+    </div>
+    
+    <button (click)="abrirModalCrear()" 
+            class="bg-[#2563eb] hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2">
+      <i class="fa-solid fa-plus"></i> Nueva organización
+    </button>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+    
+    <div class="relative w-full md:w-96">
+      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <input type="text" 
+             [(ngModel)]="busqueda"
+             placeholder="Buscar..." 
+             class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
+    </div>
+
+    <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">
+      Estado: All <i class="fa-solid fa-chevron-down text-xs"></i>
+    </button>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50/50 border-b border-gray-100">
+          <tr>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Organización</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Contacto</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actividades</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (org of organizacionesFiltradas(); track org.id) {
+            <tr class="hover:bg-gray-50/50 transition-colors group">
+              
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm"
+                       [class.bg-purple-100]="org.id % 2 === 0" [class.text-purple-600]="org.id % 2 === 0"
+                       [class.bg-orange-100]="org.id % 2 !== 0" [class.text-orange-600]="org.id % 2 !== 0">
+                    {{ org.nombre.substring(0,2).toUpperCase() }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-gray-900 text-sm">{{ org.nombre }}</p>
+                    <p class="text-xs text-gray-400">{{ org.tipo }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4">
+                <p class="text-sm font-medium text-gray-900">{{ org.contacto }}</p>
+                <p class="text-xs text-gray-400">{{ org.email }}</p>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="text-sm font-bold text-gray-700">{{ org.actividadesCount }}</span> 
+                <span class="text-xs text-gray-400 ml-1">Activas</span>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-bold border"
+                  [class.bg-green-50]="org.estado === 'Active'"
+                  [class.text-green-600]="org.estado === 'Active'"
+                  [class.border-green-100]="org.estado === 'Active'"
+                  [class.bg-orange-50]="org.estado === 'Pending'"
+                  [class.text-orange-600]="org.estado === 'Pending'"
+                  [class.border-orange-100]="org.estado === 'Pending'">
+                  {{ org.estado }}
+                </span>
+              </td>
+
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2 text-gray-400">
+                  <button class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                  <button (click)="editar(org.id)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                </div>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

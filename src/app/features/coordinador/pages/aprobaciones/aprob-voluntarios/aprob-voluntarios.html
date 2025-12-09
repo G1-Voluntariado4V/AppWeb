@@ -1,0 +1,87 @@
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Aprobaciones pendientes</h1>
+    <p class="text-gray-500 text-sm">Revisa y aprueba estos voluntarios que desean colaborar.</p>
+  </div>
+
+  <div class="flex gap-2">
+    <a routerLink="/coordinador/aprobaciones/organizaciones" 
+       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+      Organizaciones
+      <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">2</span>
+    </a>
+
+    <button class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
+      Voluntarios
+      <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{{ solicitudes().length }}</span>
+    </button>
+
+    <a routerLink="/coordinador/aprobaciones/actividades" 
+       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+      Actividades
+      <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">3</span>
+    </a>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50/50 border-b border-gray-100">
+          <tr>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actividad Interés</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Voluntario</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Curso</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Decisión</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (sol of solicitudes(); track sol.id) {
+            <tr class="hover:bg-gray-50/50 transition-colors group">
+              
+              <td class="px-6 py-4">
+                <span class="font-bold text-gray-900 text-sm">{{ sol.actividadInteres }}</span>
+              </td>
+
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                    <i class="fa-solid fa-user"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900 text-sm">{{ sol.nombre }}</p>
+                    <p class="text-[10px] text-gray-400">{{ sol.email }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">{{ sol.curso }}</span>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs font-bold">En progreso</span>
+              </td>
+
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="aprobar(sol.id)" 
+                          class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-check"></i>
+                  </button>
+                  <button (click)="rechazar(sol.id)" 
+                          class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

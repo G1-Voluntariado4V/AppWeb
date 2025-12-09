@@ -1,0 +1,89 @@
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Voluntarios</h1>
+      <p class="text-gray-500 text-sm">Listado de alumnos registrados en la plataforma.</p>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+    
+    <div class="relative w-full md:w-96">
+      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <input type="text" 
+             [(ngModel)]="busqueda"
+             placeholder="Buscar por nombre, email o DNI..." 
+             class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
+    </div>
+
+    <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">
+      Todos los Cursos <i class="fa-solid fa-chevron-down text-xs"></i>
+    </button>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50/50 border-b border-gray-100">
+          <tr>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Voluntario</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Curso</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Historial</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (vol of voluntariosFiltrados(); track vol.id) {
+            <tr class="hover:bg-gray-50/50 transition-colors group">
+              
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 overflow-hidden">
+                    <i class="fa-solid fa-user"></i>
+                  </div>
+                  <div>
+                    <p class="font-bold text-gray-900 text-sm">{{ vol.nombre }}</p>
+                    <p class="text-xs text-gray-400">{{ vol.email }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg text-xs font-bold border border-gray-200">
+                  {{ vol.curso }}
+                </span>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="text-sm font-bold text-gray-900">{{ vol.actividadesCount }} Actividades</span>
+              </td>
+
+              <td class="px-6 py-4">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 w-fit"
+                  [class.bg-green-50]="vol.estado === 'Activo'"
+                  [class.text-green-600]="vol.estado === 'Activo'"
+                  [class.bg-gray-100]="vol.estado === 'Inactivo'"
+                  [class.text-gray-500]="vol.estado === 'Inactivo'">
+                  <div class="w-1.5 h-1.5 rounded-full" 
+                       [class.bg-green-500]="vol.estado === 'Activo'"
+                       [class.bg-gray-400]="vol.estado === 'Inactivo'"></div>
+                  {{ vol.estado }}
+                </span>
+              </td>
+
+              <td class="px-6 py-4 text-right">
+                <button (click)="verDetalle(vol.id)" class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-600 transition-colors">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
