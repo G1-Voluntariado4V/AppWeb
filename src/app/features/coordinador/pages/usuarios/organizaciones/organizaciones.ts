@@ -1,26 +1,26 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-// Ajusta la ruta de importación según dónde esté tu servicio
 import { CoordinadorService, OrganizacionAdmin } from '../../../services/coordinador';
+// IMPORTANTE: Importar el modal
+import { ModalCrearOrganizacion } from '../../../components/modal-crear-organizacion/modal-crear-organizacion';
 
 @Component({
   selector: 'app-organizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  // IMPORTANTE: Añadirlo a imports
+  imports: [CommonModule, FormsModule, ModalCrearOrganizacion],
   templateUrl: './organizaciones.html',
 })
 export class Organizaciones implements OnInit {
   
   private coordinadorService = inject(CoordinadorService);
-
-  // Lista de organizaciones
   organizaciones = signal<OrganizacionAdmin[]>([]);
-  
-  // Buscador
   busqueda = signal('');
+  
+  // Signal para controlar si el modal se ve o no
+  modalVisible = signal(false);
 
-  // Filtro automático
   organizacionesFiltradas = computed(() => {
     const term = this.busqueda().toLowerCase();
     return this.organizaciones().filter(org => 
@@ -35,9 +35,31 @@ export class Organizaciones implements OnInit {
     });
   }
 
-  // Acciones (Visuales)
+  // --- MÉTODOS DEL MODAL ---
+
   abrirModalCrear() {
-    console.log('Abrir popup de nueva organización');
+    this.modalVisible.set(true); // Muestra el modal
+  }
+
+  cerrarModal() {
+    this.modalVisible.set(false); // Oculta el modal
+  }
+
+  guardarNuevaOrganizacion(datos: any) {
+    // Aquí añadimos la nueva org a la lista (Simulado)
+    const nuevaOrg: OrganizacionAdmin = {
+      id: Date.now(), // ID temporal
+      nombre: datos.nombre,
+      tipo: datos.tipo,
+      contacto: datos.contacto,
+      email: datos.email,
+      actividadesCount: 0,
+      estado: 'Active'
+    };
+
+    // Actualizamos la lista local
+    this.organizaciones.update(lista => [nuevaOrg, ...lista]);
+    alert('Organización creada correctamente');
   }
 
   editar(id: number) {

@@ -1,1 +1,76 @@
-<p>modal-crear-organizacion works!</p>
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity animate-in fade-in duration-200">
+  
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+    
+    <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+      <h3 class="text-lg font-bold text-gray-900">Nueva Organización</h3>
+      <button (click)="cerrar()" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      
+      @if (error()) {
+        <div class="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          {{ error() }}
+        </div>
+      }
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre *</label>
+          <input type="text" [(ngModel)]="nombre" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Cruz Roja">
+        </div>
+
+        <div>
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">CIF *</label>
+           <input type="text" [(ngModel)]="cif" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="G-12345678">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
+          <select [(ngModel)]="tipo" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
+            <option value="ONG">ONG</option>
+            <option value="Residencia">Residencia</option>
+            <option value="Asociación">Asociación</option>
+            <option value="Educativo">Centro Educativo</option>
+          </select>
+        </div>
+
+        <div>
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Sitio Web</label>
+           <input type="text" [(ngModel)]="web" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="www.ejemplo.org">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Persona de Contacto</label>
+          <input type="text" [(ngModel)]="contacto" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Nombre Apellido">
+        </div>
+
+        <div>
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono</label>
+           <input type="text" [(ngModel)]="telefono" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="+34 600...">
+        </div>
+        
+        <div class="md:col-span-2">
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email Corporativo *</label>
+           <input type="email" [(ngModel)]="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="contacto@organizacion.org">
+        </div>
+
+        <div class="md:col-span-2">
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección Física</label>
+           <input type="text" [(ngModel)]="direccion" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Calle Mayor, 12, Pamplona">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="cerrar()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
+      <button (click)="guardar()" class="px-6 py-2 bg-[#2563eb] text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-md transition-colors">Crear Organización</button>
+    </div>
+
+  </div>
+</div>

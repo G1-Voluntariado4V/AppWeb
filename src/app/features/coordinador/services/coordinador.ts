@@ -21,7 +21,7 @@ export interface Aviso {
   tipo: 'alerta' | 'info';
 }
 
-// --- INTERFAZ ORGANIZACIONES ---
+// --- INTERFAZ ORGANIZACIONES (Actualizada con SQL) ---
 export interface OrganizacionAdmin {
   id: number;
   nombre: string;
@@ -31,6 +31,12 @@ export interface OrganizacionAdmin {
   actividadesCount: number;
   estado: 'Active' | 'Pending' | 'Inactive';
   logo?: string;
+  // Nuevos campos
+  cif?: string;
+  direccion?: string;
+  sitioWeb?: string;
+  descripcion?: string;
+  telefono?: string;
 }
 
 // --- INTERFAZ VOLUNTARIOS ---
@@ -44,7 +50,7 @@ export interface VoluntarioAdmin {
   foto?: string;
 }
 
-// --- INTERFAZ ACTIVIDADES ---
+// --- INTERFAZ ACTIVIDADES (Actualizada con SQL) ---
 export interface ActividadAdmin {
   id: number;
   nombre: string;
@@ -52,6 +58,11 @@ export interface ActividadAdmin {
   organizador: string;
   fecha: string;
   estado: 'Active' | 'Pending' | 'In Progress' | 'Finished';
+  // Nuevos campos
+  descripcion?: string;
+  duracionHoras?: number;
+  cupoMaximo?: number;
+  ubicacion?: string;
 }
 
 // --- INTERFAZ SOLICITUDES ORGANIZACIONES ---
@@ -64,7 +75,7 @@ export interface SolicitudOrganizacion {
   estado: 'Pendiente';
 }
 
-// --- INTERFAZ SOLICITUDES VOLUNTARIOS (NUEVO) ---
+// --- INTERFAZ SOLICITUDES VOLUNTARIOS ---
 export interface SolicitudVoluntario {
   id: number;
   nombre: string;
@@ -74,7 +85,7 @@ export interface SolicitudVoluntario {
   estado: 'Pendiente';
 }
 
-// --- INTERFAZ SOLICITUDES ACTIVIDADES (NUEVO) ---
+// --- INTERFAZ SOLICITUDES ACTIVIDADES ---
 export interface SolicitudActividad {
   id: number;
   actividad: string;
@@ -109,11 +120,50 @@ export class CoordinadorService {
     { id: 2, titulo: 'Actualización', subtitulo: 'Nuevas funcionalidades', tipo: 'info' }
   ];
 
-  // --- MOCK DATA: ORGANIZACIONES ---
+  // --- MOCK DATA: ORGANIZACIONES (Actualizada con datos completos) ---
   private organizaciones: OrganizacionAdmin[] = [
-    { id: 1, nombre: 'Amavir Oblatas', tipo: 'Residencia', contacto: 'Elena Martín', email: 'elena@amavir.es', actividadesCount: 12, estado: 'Active' },
-    { id: 2, nombre: 'Cruz Roja', tipo: 'ONG', contacto: 'Javier Sola', email: 'javier@cruzroja.es', actividadesCount: 5, estado: 'Active' },
-    { id: 3, nombre: 'Banco Alimentos', tipo: 'ONG', contacto: 'Maria Ruiz', email: 'maria@banco.es', actividadesCount: 0, estado: 'Pending' }
+    { 
+      id: 1, 
+      nombre: 'Amavir Oblatas', 
+      tipo: 'Residencia', 
+      contacto: 'Elena Martín', 
+      email: 'elena@amavir.es', 
+      actividadesCount: 12, 
+      estado: 'Active',
+      cif: 'G-31000001',
+      direccion: 'Av. Guipúzcoa, 5, Pamplona',
+      sitioWeb: 'www.amavir.es',
+      telefono: '948123456',
+      descripcion: 'Residencia de ancianos especializada en atención integral.'
+    },
+    { 
+      id: 2, 
+      nombre: 'Cruz Roja', 
+      tipo: 'ONG', 
+      contacto: 'Javier Sola', 
+      email: 'javier@cruzroja.es', 
+      actividadesCount: 5, 
+      estado: 'Active',
+      cif: 'G-28000002',
+      direccion: 'C/ Leyre, 6, Pamplona',
+      sitioWeb: 'www.cruzroja.es',
+      telefono: '948654321',
+      descripcion: 'Organización humanitaria de carácter voluntario.'
+    },
+    { 
+      id: 3, 
+      nombre: 'Banco Alimentos', 
+      tipo: 'ONG', 
+      contacto: 'Maria Ruiz', 
+      email: 'maria@banco.es', 
+      actividadesCount: 0, 
+      estado: 'Pending',
+      cif: 'G-31555555',
+      direccion: 'Polígono Landaben, Calle A',
+      sitioWeb: 'www.bancoalimentosnavarra.org',
+      telefono: '948999888',
+      descripcion: 'Recogida y distribución de alimentos a personas necesitadas.'
+    }
   ];
 
   // --- MOCK DATA: VOLUNTARIOS ---
@@ -123,26 +173,57 @@ export class CoordinadorService {
     { id: 3, nombre: 'Sara Jiménez', email: 'sara.jimenez@cuatrovientos.org', curso: '2º GA', actividadesCount: 0, estado: 'Inactivo' }
   ];
 
-  // --- MOCK DATA: ACTIVIDADES ---
+  // --- MOCK DATA: ACTIVIDADES (Actualizada con datos completos) ---
   private actividades: ActividadAdmin[] = [
-    { id: 1, nombre: 'Acompañamiento Amavir', tipo: 'Social', organizador: 'Amavir', fecha: '01 Jun 2025', estado: 'Active' },
-    { id: 2, nombre: 'Taller de Smartphone', tipo: 'Social', organizador: 'Cruz Roja', fecha: '01 Jun 2025', estado: 'Pending' },
-    { id: 3, nombre: 'Limpieza Río', tipo: 'Medioambiente', organizador: 'Ayuntamiento', fecha: '01 Jun 2025', estado: 'In Progress' }
+    { 
+      id: 1, 
+      nombre: 'Acompañamiento Amavir', 
+      tipo: 'Social', 
+      organizador: 'Amavir', 
+      fecha: '2025-06-01', 
+      estado: 'Active',
+      descripcion: 'Acompañamiento a personas mayores en paseos y actividades lúdicas.',
+      duracionHoras: 2,
+      cupoMaximo: 5,
+      ubicacion: 'Residencia Amavir Oblatas'
+    },
+    { 
+      id: 2, 
+      nombre: 'Taller de Smartphone', 
+      tipo: 'Social', 
+      organizador: 'Cruz Roja', 
+      fecha: '2025-06-01', 
+      estado: 'Pending',
+      descripcion: 'Enseñar uso básico del móvil a personas mayores.',
+      duracionHoras: 3,
+      cupoMaximo: 10,
+      ubicacion: 'Sede Cruz Roja'
+    },
+    { 
+      id: 3, 
+      nombre: 'Limpieza Río', 
+      tipo: 'Medioambiente', 
+      organizador: 'Ayuntamiento', 
+      fecha: '2025-06-01', 
+      estado: 'In Progress',
+      descripcion: 'Jornada de limpieza en las orillas del río Arga.',
+      duracionHoras: 4,
+      cupoMaximo: 20,
+      ubicacion: 'Paseo del Arga, Pamplona'
+    }
   ];
 
-  // --- MOCK DATA: SOLICITUDES ORGANIZACIONES ---
+  // --- MOCK DATA: SOLICITUDES ---
   private solicitudesOrganizaciones: SolicitudOrganizacion[] = [
     { id: 1, organizacion: 'Banco Alimentos', email: 'banco@alimentos.org', fechaRegistro: '20 Nov 2025', tipo: 'ONG', estado: 'Pendiente' },
     { id: 2, organizacion: 'Nuevo Proyecto', email: 'info@proyecto.org', fechaRegistro: '19 Nov 2025', tipo: 'Asociación', estado: 'Pendiente' }
   ];
 
-  // --- MOCK DATA: SOLICITUDES VOLUNTARIOS (NUEVO) ---
   private solicitudesVoluntarios: SolicitudVoluntario[] = [
     { id: 1, nombre: 'Lucía Fernández', email: 'lucia@cuatrovientos.org', curso: '2º DAM', actividadInteres: 'Taller de Smartphone', estado: 'Pendiente' },
     { id: 2, nombre: 'Marcos Alonso', email: 'marcos@cuatrovientos.org', curso: '1º SMR', actividadInteres: 'Paseo Saludable', estado: 'Pendiente' }
   ];
 
-  // --- MOCK DATA: SOLICITUDES ACTIVIDADES (NUEVO) ---
   private solicitudesActividades: SolicitudActividad[] = [
     { id: 1, actividad: 'Taller de Smartphone', organizacion: 'Solera Asistencial', estado: 'En progreso', fechaPropuesta: '15 Jul 2025' },
     { id: 2, actividad: 'Paseo Saludable', organizacion: 'Cruz Roja', estado: 'En pausa', fechaPropuesta: '20 Jul 2025' }

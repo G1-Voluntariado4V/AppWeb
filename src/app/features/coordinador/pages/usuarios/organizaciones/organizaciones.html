@@ -96,5 +96,10 @@
       </table>
     </div>
   </div>
-
+    @if (modalVisible()) {
+    <app-modal-crear-organizacion 
+        (close)="cerrarModal()" 
+        (save)="guardarNuevaOrganizacion($event)">
+    </app-modal-crear-organizacion>
+    }
 </div>

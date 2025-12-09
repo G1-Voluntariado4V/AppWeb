@@ -1,1 +1,78 @@
-<p>modal-crear-actividad works!</p>
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity animate-in fade-in duration-200">
+  
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+    
+    <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+      <h3 class="text-lg font-bold text-gray-900">Nueva Actividad</h3>
+      <button (click)="cerrar()" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      
+      @if (error()) {
+        <div class="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          {{ error() }}
+        </div>
+      }
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <div class="md:col-span-2">
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Título de la Actividad *</label>
+          <input type="text" [(ngModel)]="nombre" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Recogida de alimentos">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Organizador *</label>
+          <input type="text" [(ngModel)]="organizador" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Amavir">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
+          <select [(ngModel)]="tipo" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
+            <option value="Social">Social</option>
+            <option value="Medioambiente">Medioambiente</option>
+            <option value="Deportivo">Deportivo</option>
+            <option value="Educativo">Educativo</option>
+          </select>
+        </div>
+
+        <div>
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Fecha de Inicio *</label>
+           <input type="date" [(ngModel)]="fecha" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
+        </div>
+
+        <div>
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Duración (Horas)</label>
+           <input type="number" [(ngModel)]="duracion" min="1" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: 4">
+        </div>
+
+        <div>
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupo Máximo</label>
+           <input type="number" [(ngModel)]="cupo" min="1" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: 20">
+        </div>
+
+        <div>
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ubicación</label>
+           <input type="text" [(ngModel)]="ubicacion" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Banco de Alimentos, Navarra">
+        </div>
+
+        <div class="md:col-span-2">
+           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
+           <textarea [(ngModel)]="descripcion" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none resize-none" placeholder="Detalles de la actividad..."></textarea>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="cerrar()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
+      <button (click)="guardar()" class="px-6 py-2 bg-[#2563eb] text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-md transition-colors">Crear Actividad</button>
+    </div>
+
+  </div>
+</div>
