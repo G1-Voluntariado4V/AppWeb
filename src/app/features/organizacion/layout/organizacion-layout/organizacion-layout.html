@@ -1,0 +1,17 @@
+<div class="flex h-screen w-screen bg-[#F3F5F9] overflow-hidden p-4 gap-4">
+
+  <div class="h-full flex-shrink-0">
+    <app-sidebar 
+      [links]="menuLinks()"
+      [userName]="usuario().nombre"
+      [userRole]="usuario().rol" 
+      [userPhoto]="usuario().foto"
+      (onLogout)="handleLogout()">
+    </app-sidebar>
+  </div>
+
+  <main class="flex-1 h-full overflow-y-auto relative">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>
