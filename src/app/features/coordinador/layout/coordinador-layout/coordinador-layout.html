@@ -5,11 +5,10 @@
       [links]="menuLinks()"
       [userName]="usuario().nombre"
       [userRole]="usuario().cargo" 
-      [userPhoto]="usuario().foto"
+      [userPhoto]="usuario().foto || ''" 
       (onLogout)="handleLogout()">
     </app-sidebar>
   </div>
-
   <main class="flex-1 h-full overflow-y-auto relative">
     <router-outlet></router-outlet>
   </main>

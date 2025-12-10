@@ -1,1 +1,84 @@
-<p>actividades works!</p>
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Mis Actividades</h1>
+      <p class="text-gray-500 text-sm">Gestiona las ofertas de voluntariado publicadas.</p>
+    </div>
+    
+    <button (click)="abrirCrear()" 
+            class="bg-[#2563eb] hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2">
+      <i class="fa-solid fa-plus"></i> Publicar Actividad
+    </button>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center relative z-20">
+    <div class="relative w-full md:w-96">
+      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <input type="text" [(ngModel)]="busqueda" placeholder="Buscar actividad..." 
+             class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
+    </div>
+
+    <div class="relative">
+      <button (click)="toggleFiltro()" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors min-w-[140px] justify-between">
+        <span>{{ filtroEstado() === 'Todos' ? 'Todos los estados' : filtroEstado() }}</span>
+        <i class="fa-solid fa-chevron-down text-xs transition-transform" [class.rotate-180]="menuFiltroAbierto()"></i>
+      </button>
+
+      @if (menuFiltroAbierto()) {
+        <div class="fixed inset-0 z-10" (click)="toggleFiltro()"></div>
+        <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in slide-in-from-top-2">
+            <button (click)="seleccionarFiltro('Todos')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Todos</button>
+            <button (click)="seleccionarFiltro('Activa')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-green-600 font-bold">Activa</button>
+            <button (click)="seleccionarFiltro('Pendiente')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-orange-500 font-bold">Pendiente</button>
+            <button (click)="seleccionarFiltro('Finalizada')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-gray-500 font-bold">Finalizada</button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative z-10">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50/50 border-b border-gray-100">
+          <tr>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actividad</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Inscritos</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (act of actividadesFiltradas(); track act.id) {
+            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(act)">
+              <td class="px-6 py-4 font-bold text-gray-900 text-sm">{{ act.nombre }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ act.tipo }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ act.fecha }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">
+                <span class="font-bold text-blue-600">{{ act.voluntariosInscritos }}</span> / {{ act.cupoMaximo }}
+              </td>
+              <td class="px-6 py-4 text-right">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                  [class.bg-green-100]="act.estado === 'Activa'" [class.text-green-700]="act.estado === 'Activa'"
+                  [class.bg-orange-100]="act.estado === 'Pendiente'" [class.text-orange-700]="act.estado === 'Pendiente'"
+                  [class.bg-gray-100]="act.estado === 'Finalizada'" [class.text-gray-600]="act.estado === 'Finalizada'">
+                  {{ act.estado }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (modalCrearVisible()) {
+    <app-modal-crear-actividad (close)="cerrarCrear()" (save)="guardarActividad($event)"></app-modal-crear-actividad>
+  }
+
+  @if (actividadSeleccionada()) {
+    <app-modal-detalle-actividad [act]="actividadSeleccionada()!" (close)="cerrarDetalle()"></app-modal-detalle-actividad>
+  }
+
+</div>

@@ -1,11 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, input, output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActividadOrg } from '../../services/organizacion.service';
 
 @Component({
   selector: 'app-modal-detalle-actividad',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './modal-detalle-actividad.html',
-  styleUrl: './modal-detalle-actividad.css',
 })
 export class ModalDetalleActividad {
-
+  act = input.required<ActividadOrg>();
+  close = output<void>();
 }

@@ -1,1 +1,27 @@
-<p>modal-detalle-actividad works!</p>
+<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="close.emit()">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200" (click)="$event.stopPropagation()">
+    
+    <div class="h-32 bg-gradient-to-r from-blue-500 to-indigo-600 relative">
+        <button (click)="close.emit()" class="absolute top-4 right-4 w-8 h-8 bg-black/20 text-white rounded-full flex items-center justify-center hover:bg-black/40"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="p-8">
+        <span class="text-xs font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded-lg mb-2 inline-block">{{ act().tipo }}</span>
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">{{ act().nombre }}</h2>
+        
+        <div class="flex gap-6 mb-6 text-sm text-gray-600">
+            <span class="flex items-center gap-2"><i class="fa-regular fa-calendar"></i> {{ act().fecha }}</span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-users"></i> {{ act().voluntariosInscritos }} / {{ act().cupoMaximo }} inscritos</span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> {{ act().ubicacion || 'Sin ubicación' }}</span>
+        </div>
+
+        <p class="text-gray-600 leading-relaxed mb-6">{{ act().descripcion || 'Sin descripción detallada.' }}</p>
+
+        <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
+            <button class="px-4 py-2 border border-red-100 text-red-500 rounded-xl text-sm font-bold hover:bg-red-50">Cancelar Actividad</button>
+            <button class="px-6 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-700">Editar Datos</button>
+        </div>
+    </div>
+
+  </div>
+</div>
