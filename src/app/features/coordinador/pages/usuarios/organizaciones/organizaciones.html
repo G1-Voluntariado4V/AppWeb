@@ -14,17 +14,13 @@
 
   <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
     
-    <div class="relative w-full md:w-96">
-      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+    <div class="relative w-full"> <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
       <input type="text" 
              [(ngModel)]="busqueda"
-             placeholder="Buscar..." 
+             placeholder="Buscar organización..." 
              class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
     </div>
 
-    <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">
-      Estado: All <i class="fa-solid fa-chevron-down text-xs"></i>
-    </button>
   </div>
 
   <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">

@@ -1,6 +1,8 @@
 import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { Sidebar, SidebarLink } from '../../../../shared/components/sidebar/sidebar';
+// CORRECCIÓN: Ruta correcta (subir 2 niveles)
+import { CoordinadorService } from '../../services/coordinador';
 
 @Component({
   selector: 'coordinador-layout',
@@ -11,6 +13,8 @@ import { Sidebar, SidebarLink } from '../../../../shared/components/sidebar/side
 export class CoordinadorLayout {
   
   private router = inject(Router);
+  // Inyectamos el servicio
+  public coordinadorService = inject(CoordinadorService); // Poner 'public' ayuda en algunos casos de template
 
   menuLinks = signal<SidebarLink[]>([
     { 
@@ -29,7 +33,6 @@ export class CoordinadorLayout {
       label: 'Usuarios', 
       icon: 'fa-solid fa-users',
       children: [
-        // AQUI HE PUESTO LOS ICONOS
         { label: 'Organizaciones', route: '/coordinador/usuarios/organizaciones', icon: 'fa-solid fa-building' },
         { label: 'Voluntarios', route: '/coordinador/usuarios/voluntarios', icon: 'fa-solid fa-user-group' }
       ]
@@ -40,7 +43,6 @@ export class CoordinadorLayout {
       label: 'Aprobaciones', 
       icon: 'fa-solid fa-circle-check', 
       children: [
-        // AQUI HE PUESTO LOS ICONOS
         { label: 'Organizaciones', route: '/coordinador/aprobaciones/organizaciones', icon: 'fa-solid fa-building-circle-check' },
         { label: 'Voluntarios', route: '/coordinador/aprobaciones/voluntarios', icon: 'fa-solid fa-user-check' },
         { label: 'Actividades', route: '/coordinador/aprobaciones/actividades', icon: 'fa-solid fa-calendar-check' }
@@ -48,11 +50,8 @@ export class CoordinadorLayout {
     },
   ]);
 
-  usuario = signal({
-    nombre: 'Admin',
-    rol: 'Coordinador',
-    foto: '' 
-  });
+  // Enlazamos al servicio
+  usuario = this.coordinadorService.perfilUsuario;
 
   handleLogout() {
     this.router.navigate(['/']);

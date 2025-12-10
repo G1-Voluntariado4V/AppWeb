@@ -36,7 +36,25 @@ export interface SolicitudActividad { id: number; actividad: string; organizacio
 export class CoordinadorService {
 
   // --- 1. ESTADO GLOBAL REACTIVO (SIGNALS) ---
-  // Estos son los datos "vivos" de tu aplicación.
+  
+  // *** AÑADIDO: PERFIL DE USUARIO GLOBAL ***
+  public perfilUsuario = signal({
+    nombre: 'Admin General',
+    cargo: 'Coordinador Principal',
+    email: 'admin@cuatrovientos.org',
+    telefono: '+34 600 123 456',
+    foto: null as string | null
+  });
+
+  // *** AÑADIDO: MÉTODO PARA ACTUALIZARLO ***
+  actualizarPerfilUsuario(datos: any) {
+    this.perfilUsuario.update(actual => ({
+      ...actual,
+      ...datos
+    }));
+  }
+
+  // --- RESTO DE DATOS "VIVOS" DE TU APLICACIÓN ---
 
   private _organizaciones = signal<OrganizacionAdmin[]>([
     { id: 1, nombre: 'Amavir Oblatas', tipo: 'Residencia', contacto: 'Elena Martín', email: 'elena@amavir.es', actividadesCount: 12, estado: 'Active', cif: 'G-31000001', direccion: 'Av. Guipúzcoa, 5', sitioWeb: 'www.amavir.es', telefono: '948123456', descripcion: 'Residencia de ancianos.' },

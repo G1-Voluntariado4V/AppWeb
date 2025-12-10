@@ -1,13 +1,12 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CoordinadorService, DashboardStats, Aviso } from '../../services/coordinador';
-// Importamos el nuevo modal
 import { ModalEditarPerfil } from '../../components/modal-editar-perfil/modal-editar-perfil';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ModalEditarPerfil], // Añadimos el modal a imports
+  imports: [CommonModule, ModalEditarPerfil],
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit {
@@ -24,13 +23,10 @@ export class Dashboard implements OnInit {
   avisos = signal<Aviso[]>([]);
   anioActual = signal('2025/2026');
 
-  // --- NUEVO: DATOS DEL PERFIL ---
-  perfil = signal({
-    nombre: 'Admin General',
-    cargo: 'Coordinador Principal',
-    email: 'admin@cuatrovientos.org',
-    telefono: '+34 600 123 456'
-  });
+  // --- DATOS DEL PERFIL ---
+  // CAMBIO IMPORTANTE: Enlazamos directamente con la señal del servicio.
+  // Así, cuando cambie aquí, cambiará en el Sidebar automáticamente.
+  perfil = this.coordinadorService.perfilUsuario;
 
   // Control del modal
   modalPerfilVisible = signal(false);
@@ -42,7 +38,6 @@ export class Dashboard implements OnInit {
   cargarDatos() {
     this.coordinadorService.getDashboardStats().subscribe(data => this.stats.set(data));
     this.coordinadorService.getAvisos().subscribe(data => this.avisos.set(data));
-    // Ya no cargamos la gráfica porque la vamos a quitar
   }
 
   // Métodos del Modal
@@ -55,8 +50,10 @@ export class Dashboard implements OnInit {
   }
 
   actualizarPerfil(nuevosDatos: any) {
-    this.perfil.set(nuevosDatos);
-    // Aquí llamarías al servicio para guardar en BD si fuera real
-    alert('Perfil actualizado correctamente');
+    // CAMBIO IMPORTANTE: Llamamos al método del servicio para actualizar el estado global.
+    this.coordinadorService.actualizarPerfilUsuario(nuevosDatos);
+    
+    // (Opcional) Un alert o notificación
+    // alert('Perfil actualizado correctamente');
   }
 }

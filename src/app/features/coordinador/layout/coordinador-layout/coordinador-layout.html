@@ -4,7 +4,7 @@
     <app-sidebar 
       [links]="menuLinks()"
       [userName]="usuario().nombre"
-      [userRole]="usuario().rol"
+      [userRole]="usuario().cargo" 
       [userPhoto]="usuario().foto"
       (onLogout)="handleLogout()">
     </app-sidebar>

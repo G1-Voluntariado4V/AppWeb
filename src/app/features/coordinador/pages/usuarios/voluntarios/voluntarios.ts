@@ -1,9 +1,7 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-// Ajusta la ruta de imports: subimos 4 niveles para llegar a services
 import { CoordinadorService, VoluntarioAdmin } from '../../../services/coordinador';
-// Importamos el componente del Modal de Detalle
 import { ModalDetalleVoluntario } from '../../../components/modal-detalle-voluntario/modal-detalle-voluntario';
 
 @Component({
@@ -19,16 +17,31 @@ export class Voluntarios implements OnInit {
   voluntarios = signal<VoluntarioAdmin[]>([]);
   busqueda = signal('');
 
-  // Signal para controlar qué voluntario se ve en el detalle (null = cerrado)
+  // --- NUEVO: Lógica de Filtros ---
+  filtroCurso = signal('Todos');
+  menuFiltroAbierto = signal(false);
+  
+  // Lista de cursos disponibles para el desplegable
+  cursosDisponibles = ['1º SMR', '2º SMR', '1º DAM', '2º DAM', '1º GA', '2º GA', '1º AF', '2º AF'];
+
+  // Signal para el modal de detalle
   voluntarioSeleccionado = signal<VoluntarioAdmin | null>(null);
 
-  // Filtro automático por nombre o curso
+  // --- COMPUTED ACTUALIZADO (Texto + Curso) ---
   voluntariosFiltrados = computed(() => {
     const term = this.busqueda().toLowerCase();
-    return this.voluntarios().filter(vol => 
-      vol.nombre.toLowerCase().includes(term) || 
-      vol.curso.toLowerCase().includes(term)
-    );
+    const curso = this.filtroCurso();
+
+    return this.voluntarios().filter(vol => {
+      // 1. Coincide con el texto?
+      const matchTexto = vol.nombre.toLowerCase().includes(term) || 
+                         vol.email.toLowerCase().includes(term);
+      
+      // 2. Coincide con el curso? (Si es 'Todos', pasa siempre)
+      const matchCurso = curso === 'Todos' || vol.curso === curso;
+
+      return matchTexto && matchCurso;
+    });
   });
 
   ngOnInit() {
@@ -37,10 +50,18 @@ export class Voluntarios implements OnInit {
     });
   }
 
-  // --- MÉTODOS PARA EL MODAL DE DETALLE ---
+  // --- MÉTODOS FILTRO ---
+  toggleFiltro() {
+    this.menuFiltroAbierto.update(v => !v);
+  }
 
+  seleccionarFiltro(curso: string) {
+    this.filtroCurso.set(curso);
+    this.menuFiltroAbierto.set(false); // Cerrar menú al seleccionar
+  }
+
+  // --- MÉTODOS DETALLE ---
   verDetalle(vol: VoluntarioAdmin) {
-    // Guardamos el voluntario entero para mostrarlo en el modal
     this.voluntarioSeleccionado.set(vol);
   }
 
