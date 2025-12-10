@@ -13,66 +13,59 @@ export class ModalCrearActividad {
   close = output<void>();
   save = output<any>();
 
-  // Campos
-  nombre = signal('');
-  tipo = signal('Social');
-  organizador = signal('');
-  fecha = signal('');
-  
-  // Nuevos campos SQL
-  duracion = signal<number | null>(null);
-  cupo = signal<number | null>(null);
-  ubicacion = signal('');
+  // Datos
+  titulo = signal('');
   descripcion = signal('');
+  tipoVoluntariado = signal('Presencial');
+  fecha = signal(new Date().toISOString().split('T')[0]);
+  imagenNombre = signal(''); // Para mostrar el nombre del archivo seleccionado
+  
+  odsSeleccionados = signal<number[]>([]);
+  
+  // Lista ODS
+  odsOptions = [
+    { id: 1, nombre: 'Fin de la Pobreza', color: 'bg-red-500', icon: 'fa-solid fa-users' },
+    { id: 3, nombre: 'Salud y Bienestar', color: 'bg-green-500', icon: 'fa-solid fa-heart-pulse' },
+    { id: 4, nombre: 'Educación de Calidad', color: 'bg-red-400', icon: 'fa-solid fa-book-open' },
+  ];
 
-  error = signal('');
+  toggleOds(id: number) {
+    this.odsSeleccionados.update(lista => {
+      if (lista.includes(id)) return lista.filter(x => x !== id);
+      return [...lista, id];
+    });
+  }
+
+  // MÉTODO PARA GESTIONAR EL ARCHIVO
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.imagenNombre.set(file.name);
+      // Aquí podrías leer el archivo con FileReader si quisieras mostrar preview
+    }
+  }
 
   cerrar() {
     this.close.emit();
   }
 
   guardar() {
-    this.error.set('');
-
-    // 1. Campos obligatorios
-    if (!this.nombre() || !this.fecha() || !this.organizador()) {
-      this.error.set('Nombre, Fecha y Organizador son obligatorios.');
+    if (!this.titulo() || !this.fecha()) {
+      alert('El título y la fecha son obligatorios');
       return;
     }
 
-    // 2. Validación de Fecha (No permitir pasado)
-    const fechaSeleccionada = new Date(this.fecha());
-    const hoy = new Date();
-    hoy.setHours(0,0,0,0); // Ignorar hora actual para comparar solo días
-    
-    if (fechaSeleccionada < hoy) {
-      this.error.set('La fecha no puede ser anterior a hoy.');
-      return;
-    }
-
-    // 3. Validaciones Numéricas (SQL INT)
-    if (this.duracion() !== null && this.duracion()! <= 0) {
-      this.error.set('La duración debe ser mayor a 0 horas.');
-      return;
-    }
-
-    if (this.cupo() !== null && this.cupo()! <= 0) {
-      this.error.set('El cupo máximo debe ser al menos 1 persona.');
-      return;
-    }
-
-    // Emitir
     this.save.emit({
-      nombre: this.nombre(),
-      tipo: this.tipo(),
-      organizador: this.organizador(),
+      nombre: this.titulo(),
+      tipo: 'Social', 
+      organizador: 'Interna', 
       fecha: this.fecha(),
-      duracionHoras: this.duracion(),
-      cupoMaximo: this.cupo(),
-      ubicacion: this.ubicacion(),
-      descripcion: this.descripcion()
+      descripcion: this.descripcion(),
+      estado: 'Active',
+      ods: this.odsSeleccionados(),
+      tipoVoluntariado: this.tipoVoluntariado(),
+      imagen: this.imagenNombre() // Enviamos el nombre de la imagen
     });
-    
     this.cerrar();
   }
 }

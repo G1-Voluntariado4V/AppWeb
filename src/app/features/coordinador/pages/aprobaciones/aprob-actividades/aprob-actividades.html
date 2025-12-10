@@ -49,11 +49,11 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
           @for (sol of solicitudes(); track sol.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group">
+            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(sol)">
               
               <td class="px-6 py-4">
                 <span class="font-bold text-gray-900 text-sm">{{ sol.actividad }}</span>
-                <p class="text-[10px] text-gray-400">Descripción breve...</p>
+                <p class="text-[10px] text-gray-400">Clic para ver detalles...</p>
               </td>
 
               <td class="px-6 py-4">
@@ -67,10 +67,7 @@
 
               <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[10px] font-bold">
-                        {{ sol.organizacion.substring(0,2).toUpperCase() }}
-                    </span>
-                    <span class="text-sm text-gray-600">{{ sol.estado }}</span>
+                    <span class="text-sm text-gray-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 text-xs">{{ sol.estado }}</span>
                 </div>
               </td>
 
@@ -80,12 +77,12 @@
 
               <td class="px-6 py-4 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button (click)="aprobar(sol.id)" 
-                          class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors">
+                  <button (click)="aprobar(sol.id, $event)" 
+                          class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm">
                     <i class="fa-solid fa-check"></i>
                   </button>
-                  <button (click)="rechazar(sol.id)" 
-                          class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors">
+                  <button (click)="rechazar(sol.id, $event)" 
+                          class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm">
                     <i class="fa-solid fa-xmark"></i>
                   </button>
                 </div>
@@ -97,5 +94,12 @@
       </table>
     </div>
   </div>
+
+  @if (actParaVer()) {
+    <app-modal-detalle-actividad 
+      [act]="actParaVer()!" 
+      (close)="cerrarDetalle()">
+    </app-modal-detalle-actividad>
+  }
 
 </div>

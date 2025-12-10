@@ -37,6 +37,9 @@
                             <i [class]="link.icon + ' text-gray-500 text-lg w-5 text-center'"></i>
                             <span>{{ link.label }}</span>
                         </div>
+                        
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"
+                           [class.rotate-180]="isMenuOpen(link.label)"></i>
                     </button>
 
                     @if (isMenuOpen(link.label)) {
@@ -44,7 +47,12 @@
                             @for (child of link.children; track child.label) {
                                 <a [routerLink]="child.route"
                                    routerLinkActive="text-[#2563eb] font-bold"
-                                   class="block py-2 text-gray-500 hover:text-gray-900 transition-colors text-sm font-medium">
+                                   class="flex items-center gap-2 py-2 text-gray-500 hover:text-gray-900 transition-colors text-sm font-medium group">
+                                    
+                                    @if (child.icon) {
+                                        <i [class]="child.icon + ' text-xs w-4 text-center opacity-70 group-hover:opacity-100'"></i>
+                                    }
+                                    
                                     {{ child.label }}
                                 </a>
                             }

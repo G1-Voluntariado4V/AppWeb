@@ -1,41 +1,62 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-// CORRECCIÓN 1: Importamos 'Coordinador' en lugar de 'CoordinadorService'
-import { CoordinadorService, DashboardStats, ActividadSemanal, Aviso } from '../../services/coordinador';
+import { CoordinadorService, DashboardStats, Aviso } from '../../services/coordinador';
+// Importamos el nuevo modal
+import { ModalEditarPerfil } from '../../components/modal-editar-perfil/modal-editar-perfil';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ModalEditarPerfil], // Añadimos el modal a imports
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit {
   
-  // CORRECCIÓN 2: Inyectamos la clase 'Coordinador'
-  private coordinador = inject(CoordinadorService);
+  private coordinadorService = inject(CoordinadorService);
 
-  // Signals para los datos
   stats = signal<DashboardStats>({
     voluntariosActivos: 0,
-    incrementoMensual: 0,
+    organizacionesActivas: 0,
     horasTotales: 0,
-    voluntariadosCompletados: 0
+    actividadesTotales: 0
   });
 
-  grafica = signal<ActividadSemanal[]>([]);
   avisos = signal<Aviso[]>([]);
-
-  // Fecha actual para el selector (visual)
   anioActual = signal('2025/2026');
+
+  // --- NUEVO: DATOS DEL PERFIL ---
+  perfil = signal({
+    nombre: 'Admin General',
+    cargo: 'Coordinador Principal',
+    email: 'admin@cuatrovientos.org',
+    telefono: '+34 600 123 456'
+  });
+
+  // Control del modal
+  modalPerfilVisible = signal(false);
 
   ngOnInit() {
     this.cargarDatos();
   }
 
   cargarDatos() {
-    // CORRECCIÓN 3: Usamos 'this.coordinador' para llamar a los métodos
-    this.coordinador.getDashboardStats().subscribe(data => this.stats.set(data));
-    this.coordinador.getActividadSemanal().subscribe(data => this.grafica.set(data));
-    this.coordinador.getAvisos().subscribe(data => this.avisos.set(data));
+    this.coordinadorService.getDashboardStats().subscribe(data => this.stats.set(data));
+    this.coordinadorService.getAvisos().subscribe(data => this.avisos.set(data));
+    // Ya no cargamos la gráfica porque la vamos a quitar
+  }
+
+  // Métodos del Modal
+  abrirModalPerfil() {
+    this.modalPerfilVisible.set(true);
+  }
+
+  cerrarModalPerfil() {
+    this.modalPerfilVisible.set(false);
+  }
+
+  actualizarPerfil(nuevosDatos: any) {
+    this.perfil.set(nuevosDatos);
+    // Aquí llamarías al servicio para guardar en BD si fuera real
+    alert('Perfil actualizado correctamente');
   }
 }

@@ -1,77 +1,115 @@
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity animate-in fade-in duration-200">
+<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
   
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
     
-    <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-      <h3 class="text-lg font-bold text-gray-900">Nueva Actividad</h3>
+    <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
+      <h2 class="text-2xl font-bold text-gray-900">Nueva Actividad</h2>
       <button (click)="cerrar()" class="text-gray-400 hover:text-gray-600 transition-colors">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
     </div>
 
-    <div class="p-6 space-y-4">
-      
-      @if (error()) {
-        <div class="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 flex items-center gap-2">
-          <i class="fa-solid fa-circle-exclamation"></i>
-          {{ error() }}
-        </div>
-      }
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="p-8 bg-gray-50/50 overflow-y-auto custom-scrollbar">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <div class="md:col-span-2">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Título de la Actividad *</label>
-          <input type="text" [(ngModel)]="nombre" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Recogida de alimentos">
+        <div class="lg:col-span-2 space-y-6">
+          
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Título</label>
+            <input type="text" [(ngModel)]="titulo" 
+                   class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400"
+                   placeholder="Ej: Recogida de Alimentos">
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
+            <textarea [(ngModel)]="descripcion" rows="4"
+                      class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400 resize-none"
+                      placeholder="Describe los detalles de la actividad..."></textarea>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <label class="block text-sm font-bold text-gray-700 mb-4">Selecciona los ODS</label>
+            <div class="flex flex-wrap gap-3">
+              @for (ods of odsOptions; track ods.id) {
+                <div (click)="toggleOds(ods.id)"
+                     class="cursor-pointer w-28 h-28 rounded-2xl flex flex-col items-start justify-between p-3 text-white transition-transform hover:scale-105 relative overflow-hidden shadow-md"
+                     [class]="ods.color"
+                     [class.ring-4]="odsSeleccionados().includes(ods.id)"
+                     [class.ring-blue-400]="odsSeleccionados().includes(ods.id)"
+                     [class.opacity-60]="odsSeleccionados().length > 0 && !odsSeleccionados().includes(ods.id)">
+                  <span class="text-xl font-black opacity-80">{{ ods.id }}</span>
+                  <div>
+                    <i [class]="ods.icon + ' text-xl mb-1 block'"></i>
+                    <span class="text-[9px] font-bold uppercase leading-tight block">{{ ods.nombre }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <label class="block text-sm font-bold text-gray-700 mb-4">Imagen de Portada</label>
+            
+            <input type="file" #fileInput (change)="onFileSelected($event)" class="hidden" accept="image/*">
+            
+            <div (click)="fileInput.click()" 
+                 class="border-2 border-dashed border-gray-300 rounded-2xl h-40 flex flex-col items-center justify-center text-gray-400 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer group">
+              
+              @if (imagenNombre()) {
+                <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-500"></i>
+                <span class="text-sm font-bold text-gray-800">{{ imagenNombre() }}</span>
+                <span class="text-xs text-blue-500 mt-1">Clic para cambiar</span>
+              } @else {
+                <i class="fa-regular fa-image text-3xl mb-2 group-hover:text-blue-500 transition-colors"></i>
+                <span class="text-sm font-medium group-hover:text-blue-600 transition-colors">Subir imagen</span>
+              }
+            </div>
+          </div>
+
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Organizador *</label>
-          <input type="text" [(ngModel)]="organizador" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Amavir">
-        </div>
+        <div class="space-y-6">
+          
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <label class="block text-sm font-bold text-gray-700 mb-4">Tipos de Voluntariado</label>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all hover:bg-gray-50"
+                     [class.border-blue-500]="tipoVoluntariado() === 'Presencial'"
+                     [class.bg-blue-50]="tipoVoluntariado() === 'Presencial'">
+                <input type="radio" name="tipo" value="Presencial" [(ngModel)]="tipoVoluntariado" class="text-blue-600 focus:ring-blue-500">
+                <span class="text-sm font-medium text-gray-700">Presencial</span>
+              </label>
 
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
-          <select [(ngModel)]="tipo" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
-            <option value="Social">Social</option>
-            <option value="Medioambiente">Medioambiente</option>
-            <option value="Deportivo">Deportivo</option>
-            <option value="Educativo">Educativo</option>
-          </select>
-        </div>
+              <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all hover:bg-gray-50"
+                     [class.border-blue-500]="tipoVoluntariado() === 'Técnico'"
+                     [class.bg-blue-50]="tipoVoluntariado() === 'Técnico'">
+                <input type="radio" name="tipo" value="Técnico" [(ngModel)]="tipoVoluntariado" class="text-blue-600 focus:ring-blue-500">
+                <span class="text-sm font-medium text-gray-700">Técnico (FP)</span>
+              </label>
+            </div>
+          </div>
 
-        <div>
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Fecha de Inicio *</label>
-           <input type="date" [(ngModel)]="fecha" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
-        </div>
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-4">
+              <span class="font-bold text-gray-900">Fecha de Inicio</span>
+            </div>
+            <input type="date" [(ngModel)]="fecha" 
+                   class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none cursor-pointer">
+          </div>
 
-        <div>
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Duración (Horas)</label>
-           <input type="number" [(ngModel)]="duracion" min="1" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: 4">
-        </div>
-
-        <div>
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupo Máximo</label>
-           <input type="number" [(ngModel)]="cupo" min="1" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: 20">
-        </div>
-
-        <div>
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ubicación</label>
-           <input type="text" [(ngModel)]="ubicacion" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Banco de Alimentos, Navarra">
-        </div>
-
-        <div class="md:col-span-2">
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
-           <textarea [(ngModel)]="descripcion" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none resize-none" placeholder="Detalles de la actividad..."></textarea>
         </div>
 
       </div>
-
     </div>
 
-    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-      <button (click)="cerrar()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
-      <button (click)="guardar()" class="px-6 py-2 bg-[#2563eb] text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-md transition-colors">Crear Actividad</button>
+    <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-end gap-3 shrink-0">
+      <button (click)="cerrar()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="guardar()" class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-[#2563eb] hover:bg-blue-700 shadow-md transition-all transform hover:-translate-y-0.5">
+        Publicar Actividad
+      </button>
     </div>
 
   </div>

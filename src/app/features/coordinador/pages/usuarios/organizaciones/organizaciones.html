@@ -41,7 +41,7 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
           @for (org of organizacionesFiltradas(); track org.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group">
+            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(org)">
               
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
@@ -81,10 +81,10 @@
 
               <td class="px-6 py-4 text-right">
                 <div class="flex items-center justify-end gap-2 text-gray-400">
-                  <button class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
+                  <button (click)="$event.stopPropagation(); verDetalle(org)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
                     <i class="fa-regular fa-eye"></i>
                   </button>
-                  <button (click)="editar(org.id)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
+                  <button (click)="editar(org.id, $event)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-pen"></i>
                   </button>
                 </div>
@@ -96,10 +96,19 @@
       </table>
     </div>
   </div>
-    @if (modalVisible()) {
+
+  @if (modalCrearVisible()) {
     <app-modal-crear-organizacion 
-        (close)="cerrarModal()" 
+        (close)="cerrarModalCrear()" 
         (save)="guardarNuevaOrganizacion($event)">
     </app-modal-crear-organizacion>
-    }
+  }
+
+  @if (orgSeleccionada()) {
+    <app-modal-detalle-organizacion 
+      [org]="orgSeleccionada()!" 
+      (close)="cerrarDetalle()">
+    </app-modal-detalle-organizacion>
+  }
+
 </div>

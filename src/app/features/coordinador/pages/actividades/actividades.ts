@@ -1,25 +1,30 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+// Importamos Servicio e Interfaz
 import { CoordinadorService, ActividadAdmin } from '../../services/coordinador';
-// IMPORTANTE: Importar el modal
+// Importamos AMBOS modales (Crear y Detalle)
 import { ModalCrearActividad } from '../../components/modal-crear-actividad/modal-crear-actividad';
+import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/modal-detalle-actividad';
 
 @Component({
   selector: 'app-actividades',
   standalone: true,
-  // IMPORTANTE: Añadirlo a imports
-  imports: [CommonModule, FormsModule, ModalCrearActividad],
+  imports: [CommonModule, FormsModule, ModalCrearActividad, ModalDetalleActividad],
   templateUrl: './actividades.html',
 })
 export class Actividades implements OnInit {
   
   private coordinadorService = inject(CoordinadorService);
+
   actividades = signal<ActividadAdmin[]>([]);
   busqueda = signal('');
   
-  // Signal del modal
-  modalVisible = signal(false);
+  // Signals para controlar los modales
+  modalCrearVisible = signal(false);
+  
+  // Signal para el detalle (guarda la actividad seleccionada o null)
+  actividadSeleccionada = signal<ActividadAdmin | null>(null);
 
   actividadesFiltradas = computed(() => {
     const term = this.busqueda().toLowerCase();
@@ -30,36 +35,64 @@ export class Actividades implements OnInit {
   });
 
   ngOnInit() {
+    this.cargarDatos();
+  }
+
+  cargarDatos() {
     this.coordinadorService.getActividadesAdmin().subscribe(data => {
       this.actividades.set(data);
     });
   }
 
-  // --- MÉTODOS DEL MODAL ---
+  // --- MÉTODOS DEL MODAL CREAR ---
 
   abrirModalCrear() {
-    this.modalVisible.set(true);
+    this.modalCrearVisible.set(true);
   }
 
-  cerrarModal() {
-    this.modalVisible.set(false);
+  cerrarModalCrear() {
+    this.modalCrearVisible.set(false);
   }
 
   guardarNuevaActividad(datos: any) {
+    // 1. Creamos el objeto completo con los campos del modal
     const nuevaAct: ActividadAdmin = {
-      id: Date.now(),
+      id: Date.now(), // ID temporal
       nombre: datos.nombre,
       tipo: datos.tipo,
       organizador: datos.organizador,
-      fecha: datos.fecha, // La fecha viene en formato YYYY-MM-DD del input
-      estado: 'Active'
+      fecha: datos.fecha,
+      estado: 'Active', 
+      
+      // Nuevos campos SQL que vienen del modal
+      duracionHoras: datos.duracionHoras,
+      cupoMaximo: datos.cupoMaximo,
+      ubicacion: datos.ubicacion,
+      descripcion: datos.descripcion
     };
 
-    this.actividades.update(lista => [nuevaAct, ...lista]);
-    alert('Actividad creada correctamente');
+    // 2. Enviamos al servicio (Esto actualiza el Dashboard automáticamente)
+    this.coordinadorService.addActividad(nuevaAct);
+
+    // 3. Recargamos la tabla local
+    this.cargarDatos();
+
+    alert('Actividad creada y estadísticas actualizadas.');
   }
 
-  editar(id: number) {
+  // --- MÉTODOS DEL MODAL DETALLE ---
+
+  verDetalle(act: ActividadAdmin) {
+    this.actividadSeleccionada.set(act);
+  }
+
+  cerrarDetalle() {
+    this.actividadSeleccionada.set(null);
+  }
+
+  // Editamos stopPropagation para que no abra el detalle al hacer click en el lápiz
+  editar(id: number, event: Event) {
+    event.stopPropagation();
     console.log('Editar actividad', id);
   }
 }

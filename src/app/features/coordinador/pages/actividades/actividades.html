@@ -40,7 +40,7 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
           @for (act of actividadesFiltradas(); track act.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group">
+            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(act)">
               
               <td class="px-6 py-4">
                 <div>
@@ -75,7 +75,7 @@
               </td>
 
               <td class="px-6 py-4 text-right">
-                <button (click)="editar(act.id)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 text-gray-400 transition-colors">
+                <button (click)="editar(act.id, $event)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 text-gray-400 transition-colors">
                   <i class="fa-solid fa-pen"></i>
                 </button>
               </td>
@@ -86,10 +86,19 @@
       </table>
     </div>
   </div>
-@if (modalVisible()) {
-  <app-modal-crear-actividad 
-    (close)="cerrarModal()" 
-    (save)="guardarNuevaActividad($event)">
-  </app-modal-crear-actividad>
-}
+
+  @if (modalCrearVisible()) {
+    <app-modal-crear-actividad 
+      (close)="cerrarModalCrear()" 
+      (save)="guardarNuevaActividad($event)">
+    </app-modal-crear-actividad>
+  }
+
+  @if (actividadSeleccionada()) {
+    <app-modal-detalle-actividad 
+      [act]="actividadSeleccionada()!"  
+      (close)="cerrarDetalle()">
+    </app-modal-detalle-actividad>
+  }
+
 </div>

@@ -1,75 +1,85 @@
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity animate-in fade-in duration-200">
+<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-200">
     
-    <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-      <h3 class="text-lg font-bold text-gray-900">Nueva Organización</h3>
-      <button (click)="cerrar()" class="text-gray-400 hover:text-gray-600 transition-colors">
-        <i class="fa-solid fa-xmark text-xl"></i>
+    <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Registrar Organización</h2>
+        <p class="text-sm text-gray-500">Añade una nueva entidad colaboradora</p>
+      </div>
+      <button (click)="cerrar()" class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors">
+        <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
-    <div class="p-6 space-y-4">
+    <div class="p-8 bg-white flex flex-col gap-6">
       
       @if (error()) {
-        <div class="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 flex items-center gap-2">
-          <i class="fa-solid fa-circle-exclamation"></i>
-          {{ error() }}
+        <div class="bg-red-50 text-red-600 px-4 py-3 rounded-xl border border-red-100 flex items-center gap-3 animate-in slide-in-from-top-2">
+          <i class="fa-solid fa-circle-exclamation text-lg"></i>
+          <span class="text-sm font-medium">{{ error() }}</span>
         </div>
       }
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre *</label>
-          <input type="text" [(ngModel)]="nombre" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Ej: Cruz Roja">
+      <div class="flex flex-col md:flex-row gap-8">
+        <div class="flex-1 space-y-5">
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Datos Generales</h3>
+          
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Nombre Organización *</label>
+            <input type="text" [(ngModel)]="nombre" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all" placeholder="Ej: Amavir Oblatas">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+              <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-1">CIF *</label>
+                  <input type="text" [(ngModel)]="cif" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all" placeholder="G-123...">
+              </div>
+              <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-1">Tipo</label>
+                  <select [(ngModel)]="tipo" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all">
+                      <option value="ONG">ONG</option>
+                      <option value="Residencia">Residencia</option>
+                      <option value="Asociación">Asociación</option>
+                  </select>
+              </div>
+          </div>
+
+          <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">Web</label>
+              <input type="text" [(ngModel)]="web" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all" placeholder="www.sitio.com">
+          </div>
         </div>
 
-        <div>
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">CIF *</label>
-           <input type="text" [(ngModel)]="cif" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="G-12345678">
-        </div>
+        <div class="flex-1 bg-gray-50 p-6 rounded-2xl border border-gray-100 h-fit">
+          <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-6 border-b border-gray-200 pb-2">Información de Contacto</h3>
+          
+          <div class="space-y-4">
+              <div>
+                  <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Coordinador</label>
+                  <input type="text" [(ngModel)]="contacto" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Nombre Apellido">
+              </div>
 
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
-          <select [(ngModel)]="tipo" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
-            <option value="ONG">ONG</option>
-            <option value="Residencia">Residencia</option>
-            <option value="Asociación">Asociación</option>
-            <option value="Educativo">Centro Educativo</option>
-          </select>
-        </div>
+              <div>
+                  <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Email *</label>
+                  <input type="email" [(ngModel)]="email" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="email@org.com">
+              </div>
 
-        <div>
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Sitio Web</label>
-           <input type="text" [(ngModel)]="web" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="www.ejemplo.org">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Persona de Contacto</label>
-          <input type="text" [(ngModel)]="contacto" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Nombre Apellido">
-        </div>
-
-        <div>
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono</label>
-           <input type="text" [(ngModel)]="telefono" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="+34 600...">
-        </div>
-        
-        <div class="md:col-span-2">
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email Corporativo *</label>
-           <input type="email" [(ngModel)]="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="contacto@organizacion.org">
-        </div>
-
-        <div class="md:col-span-2">
-           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección Física</label>
-           <input type="text" [(ngModel)]="direccion" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Calle Mayor, 12, Pamplona">
+              <div>
+                  <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Teléfono</label>
+                  <input type="text" [(ngModel)]="telefono" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="+34 600 000 000">
+                  <p class="text-[10px] text-gray-400 mt-1">Solo números y símbolo +</p>
+              </div>
+          </div>
         </div>
       </div>
-
     </div>
 
-    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-      <button (click)="cerrar()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
-      <button (click)="guardar()" class="px-6 py-2 bg-[#2563eb] text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-md transition-colors">Crear Organización</button>
+    <div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="cerrar()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 transition-all">Cancelar</button>
+      <button (click)="guardar()" class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-[#2563eb] hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-0.5">
+        Crear Organización
+      </button>
     </div>
 
   </div>

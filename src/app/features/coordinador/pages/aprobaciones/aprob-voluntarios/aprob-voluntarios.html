@@ -38,7 +38,7 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
           @for (sol of solicitudes(); track sol.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group">
+            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(sol)">
               
               <td class="px-6 py-4">
                 <span class="font-bold text-gray-900 text-sm">{{ sol.actividadInteres }}</span>
@@ -61,17 +61,17 @@
               </td>
 
               <td class="px-6 py-4">
-                <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs font-bold">En progreso</span>
+                <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs font-bold">En revisión</span>
               </td>
 
               <td class="px-6 py-4 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button (click)="aprobar(sol.id)" 
-                          class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors">
+                  <button (click)="aprobar(sol.id, $event)" 
+                          class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm">
                     <i class="fa-solid fa-check"></i>
                   </button>
-                  <button (click)="rechazar(sol.id)" 
-                          class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors">
+                  <button (click)="rechazar(sol.id, $event)" 
+                          class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm">
                     <i class="fa-solid fa-xmark"></i>
                   </button>
                 </div>
@@ -79,9 +79,25 @@
 
             </tr>
           }
+          
+          @if (solicitudes().length === 0) {
+            <tr>
+              <td colspan="5" class="px-6 py-10 text-center text-gray-400">
+                <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-100"></i>
+                <p>¡Todo al día! No hay voluntarios pendientes de aprobación.</p>
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
   </div>
+
+  @if (volParaVer()) {
+    <app-modal-detalle-voluntario 
+      [vol]="volParaVer()!" 
+      (close)="cerrarDetalle()">
+    </app-modal-detalle-voluntario>
+  }
 
 </div>

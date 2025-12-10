@@ -1,12 +1,15 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+// Ajusta la ruta de imports: subimos 4 niveles para llegar a services
 import { CoordinadorService, VoluntarioAdmin } from '../../../services/coordinador';
+// Importamos el componente del Modal de Detalle
+import { ModalDetalleVoluntario } from '../../../components/modal-detalle-voluntario/modal-detalle-voluntario';
 
 @Component({
   selector: 'app-voluntarios',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalDetalleVoluntario],
   templateUrl: './voluntarios.html',
 })
 export class Voluntarios implements OnInit {
@@ -15,6 +18,9 @@ export class Voluntarios implements OnInit {
 
   voluntarios = signal<VoluntarioAdmin[]>([]);
   busqueda = signal('');
+
+  // Signal para controlar qué voluntario se ve en el detalle (null = cerrado)
+  voluntarioSeleccionado = signal<VoluntarioAdmin | null>(null);
 
   // Filtro automático por nombre o curso
   voluntariosFiltrados = computed(() => {
@@ -31,7 +37,14 @@ export class Voluntarios implements OnInit {
     });
   }
 
-  verDetalle(id: number) {
-    console.log('Ver detalle voluntario', id);
+  // --- MÉTODOS PARA EL MODAL DE DETALLE ---
+
+  verDetalle(vol: VoluntarioAdmin) {
+    // Guardamos el voluntario entero para mostrarlo en el modal
+    this.voluntarioSeleccionado.set(vol);
+  }
+
+  cerrarDetalle() {
+    this.voluntarioSeleccionado.set(null);
   }
 }

@@ -1,6 +1,5 @@
 import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
-// Importamos la interfaz SidebarLink para que no de error de tipos
 import { Sidebar, SidebarLink } from '../../../../shared/components/sidebar/sidebar';
 
 @Component({
@@ -13,7 +12,6 @@ export class CoordinadorLayout {
   
   private router = inject(Router);
 
-  // MENÚ ESTRUCTURADO (Con desplegables)
   menuLinks = signal<SidebarLink[]>([
     { 
       label: 'Dashboard', 
@@ -31,8 +29,9 @@ export class CoordinadorLayout {
       label: 'Usuarios', 
       icon: 'fa-solid fa-users',
       children: [
-        { label: 'Organizaciones', route: '/coordinador/usuarios/organizaciones', icon: '' },
-        { label: 'Voluntarios', route: '/coordinador/usuarios/voluntarios', icon: '' }
+        // AQUI HE PUESTO LOS ICONOS
+        { label: 'Organizaciones', route: '/coordinador/usuarios/organizaciones', icon: 'fa-solid fa-building' },
+        { label: 'Voluntarios', route: '/coordinador/usuarios/voluntarios', icon: 'fa-solid fa-user-group' }
       ]
     },
     
@@ -41,9 +40,10 @@ export class CoordinadorLayout {
       label: 'Aprobaciones', 
       icon: 'fa-solid fa-circle-check', 
       children: [
-        { label: 'Organizaciones', route: '/coordinador/aprobaciones/organizaciones', icon: '' },
-        { label: 'Voluntarios', route: '/coordinador/aprobaciones/voluntarios', icon: '' },
-        { label: 'Actividades', route: '/coordinador/aprobaciones/actividades', icon: '' }
+        // AQUI HE PUESTO LOS ICONOS
+        { label: 'Organizaciones', route: '/coordinador/aprobaciones/organizaciones', icon: 'fa-solid fa-building-circle-check' },
+        { label: 'Voluntarios', route: '/coordinador/aprobaciones/voluntarios', icon: 'fa-solid fa-user-check' },
+        { label: 'Actividades', route: '/coordinador/aprobaciones/actividades', icon: 'fa-solid fa-calendar-check' }
       ]
     },
   ]);

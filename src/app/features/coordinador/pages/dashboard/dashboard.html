@@ -22,15 +22,15 @@
       <div class="flex items-end gap-3 mb-2">
         <span class="text-5xl font-bold">{{ stats().voluntariosActivos }}</span>
         <div class="bg-white/20 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-sm">
-          +{{ stats().incrementoMensual }}% este mes
+          Alumnos
         </div>
       </div>
     </div>
 
     <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Horas Totales</p>
+      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Organizaciones Colaboradoras</p>
       <div class="flex items-baseline gap-2">
-        <span class="text-4xl font-bold text-gray-900">{{ stats().horasTotales }}</span>
+        <span class="text-4xl font-bold text-gray-900">{{ stats().organizacionesActivas }}</span>
       </div>
       <div class="w-full h-1.5 bg-gray-100 rounded-full mt-4 overflow-hidden">
         <div class="h-full bg-purple-500 w-3/4 rounded-full"></div>
@@ -38,31 +38,54 @@
     </div>
 
     <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Voluntariados Completados</p>
+      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Actividades Totales</p>
       <div>
-        <span class="text-4xl font-bold text-gray-900">{{ stats().voluntariadosCompletados }}</span>
-        <p class="text-xs text-green-600 font-bold mt-1">Récord Mensual</p>
+        <span class="text-4xl font-bold text-gray-900">{{ stats().actividadesTotales }}</span>
+        <p class="text-xs text-green-600 font-bold mt-1">
+            {{ stats().horasTotales }} Horas estimadas
+        </p>
       </div>
     </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     
-    <div class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-      <h3 class="font-bold text-gray-900 mb-8">Actividad Semanal</h3>
+    <div class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden">
       
-      <div class="flex items-end justify-between h-48 px-4 gap-4">
-        @for (item of grafica(); track item.dia) {
-          <div class="flex flex-col items-center gap-3 w-full group cursor-pointer">
-            <div class="w-full max-w-[50px] bg-blue-50 rounded-t-xl relative overflow-hidden transition-all duration-300 group-hover:bg-blue-100" 
-                 style="height: 100%;">
-                 
-              <div class="absolute bottom-0 w-full bg-[#2563eb] rounded-t-xl transition-all duration-1000 ease-out group-hover:opacity-90"
-                   [style.height.%]="item.valor"></div>
+      <div class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 pointer-events-none"></div>
+
+      <div class="w-32 h-32 rounded-full bg-[#2563eb] flex items-center justify-center text-white text-5xl font-bold shadow-xl border-4 border-white flex-shrink-0 z-10">
+        {{ perfil().nombre.charAt(0) }}
+      </div>
+
+      <div class="flex-1 text-center md:text-left z-10 space-y-4 w-full">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">{{ perfil().nombre }}</h2>
+          <p class="text-blue-600 font-medium">{{ perfil().cargo }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm">
+              <i class="fa-solid fa-envelope"></i>
             </div>
-            <span class="text-xs font-bold text-gray-400 group-hover:text-blue-600">{{ item.dia }}</span>
+            <span>{{ perfil().email }}</span>
           </div>
-        }
+          <div class="flex items-center gap-3">
+             <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm">
+              <i class="fa-solid fa-phone"></i>
+            </div>
+            <span>{{ perfil().telefono }}</span>
+          </div>
+        </div>
+
+        <div class="flex justify-center md:justify-start">
+          <button (click)="abrirModalPerfil()" 
+                  class="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all shadow-md text-sm font-bold">
+            <i class="fa-solid fa-pen-to-square"></i>
+            Editar Perfil
+          </button>
+        </div>
       </div>
     </div>
 
@@ -91,4 +114,13 @@
     </div>
 
   </div>
+
+  @if (modalPerfilVisible()) {
+    <app-modal-editar-perfil 
+      [usuarioActual]="perfil()"
+      (close)="cerrarModalPerfil()"
+      (save)="actualizarPerfil($event)">
+    </app-modal-editar-perfil>
+  }
+
 </div>
