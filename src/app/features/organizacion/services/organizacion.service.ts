@@ -1,7 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { of, Observable, delay } from 'rxjs';
 
-// Interfaz para las actividades de la organización
 export interface ActividadOrg {
   id: number;
   nombre: string;
@@ -10,7 +9,6 @@ export interface ActividadOrg {
   estado: 'Activa' | 'Pendiente' | 'En Curso' | 'Finalizada';
   voluntariosInscritos: number;
   cupoMaximo: number;
-  // Campos extra para el detalle
   descripcion?: string;
   ubicacion?: string;
   duracionHoras?: number;
@@ -21,10 +19,10 @@ export interface ActividadOrg {
 })
 export class OrganizacionService {
 
-  // --- 1. PERFIL DE LA ORGANIZACIÓN (Estado Global) ---
+  // --- 1. PERFIL ---
   public perfil = signal({
     nombre: 'Amavir',
-    rol: 'Organizacion', // Para que el sidebar sepa qué icono poner si usas lógica de roles
+    rol: 'Organizacion',
     email: 'info@amavir.es',
     telefono: '+34 948 000 000',
     descripcion: 'Residencia de ancianos y centro de día.',
@@ -32,7 +30,7 @@ export class OrganizacionService {
     foto: null as string | null
   });
 
-  // --- 2. ACTIVIDADES DE LA ORGANIZACIÓN ---
+  // --- 2. ACTIVIDADES (Privada para escritura, Pública para lectura) ---
   private _actividades = signal<ActividadOrg[]>([
     { 
       id: 1, 
@@ -60,13 +58,12 @@ export class OrganizacionService {
     }
   ]);
 
+  // CAMBIO CLAVE: Exponemos la señal pública de solo lectura
+  public actividades = this._actividades.asReadonly();
+
   // --- 3. GETTERS Y CÁLCULOS ---
 
-  getActividades() {
-    return of(this._actividades()).pipe(delay(200)); // Simulamos carga
-  }
-
-  // Estadísticas simples para el Dashboard
+  // Estadísticas (se recalculan solas cuando _actividades cambia)
   public stats = computed(() => {
     const acts = this._actividades();
     return {
@@ -77,15 +74,23 @@ export class OrganizacionService {
     };
   });
 
-  // --- 4. ACCIONES ---
+  // --- 4. ACCIONES (Modifican la señal privada) ---
 
   actualizarPerfil(datos: any) {
     this.perfil.update(actual => ({ ...actual, ...datos }));
   }
 
   crearActividad(nueva: ActividadOrg) {
-    // Al crearla, una organización suele empezar en estado 'Pendiente' de validación por el coordinador
-    // Pero para el prototipo podemos ponerla directa o como quieras.
     this._actividades.update(lista => [nueva, ...lista]);
+  }
+
+  actualizarActividad(actividadActualizada: ActividadOrg) {
+    this._actividades.update(lista => 
+      lista.map(a => a.id === actividadActualizada.id ? actividadActualizada : a)
+    );
+  }
+
+  eliminarActividad(id: number) {
+    this._actividades.update(lista => lista.filter(a => a.id !== id));
   }
 }
