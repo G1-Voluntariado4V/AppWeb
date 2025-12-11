@@ -1,5 +1,6 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router'; // Necesario para routerLink
 // Importamos VoluntarioAdmin para el tipado del modal
 import { CoordinadorService, SolicitudVoluntario, VoluntarioAdmin } from '../../../services/coordinador';
 // Importamos el Modal de Detalle
@@ -8,7 +9,7 @@ import { ModalDetalleVoluntario } from '../../../components/modal-detalle-volunt
 @Component({
   selector: 'app-aprob-voluntarios',
   standalone: true,
-  imports: [CommonModule, ModalDetalleVoluntario],
+  imports: [CommonModule, RouterModule, ModalDetalleVoluntario], // Añadido RouterModule
   templateUrl: './aprob-voluntarios.html',
 })
 export class AprobVoluntarios implements OnInit {
@@ -17,6 +18,11 @@ export class AprobVoluntarios implements OnInit {
 
   solicitudes = signal<SolicitudVoluntario[]>([]);
   
+  // Signals para los contadores
+  countOrganizaciones = signal(0);
+  countVoluntarios = signal(0);
+  countActividades = signal(0);
+
   // Signal para controlar el modal de detalle (Tipo VoluntarioAdmin)
   volParaVer = signal<VoluntarioAdmin | null>(null);
 
@@ -25,8 +31,19 @@ export class AprobVoluntarios implements OnInit {
   }
 
   cargarDatos() {
+    // 1. Cargar solicitudes de Voluntarios (Principal)
     this.coordinadorService.getSolicitudesVoluntarios().subscribe(data => {
       this.solicitudes.set(data);
+      this.countVoluntarios.set(data.length);
+    });
+
+    // 2. Cargar contadores de las otras secciones
+    this.coordinadorService.getSolicitudesOrganizaciones().subscribe(data => {
+      this.countOrganizaciones.set(data.length);
+    });
+
+    this.coordinadorService.getSolicitudesActividades().subscribe(data => {
+      this.countActividades.set(data.length);
     });
   }
 
@@ -47,15 +64,13 @@ export class AprobVoluntarios implements OnInit {
 
   // --- LÓGICA DE DETALLE ---
   verDetalle(solicitud: SolicitudVoluntario) {
-    // Convertimos la Solicitud (datos escasos) en VoluntarioAdmin (datos completos)
-    // Rellenamos lo que falta con datos por defecto
     const volTemp: VoluntarioAdmin = {
       id: solicitud.id,
       nombre: solicitud.nombre,
       email: solicitud.email,
       curso: solicitud.curso,
-      actividadesCount: 0, // Nuevo voluntario empieza en 0
-      estado: 'Pendiente' // Estado visual para el modal
+      actividadesCount: 0, 
+      estado: 'Pendiente'
     };
     
     this.volParaVer.set(volTemp);

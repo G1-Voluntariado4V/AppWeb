@@ -1,5 +1,6 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router'; // Importante para que funcionen los enlaces
 // Importamos ActividadAdmin para el mapeo del modal
 import { CoordinadorService, SolicitudActividad, ActividadAdmin } from '../../../services/coordinador';
 // Importamos el Modal de Detalle
@@ -8,7 +9,7 @@ import { ModalDetalleActividad } from '../../../components/modal-detalle-activid
 @Component({
   selector: 'app-aprob-actividades',
   standalone: true,
-  imports: [CommonModule, ModalDetalleActividad],
+  imports: [CommonModule, RouterModule, ModalDetalleActividad], // Añadido RouterModule
   templateUrl: './aprob-actividades.html',
 })
 export class AprobActividades implements OnInit {
@@ -17,6 +18,10 @@ export class AprobActividades implements OnInit {
 
   solicitudes = signal<SolicitudActividad[]>([]);
   
+  // Signals para los contadores de los otros botones
+  countOrganizaciones = signal(0);
+  countVoluntarios = signal(0);
+
   // Signal para controlar el modal de detalle
   actParaVer = signal<ActividadAdmin | null>(null);
 
@@ -25,8 +30,18 @@ export class AprobActividades implements OnInit {
   }
 
   cargarDatos() {
+    // 1. Cargar las solicitudes de esta página (Actividades)
     this.coordinadorService.getSolicitudesActividades().subscribe(data => {
       this.solicitudes.set(data);
+    });
+
+    // 2. Cargar contadores de las otras secciones para los botones
+    this.coordinadorService.getSolicitudesOrganizaciones().subscribe(data => {
+      this.countOrganizaciones.set(data.length);
+    });
+
+    this.coordinadorService.getSolicitudesVoluntarios().subscribe(data => {
+      this.countVoluntarios.set(data.length);
     });
   }
 
@@ -47,16 +62,14 @@ export class AprobActividades implements OnInit {
 
   // --- LÓGICA DE DETALLE ---
   verDetalle(solicitud: SolicitudActividad) {
-    // Convertimos la Solicitud (datos escasos) en ActividadAdmin (datos completos)
-    // Rellenamos lo que falta con textos genéricos para visualización
     const actTemp: ActividadAdmin = {
       id: solicitud.id,
       nombre: solicitud.actividad,
       organizador: solicitud.organizacion,
       fecha: solicitud.fechaPropuesta,
-      tipo: 'Por definir', // Dato que falta en la solicitud
+      tipo: 'Por definir', 
       estado: 'Pending',
-      descripcion: 'Esta es una propuesta de actividad pendiente de validación. Revisa los datos antes de aprobar.',
+      descripcion: 'Esta es una propuesta de actividad pendiente de validación.',
       ubicacion: 'Ubicación por confirmar',
       duracionHoras: 0,
       cupoMaximo: 0

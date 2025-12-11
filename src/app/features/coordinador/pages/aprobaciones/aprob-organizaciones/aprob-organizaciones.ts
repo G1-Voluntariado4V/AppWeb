@@ -1,6 +1,7 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-// Importamos OrganizacionAdmin para el tipado del modal
+import { RouterModule } from '@angular/router'; // Necesario para routerLink
+// Importamos los tipos y el servicio
 import { CoordinadorService, SolicitudOrganizacion, OrganizacionAdmin } from '../../../services/coordinador';
 // Importamos el Modal de Detalle
 import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-organizacion/modal-detalle-organizacion';
@@ -8,7 +9,7 @@ import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-orga
 @Component({
   selector: 'app-aprob-organizaciones',
   standalone: true,
-  imports: [CommonModule, ModalDetalleOrganizacion],
+  imports: [CommonModule, RouterModule, ModalDetalleOrganizacion],
   templateUrl: './aprob-organizaciones.html',
 })
 export class AprobOrganizaciones implements OnInit {
@@ -17,7 +18,11 @@ export class AprobOrganizaciones implements OnInit {
 
   solicitudes = signal<SolicitudOrganizacion[]>([]);
   
-  // Signal para controlar el modal de detalle (Tipo OrganizacionAdmin)
+  // Signals para los contadores de los otros botones
+  countVoluntarios = signal(0);
+  countActividades = signal(0);
+  
+  // Signal para controlar el modal de detalle
   orgParaVer = signal<OrganizacionAdmin | null>(null);
 
   ngOnInit() {
@@ -25,12 +30,22 @@ export class AprobOrganizaciones implements OnInit {
   }
 
   cargarDatos() {
+    // 1. Cargar las solicitudes de esta página (Organizaciones)
     this.coordinadorService.getSolicitudesOrganizaciones().subscribe(data => {
       this.solicitudes.set(data);
     });
+
+    // 2. Cargar contadores de las otras secciones para los botones
+    this.coordinadorService.getSolicitudesVoluntarios().subscribe(data => {
+      this.countVoluntarios.set(data.length);
+    });
+
+    this.coordinadorService.getSolicitudesActividades().subscribe(data => {
+      this.countActividades.set(data.length);
+    });
   }
 
-  // Añadimos 'event' para detener la propagación del click y que no se abra el detalle
+  // Métodos de acción
   aprobar(id: number, event: Event) {
     event.stopPropagation();
     if(confirm('¿Aprobar esta organización? Pasará a ser un usuario activo.')) {
@@ -51,18 +66,16 @@ export class AprobOrganizaciones implements OnInit {
 
   // --- LÓGICA DE DETALLE ---
   verDetalle(solicitud: SolicitudOrganizacion) {
-    // Convertimos la Solicitud (datos escasos) en OrganizacionAdmin (datos completos)
-    // para que el modal pueda mostrarla. Rellenamos lo que falta.
     const orgTemp: OrganizacionAdmin = {
       id: solicitud.id,
       nombre: solicitud.organizacion,
       tipo: solicitud.tipo,
       email: solicitud.email,
-      contacto: 'Solicitante (Pendiente)', // Dato no disponible en la solicitud básica
+      contacto: 'Solicitante (Pendiente)',
       actividadesCount: 0,
-      estado: 'Pending',
-      descripcion: 'Solicitud de registro pendiente de aprobación. Revisar documentación adjunta si la hubiera.',
-      direccion: 'Dirección pendiente de verificar',
+      estado: 'Pending', // Usamos el estado en español si ya actualizaste el servicio, o 'Pending' si no.
+      descripcion: 'Solicitud de registro pendiente de aprobación.',
+      direccion: 'Dirección pendiente',
       sitioWeb: 'Pendiente',
       telefono: 'Pendiente'
     };

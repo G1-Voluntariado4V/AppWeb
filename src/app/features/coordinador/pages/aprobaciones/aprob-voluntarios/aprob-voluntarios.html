@@ -9,18 +9,24 @@
     <a routerLink="/coordinador/aprobaciones/organizaciones" 
        class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Organizaciones
-      <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">2</span>
+      <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
+        {{ countOrganizaciones() }}
+      </span>
     </a>
 
-    <button class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
+    <button class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2 cursor-default">
       Voluntarios
-      <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{{ solicitudes().length }}</span>
+      <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+        {{ countVoluntarios() }}
+      </span>
     </button>
 
     <a routerLink="/coordinador/aprobaciones/actividades" 
        class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Actividades
-      <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">3</span>
+      <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
+        {{ countActividades() }}
+      </span>
     </a>
   </div>
 
