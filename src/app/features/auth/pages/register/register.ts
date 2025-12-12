@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -93,11 +94,51 @@ export class Register {
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
-  onSubmit() {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
+
+  // ... (previous code)
+
+  async onSubmit() {
     if (this.registerForm.valid) {
-      console.log('Form Data:', this.registerForm.value);
-      console.log('Role:', this.selectedRole);
-      // Here you would call the service to register the user
+      const formValues = this.registerForm.value;
+      const firebaseUser = this.authService.getCurrentUser();
+
+      if (!firebaseUser) {
+        alert('Error: No se ha detectado autenticación con Google. Vuelve al login.');
+        this.router.navigate(['/auth/login']);
+        return;
+      }
+
+      const googleId = firebaseUser.providerData[0]?.uid || firebaseUser.uid;
+      const email = firebaseUser.email;
+
+      const payload = {
+        ...formValues,
+        role: this.selectedRole,
+        google_id: googleId,
+        email: email
+      };
+
+      try {
+        await this.authService.registerUser(payload);
+        alert('Registro completado exitosamente.');
+
+        // Redirigir según rol
+        if (this.selectedRole === 'volunteer') {
+          this.router.navigate(['/voluntario']);
+        } else {
+          // Organizaciones van a status (Pendiente)
+          this.router.navigate(['/auth/status'], { queryParams: { state: 'Pendiente' } });
+        }
+
+      } catch (error: any) {
+        console.error('Registration error:', error);
+        alert('Error al registrar: ' + (error.error?.mensaje || 'Inténtalo de nuevo.'));
+      }
+
     } else {
       this.registerForm.markAllAsTouched();
     }

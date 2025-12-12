@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AUTH_CHILD_ROUTES } from './features/auth/auth.routes';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   // 1. Ruta por defecto (Landing Page)
@@ -11,24 +12,27 @@ export const routes: Routes = [
   // 2. Ruta VOLUNTARIO
   {
     path: 'voluntario',
-    loadChildren: () => import('./features/voluntario/voluntario.routes').then(m => m.VOLUNTARIO_ROUTES)
+    loadChildren: () => import('./features/voluntario/voluntario.routes').then(m => m.VOLUNTARIO_ROUTES),
+    canActivate: [authGuard]
   },
 
   // 3. Ruta COORDINADOR
   {
     path: 'coordinador',
-    loadChildren: () => import('./features/coordinador/coordinador.routes').then(m => m.COORDINADOR_ROUTES)
+    loadChildren: () => import('./features/coordinador/coordinador.routes').then(m => m.COORDINADOR_ROUTES),
+    canActivate: [authGuard]
   },
 
   // 4. NUEVA RUTA: ORGANIZACION (Añadida aquí)
   {
     path: 'organizacion',
-    loadChildren: () => import('./features/organizacion/organizacion.routes').then(m => m.ORGANIZACION_ROUTES)
+    loadChildren: () => import('./features/organizacion/organizacion.routes').then(m => m.ORGANIZACION_ROUTES),
+    canActivate: [authGuard]
   },
 
   // 5. Ruta de Autenticación
   {
-    path: 'auth', 
+    path: 'auth',
     loadComponent: () => import('./features/auth/layout/auth-layout').then(m => m.AuthLayout),
     children: AUTH_CHILD_ROUTES
   },

@@ -1,16 +1,19 @@
 import { Injectable } from '@angular/core';
 import { signInWithPopup, User, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase.config';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    private userSubject = new BehaviorSubject<User | null>(null);
+    // undefined = loading, null = not logged in, User = logged in
+    private userSubject = new BehaviorSubject<User | null | undefined>(undefined);
     user$ = this.userSubject.asObservable();
 
-    constructor() {
+    constructor(private http: HttpClient) {
         // Listen to auth state changes
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -38,6 +41,17 @@ export class AuthService {
             console.error('Error logging out', error);
             throw error;
         }
+    }
+
+    async verifyUser(googleId: string, email: string): Promise<any> {
+        return firstValueFrom(this.http.post(`${environment.apiUrl}/auth/login`, {
+            google_id: googleId,
+            email: email
+        }));
+    }
+
+    async registerUser(userData: any): Promise<any> {
+        return firstValueFrom(this.http.post(`${environment.apiUrl}/auth/register`, userData));
     }
 
     getCurrentUser(): User | null {
