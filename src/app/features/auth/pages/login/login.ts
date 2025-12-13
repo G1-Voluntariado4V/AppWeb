@@ -41,7 +41,7 @@ export class Login {
             this.router.navigate(['/voluntario']);
           } else if (rol === 'Coordinador') {
             this.router.navigate(['/coordinador']);
-          } else if (rol === 'Organización' || rol === 'Organizador') {
+          } else if (rol === 'Organización' || rol === 'Organizador' || rol === 'Organizacion') {
             // Ajustar según lo que devuelva exactamente la API, en auth.routes decía 'organizacion'
             this.router.navigate(['/organizacion']);
           } else {
