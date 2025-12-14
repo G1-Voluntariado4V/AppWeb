@@ -13,7 +13,7 @@ export const routes: Routes = [
   {
     path: 'voluntario',
     loadChildren: () => import('./features/voluntario/voluntario.routes').then(m => m.VOLUNTARIO_ROUTES),
-    canActivate: [authGuard],
+    // canActivate: [authGuard], <--- DESACTIVADO
     data: { roles: ['Voluntario'] }
   },
 
@@ -21,7 +21,7 @@ export const routes: Routes = [
   {
     path: 'coordinador',
     loadChildren: () => import('./features/coordinador/coordinador.routes').then(m => m.COORDINADOR_ROUTES),
-    canActivate: [authGuard],
+    // canActivate: [authGuard], <--- DESACTIVADO
     data: { roles: ['Coordinador'] }
   },
 
@@ -29,7 +29,7 @@ export const routes: Routes = [
   {
     path: 'organizacion',
     loadChildren: () => import('./features/organizacion/organizacion.routes').then(m => m.ORGANIZACION_ROUTES),
-    canActivate: [authGuard],
+    // canActivate: [authGuard], <--- DESACTIVADO
     data: { roles: ['Organizacion', 'Organización', 'Organizador'] }
   },
 
