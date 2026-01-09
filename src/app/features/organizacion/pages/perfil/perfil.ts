@@ -11,7 +11,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './perfil.html',
 })
 export class Perfil {
-  
+
   private orgService = inject(OrganizacionService);
   private authService = inject(AuthService);
 
@@ -24,10 +24,10 @@ export class Perfil {
   telefono = signal('');
   descripcion = signal('');
   web = signal('');
-  
+
   // Foto - Computed para mostrar foto de Google con prioridad
   fotoPreview = signal<string | null>(null);
-  
+
   fotoMostrar = computed(() => {
     const googlePhoto = this.authService.getGooglePhoto();
     return googlePhoto || this.fotoPreview();

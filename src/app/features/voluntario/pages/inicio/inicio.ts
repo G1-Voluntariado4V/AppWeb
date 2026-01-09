@@ -27,7 +27,7 @@ export class Inicio implements OnInit {
   perfil = computed(() => {
     const datos = this.voluntarioService.perfilSignal();
     const googlePhoto = this.authService.getGooglePhoto();
-    
+
     return {
       ...datos,
       // PRIORIDAD: Google photo > Backend photo

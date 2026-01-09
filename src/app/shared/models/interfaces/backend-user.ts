@@ -5,18 +5,18 @@ export interface BackendUser {
   rol: string;
   estado: string;
   token?: string;
-  
+
   // Datos del perfil (vienen del backend según el rol)
   nombre?: string | null;
   apellidos?: string | null;
   telefono?: string | null;
   img_perfil?: string | null;
-  
+
   // Específicos de Voluntario
   dni?: string | null;
   curso?: string | null;
   carnet_conducir?: boolean;
-  
+
   // Específicos de Organización
   cif?: string | null;
   descripcion?: string | null;

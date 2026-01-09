@@ -164,7 +164,7 @@ export class VoluntarioService {
       if (firebaseUser?.email) {
         this.googleEmail = firebaseUser.email;
       }
-      
+
       this.perfilSignal.update(actual => ({
         ...actual,
         foto: this.googlePhoto ?? actual.foto,
@@ -234,7 +234,7 @@ export class VoluntarioService {
   // --- MÉTODOS DE PERFIL ---
 
   getPerfil(): Observable<PerfilVoluntario> {
-    return of(this.perfilSignal()); 
+    return of(this.perfilSignal());
   }
 
   updatePerfil(datos: PerfilVoluntario): Observable<boolean> {

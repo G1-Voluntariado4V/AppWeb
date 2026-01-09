@@ -35,7 +35,7 @@ export class VoluntarioLayout {
 
     // Formateamos el nombre (Ej: "Juan G." o nombre completo si hay)
     const nombreCompleto = [datos.nombre, datos.apellidos].filter(Boolean).join(' ').trim();
-    const nombreCorto = datos.apellidos 
+    const nombreCorto = datos.apellidos
       ? `${datos.nombre} ${datos.apellidos.charAt(0)}.`
       : datos.nombre;
 

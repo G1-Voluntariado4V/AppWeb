@@ -73,25 +73,25 @@ export class OrganizacionService {
 
   // --- 2. ACTIVIDADES (Privada para escritura, Pública para lectura) ---
   private _actividades = signal<ActividadOrg[]>([
-    { 
-      id: 1, 
-      nombre: 'Acompañamiento Amavir', 
-      tipo: 'Social', 
-      fecha: '2025-06-01', 
-      estado: 'Activa', 
-      voluntariosInscritos: 12, 
+    {
+      id: 1,
+      nombre: 'Acompañamiento Amavir',
+      tipo: 'Social',
+      fecha: '2025-06-01',
+      estado: 'Activa',
+      voluntariosInscritos: 12,
       cupoMaximo: 20,
       descripcion: 'Acompañamiento a mayores en paseos y actividades lúdicas.',
       ubicacion: 'Pamplona',
       duracionHoras: 2
     },
-    { 
-      id: 2, 
-      nombre: 'Taller de Lectura', 
-      tipo: 'Cultural', 
-      fecha: '2025-06-15', 
-      estado: 'Pendiente', 
-      voluntariosInscritos: 0, 
+    {
+      id: 2,
+      nombre: 'Taller de Lectura',
+      tipo: 'Cultural',
+      fecha: '2025-06-15',
+      estado: 'Pendiente',
+      voluntariosInscritos: 0,
       cupoMaximo: 5,
       descripcion: 'Lectura de clásicos en grupo.',
       ubicacion: 'Biblioteca Residencia',
@@ -122,7 +122,7 @@ export class OrganizacionService {
       if (firebaseUser?.email) {
         this.googleEmail = firebaseUser.email;
       }
-      
+
       this.perfil.update(actual => ({
         ...actual,
         foto: this.googlePhoto ?? actual.foto,
@@ -196,7 +196,7 @@ export class OrganizacionService {
   }
 
   actualizarActividad(actividadActualizada: ActividadOrg) {
-    this._actividades.update(lista => 
+    this._actividades.update(lista =>
       lista.map(a => a.id === actividadActualizada.id ? actividadActualizada : a)
     );
   }

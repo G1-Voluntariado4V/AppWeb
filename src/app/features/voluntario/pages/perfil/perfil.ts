@@ -1,6 +1,6 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { VoluntarioService } from '../../services/voluntario.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -11,7 +11,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './perfil.html',
 })
 export class Perfil implements OnInit {
-  
+
   private voluntarioService = inject(VoluntarioService);
   private authService = inject(AuthService);
 
@@ -32,7 +32,7 @@ export class Perfil implements OnInit {
   perfil = computed(() => {
     const datos = this.perfilEditable();
     const googlePhoto = this.authService.getGooglePhoto();
-    
+
     return {
       ...datos,
       // PRIORIDAD: Google photo > foto subida > Backend photo
@@ -43,14 +43,14 @@ export class Perfil implements OnInit {
   ngOnInit() {
     // Cargar datos del servicio
     const datos = this.voluntarioService.perfilSignal();
-    this.perfilEditable.set({ ...datos }); 
+    this.perfilEditable.set({ ...datos });
   }
 
   // --- FUNCIÓN PARA PROCESAR LA IMAGEN ---
   // Nota: La foto de Google siempre tendrá prioridad, esta solo se usa si no hay foto de Google
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
-    
+
     if (file) {
       if (!file.type.startsWith('image/')) {
         alert('Por favor, selecciona un archivo de imagen válido.');
@@ -58,7 +58,7 @@ export class Perfil implements OnInit {
       }
 
       const reader = new FileReader();
-      
+
       reader.onload = (e: any) => {
         const base64Image = e.target.result;
         this.perfilEditable.update(current => ({

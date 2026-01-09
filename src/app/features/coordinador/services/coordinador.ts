@@ -9,9 +9,9 @@ import { environment } from '../../../../environments/environment';
 // --- INTERFACES ---
 export interface DashboardStats {
   voluntariosActivos: number;
-  organizacionesActivas: number; 
+  organizacionesActivas: number;
   horasTotales: number;
-  actividadesTotales: number; 
+  actividadesTotales: number;
 }
 
 export interface ActividadSemanal { dia: string; valor: number; }
@@ -41,7 +41,7 @@ interface CoordinadorPerfilResponse {
 }
 
 export interface OrganizacionAdmin {
-  id: number; nombre: string; tipo: string; contacto: string; email: string; actividadesCount: number; estado: 'Active' | 'Pending' | 'Inactive'; logo?: string; 
+  id: number; nombre: string; tipo: string; contacto: string; email: string; actividadesCount: number; estado: 'Active' | 'Pending' | 'Inactive'; logo?: string;
   cif?: string; direccion?: string; sitioWeb?: string; descripcion?: string; telefono?: string;
 }
 
@@ -50,7 +50,7 @@ export interface VoluntarioAdmin {
 }
 
 export interface ActividadAdmin {
-  id: number; nombre: string; tipo: string; organizador: string; fecha: string; estado: 'Active' | 'Pending' | 'In Progress' | 'Finished'; 
+  id: number; nombre: string; tipo: string; organizador: string; fecha: string; estado: 'Active' | 'Pending' | 'In Progress' | 'Finished';
   descripcion?: string; duracionHoras?: number; cupoMaximo?: number; ubicacion?: string;
 }
 
@@ -157,7 +157,7 @@ export class CoordinadorService {
     { id: 1, organizacion: 'Banco Alimentos', email: 'banco@alimentos.org', fechaRegistro: '20 Nov 2025', tipo: 'ONG', estado: 'Pendiente' },
     { id: 2, organizacion: 'Nuevo Proyecto', email: 'info@proyecto.org', fechaRegistro: '19 Nov 2025', tipo: 'Asociación', estado: 'Pendiente' }
   ]);
-  
+
   private _solicitudesVol = signal<SolicitudVoluntario[]>([
     { id: 1, nombre: 'Lucía Fernández', email: 'lucia@cuatrovientos.org', curso: '2º DAM', actividadInteres: 'Taller de Smartphone', estado: 'Pendiente' },
     { id: 2, nombre: 'Marcos Alonso', email: 'marcos@cuatrovientos.org', curso: '1º SMR', actividadInteres: 'Paseo Saludable', estado: 'Pendiente' }
@@ -208,19 +208,19 @@ export class CoordinadorService {
 
   // --- 3. MÉTODOS DE LECTURA (Getters) ---
 
-  getDashboardStats() { return of(this.statsCalculated()).pipe(delay(200)); } 
+  getDashboardStats() { return of(this.statsCalculated()).pipe(delay(200)); }
   getAvisos() { return of(this.avisosCalculated()).pipe(delay(200)); }
-  
+
   getOrganizaciones() { return of(this._organizaciones()); }
   getVoluntarios() { return of(this._voluntarios()); }
   getActividadesAdmin() { return of(this._actividades()); }
-  
+
   getSolicitudesOrganizaciones() { return of(this._solicitudesOrg()); }
   getSolicitudesVoluntarios() { return of(this._solicitudesVol()); }
   getSolicitudesActividades() { return of(this._solicitudesAct()); }
-  
-  getActividadSemanal() { 
-    return of([{ dia: 'L', valor: 40 }, { dia: 'M', valor: 60 }, { dia: 'X', valor: 85 }, { dia: 'J', valor: 55 }, { dia: 'V', valor: 70 }]); 
+
+  getActividadSemanal() {
+    return of([{ dia: 'L', valor: 40 }, { dia: 'M', valor: 60 }, { dia: 'X', valor: 85 }, { dia: 'J', valor: 55 }, { dia: 'V', valor: 70 }]);
   }
 
   // --- 4. ACCIONES (Añadir y Aprobar) ---

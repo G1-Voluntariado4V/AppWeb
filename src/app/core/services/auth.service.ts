@@ -24,7 +24,7 @@ export class AuthService {
 
     // Signal reactivo para la foto de Google (persistida)
     private googlePhotoSignal = signal<string | null>(this.loadGooglePhotoFromStorage());
-    
+
     // Signal reactivo para el correo de Google (persistido)
     private googleEmailSignal = signal<string | null>(this.loadGoogleEmailFromStorage());
 
@@ -33,13 +33,13 @@ export class AuthService {
         const backendUser = this.backendUserSubject.getValue();
         const googlePhoto = this.googlePhotoSignal();
         const googleEmail = this.googleEmailSignal();
-        
+
         // Construir nombre completo desde backend o usar correo como fallback
         const nombreBackend = [backendUser?.nombre, backendUser?.apellidos]
             .filter(Boolean)
             .join(' ')
             .trim();
-        
+
         return {
             nombre: nombreBackend || googleEmail?.split('@')[0] || 'Usuario',
             rol: this.formatRol(backendUser?.rol),
@@ -53,17 +53,17 @@ export class AuthService {
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 this.userSubject.next(user);
-                
+
                 // Guardar foto de Google
                 if (user.photoURL) {
                     this.persistGooglePhoto(user.photoURL);
                 }
-                
+
                 // Guardar correo de Google
                 if (user.email) {
                     this.persistGoogleEmail(user.email);
                 }
-                
+
                 const googleId = user.providerData[0]?.uid || user.uid;
                 // Drop cached backend user if it belongs to a different Google account
                 const cached = this.backendUserSubject.getValue();

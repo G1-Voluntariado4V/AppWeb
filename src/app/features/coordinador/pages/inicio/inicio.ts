@@ -11,7 +11,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './inicio.html',
 })
 export class Inicio implements OnInit {
-  
+
   private coordinadorService = inject(CoordinadorService);
   private authService = inject(AuthService);
 
@@ -30,7 +30,7 @@ export class Inicio implements OnInit {
   perfil = computed(() => {
     const perfilBase = this.coordinadorService.perfilUsuario();
     const googlePhoto = this.authService.getGooglePhoto();
-    
+
     return {
       ...perfilBase,
       // PRIORIDAD: Google photo > Backend photo

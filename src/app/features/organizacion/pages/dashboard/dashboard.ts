@@ -11,7 +11,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
-  
+
   private orgService = inject(OrganizacionService);
   private authService = inject(AuthService);
 
@@ -19,7 +19,7 @@ export class Dashboard {
   perfil = computed(() => {
     const perfilBase = this.orgService.perfil();
     const googlePhoto = this.authService.getGooglePhoto();
-    
+
     return {
       ...perfilBase,
       // PRIORIDAD: Google photo > Backend photo
@@ -30,7 +30,7 @@ export class Dashboard {
   stats = this.orgService.stats;
 
   // Usamos la señal directa en vez del getter con observable
-  actividadesRecientes = this.orgService.actividades; 
-  
+  actividadesRecientes = this.orgService.actividades;
+
   fechaHoy = signal(new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
 }
