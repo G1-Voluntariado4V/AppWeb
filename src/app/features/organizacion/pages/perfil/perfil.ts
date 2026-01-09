@@ -1,7 +1,8 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrganizacionService } from '../../services/organizacion.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-perfil-org',
@@ -12,6 +13,7 @@ import { OrganizacionService } from '../../services/organizacion.service';
 export class Perfil {
   
   private orgService = inject(OrganizacionService);
+  private authService = inject(AuthService);
 
   // Leemos los datos actuales del servicio
   perfilActual = this.orgService.perfil;
@@ -23,13 +25,16 @@ export class Perfil {
   descripcion = signal('');
   web = signal('');
   
-  // Foto
+  // Foto - Computed para mostrar foto de Google con prioridad
   fotoPreview = signal<string | null>(null);
+  
+  fotoMostrar = computed(() => {
+    const googlePhoto = this.authService.getGooglePhoto();
+    return googlePhoto || this.fotoPreview();
+  });
 
   constructor() {
-    // Usamos un effect para cargar los datos cuando el servicio esté listo
-    // o simplemente en el constructor si ya están disponibles.
-    // Al ser signals, podemos leer el valor actual directamente.
+    // Cargar los datos actuales del perfil
     const datos = this.perfilActual();
     this.nombre.set(datos.nombre);
     this.email.set(datos.email);
@@ -39,7 +44,7 @@ export class Perfil {
     this.fotoPreview.set(datos.foto);
   }
 
-  // Selección de foto
+  // Selección de foto (solo se usa si no hay foto de Google)
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {

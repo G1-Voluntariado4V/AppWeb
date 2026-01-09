@@ -1,5 +1,9 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, delay, firstValueFrom } from 'rxjs';
+import { AuthService } from '../../../core/services/auth.service';
+import { BackendUser } from '../../../shared/models/interfaces/backend-user';
+import { environment } from '../../../../environments/environment';
 
 // --- INTERFACES ---
 export interface PerfilVoluntario {
@@ -11,7 +15,8 @@ export interface PerfilVoluntario {
   horasTotales: number;
   cochePropio: boolean;
   experiencia: string;
-  foto?: string; // La foto es opcional (string base64)
+  foto?: string; // Foto de Google (prioridad) o del backend
+  email?: string;
 }
 
 export interface Actividad {
@@ -29,23 +34,47 @@ export interface Actividad {
   ods?: { id: number; nombre: string; color: string }[];
 }
 
+// Interface para la respuesta del backend
+interface VoluntarioPerfilResponse {
+  nombre?: string | null;
+  apellidos?: string | null;
+  dni?: string | null;
+  telefono?: string | null;
+  fecha_nac?: string | null;
+  carnet_conducir?: boolean;
+  img_perfil?: string | null;
+  curso_actual?: { nombre?: string } | null;
+  usuario?: {
+    id_usuario?: number;
+    correo?: string;
+    estado_cuenta?: string;
+  } | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class VoluntarioService {
 
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  private googlePhoto: string | null = null;
+  private googleEmail: string | null = null;
+  private perfilCargadoPara: number | null = null;
+
   // 1. ESTADO GLOBAL REACTIVO (Signal)
-  // Al guardarlo aquí como signal, cualquier componente que lo lea se actualizará solo.
   perfilSignal = signal<PerfilVoluntario>({
-    nombre: 'Juan',
-    apellidos: 'García López',
-    dni: '12345678X',
-    telefono: '600123456',
-    curso: '1º DAM',
-    horasTotales: 24,
-    cochePropio: true,
-    experiencia: 'Voluntario en recogida de alimentos 2023.',
-    foto: '' // Empieza sin foto
+    nombre: '',
+    apellidos: '',
+    dni: '',
+    telefono: '',
+    curso: '',
+    horasTotales: 0,
+    cochePropio: false,
+    experiencia: '',
+    foto: '',
+    email: ''
   });
 
   private actividades: Actividad[] = [
@@ -115,7 +144,75 @@ export class VoluntarioService {
     }
   ];
 
-  constructor() { }
+  constructor() {
+    // Obtener foto y correo de Google
+    this.googlePhoto = this.authService.getGooglePhoto();
+    this.googleEmail = this.authService.getGoogleEmail();
+
+    // Escuchar cambios en el backend user
+    this.authService.backendUser$.subscribe((backendUser) => {
+      if (backendUser?.id_usuario && backendUser.rol?.toLowerCase().includes('voluntar')) {
+        this.cargarPerfilDesdeBackend(backendUser);
+      }
+    });
+
+    // Escuchar cambios en Firebase para la foto y correo
+    this.authService.user$.subscribe((firebaseUser) => {
+      if (firebaseUser?.photoURL) {
+        this.googlePhoto = firebaseUser.photoURL;
+      }
+      if (firebaseUser?.email) {
+        this.googleEmail = firebaseUser.email;
+      }
+      
+      this.perfilSignal.update(actual => ({
+        ...actual,
+        foto: this.googlePhoto ?? actual.foto,
+        email: this.googleEmail ?? actual.email
+      }));
+    });
+  }
+
+  private cargarPerfilDesdeBackend(backendUser: BackendUser) {
+    if (!backendUser.id_usuario) return;
+    if (this.perfilCargadoPara === backendUser.id_usuario) return;
+
+    this.perfilCargadoPara = backendUser.id_usuario;
+
+    this.http
+      .get<VoluntarioPerfilResponse>(`${environment.apiUrl}/voluntarios/${backendUser.id_usuario}`)
+      .subscribe({
+        next: (respuesta) => {
+          this.perfilSignal.set(this.mapearPerfil(respuesta, backendUser));
+        },
+        error: () => {
+          // Fallback: usar datos del backendUser directamente
+          this.perfilSignal.update(actual => ({
+            ...actual,
+            nombre: backendUser.nombre || actual.nombre,
+            apellidos: backendUser.apellidos || actual.apellidos,
+            email: this.googleEmail ?? backendUser.correo ?? actual.email,
+            telefono: backendUser.telefono || actual.telefono,
+            foto: this.googlePhoto ?? backendUser.img_perfil ?? actual.foto,
+          }));
+        },
+      });
+  }
+
+  private mapearPerfil(respuesta: VoluntarioPerfilResponse, backendUser: BackendUser): PerfilVoluntario {
+    return {
+      nombre: respuesta.nombre || backendUser.nombre || '',
+      apellidos: respuesta.apellidos || backendUser.apellidos || '',
+      dni: respuesta.dni || backendUser.dni || '',
+      telefono: respuesta.telefono || backendUser.telefono || '',
+      curso: respuesta.curso_actual?.nombre || backendUser.curso || '',
+      horasTotales: 0, // TODO: Obtener del backend cuando esté disponible
+      cochePropio: respuesta.carnet_conducir ?? backendUser.carnet_conducir ?? false,
+      experiencia: '', // TODO: Obtener del backend
+      foto: this.googlePhoto ?? respuesta.img_perfil ?? backendUser.img_perfil ?? '',
+      email: this.googleEmail ?? respuesta.usuario?.correo ?? backendUser.correo ?? ''  // Google tiene prioridad
+    };
+  }
 
   // --- MÉTODOS DE ACTIVIDADES ---
 
@@ -134,16 +231,14 @@ export class VoluntarioService {
     }
   }
 
-  // --- MÉTODOS DE PERFIL (ACTUALIZADOS) ---
+  // --- MÉTODOS DE PERFIL ---
 
-  // Devuelve un observable del valor actual (para que Perfil.ts cargue al inicio)
   getPerfil(): Observable<PerfilVoluntario> {
     return of(this.perfilSignal()); 
   }
 
-  // Actualiza la Signal globalmente
   updatePerfil(datos: PerfilVoluntario): Observable<boolean> {
-    this.perfilSignal.set(datos); // <--- AQUÍ OCURRE LA MAGIA. Se actualiza en todos lados.
+    this.perfilSignal.set(datos);
     console.log('Perfil actualizado globalmente:', datos);
     return of(true);
   }

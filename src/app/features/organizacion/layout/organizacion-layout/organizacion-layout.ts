@@ -1,7 +1,9 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, computed } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
-import { Sidebar, SidebarLink } from '../../../../shared/components/sidebar/sidebar';
+import { Sidebar } from '../../../../shared/components/sidebar/sidebar';
+import { SidebarItem } from '@app/shared/models/interfaces/sidebarItem';
 import { OrganizacionService } from '../../services/organizacion.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'organizacion-layout',
@@ -10,33 +12,45 @@ import { OrganizacionService } from '../../services/organizacion.service';
   templateUrl: './organizacion-layout.html',
 })
 export class OrganizacionLayout {
-  
-  private router = inject(Router);
-  public orgService = inject(OrganizacionService);
 
-  // Menú específico para Organización (Según tu captura Frame 32)
-  menuLinks = signal<SidebarLink[]>([
-    { 
-      label: 'Inicio', 
-      route: '/organizacion/dashboard', 
-      icon: 'fa-solid fa-house' 
+  private router = inject(Router);
+  private orgService = inject(OrganizacionService);
+  private authService = inject(AuthService);
+
+  // Menú específico para Organización
+  menuLinks = signal<SidebarItem[]>([
+    {
+      label: 'Inicio',
+      route: '/organizacion/dashboard',
+      icon: 'home'
     },
-    { 
-      label: 'Actividades', 
-      route: '/organizacion/actividades', 
-      icon: 'fa-solid fa-calendar-days' 
+    {
+      label: 'Actividades',
+      route: '/organizacion/actividades',
+      icon: 'event'
     },
-    { 
-      label: 'Mi Perfil', 
-      route: '/organizacion/perfil', 
-      icon: 'fa-solid fa-user' 
-    }
   ]);
 
-  // Conectamos con el perfil del servicio
-  usuario = this.orgService.perfil;
+  profileLink: SidebarItem = {
+    label: 'Mi perfil',
+    route: '/organizacion/perfil',
+    icon: 'account_circle',
+  };
+
+  // Conectamos con el perfil del servicio + foto de Google
+  usuario = computed(() => {
+    const perfil = this.orgService.perfil();
+    const googlePhoto = this.authService.getGooglePhoto();
+
+    return {
+      nombre: perfil.nombre || 'Organización',
+      rol: 'Organización',
+      // PRIORIDAD: Google photo > Backend photo
+      foto: googlePhoto || perfil.foto || null
+    };
+  });
 
   handleLogout() {
-    this.router.navigate(['/']);
+    this.authService.logout().finally(() => this.router.navigate(['/']));
   }
 }

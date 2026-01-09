@@ -1,17 +1,19 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CoordinadorService, DashboardStats, Aviso } from '../../services/coordinador';
 import { ModalEditarPerfil } from '../../components/modal-editar-perfil/modal-editar-perfil';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-inicio',
   standalone: true,
   imports: [CommonModule, ModalEditarPerfil],
-  templateUrl: './dashboard.html',
+  templateUrl: './inicio.html',
 })
-export class Dashboard implements OnInit {
+export class Inicio implements OnInit {
   
   private coordinadorService = inject(CoordinadorService);
+  private authService = inject(AuthService);
 
   stats = signal<DashboardStats>({
     voluntariosActivos: 0,
@@ -24,9 +26,17 @@ export class Dashboard implements OnInit {
   anioActual = signal('2025/2026');
 
   // --- DATOS DEL PERFIL ---
-  // CAMBIO IMPORTANTE: Enlazamos directamente con la señal del servicio.
-  // Así, cuando cambie aquí, cambiará en el Sidebar automáticamente.
-  perfil = this.coordinadorService.perfilUsuario;
+  // Computed que garantiza foto de Google con prioridad
+  perfil = computed(() => {
+    const perfilBase = this.coordinadorService.perfilUsuario();
+    const googlePhoto = this.authService.getGooglePhoto();
+    
+    return {
+      ...perfilBase,
+      // PRIORIDAD: Google photo > Backend photo
+      foto: googlePhoto || perfilBase.foto
+    };
+  });
 
   // Control del modal
   modalPerfilVisible = signal(false);
@@ -50,10 +60,7 @@ export class Dashboard implements OnInit {
   }
 
   actualizarPerfil(nuevosDatos: any) {
-    // CAMBIO IMPORTANTE: Llamamos al método del servicio para actualizar el estado global.
+    // Llamamos al método del servicio para actualizar el estado global
     this.coordinadorService.actualizarPerfilUsuario(nuevosDatos);
-    
-    // (Opcional) Un alert o notificación
-    // alert('Perfil actualizado correctamente');
   }
 }

@@ -1,0 +1,148 @@
+<div class="max-w-7xl h-full mx-auto space-y-6">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+      <h1 class="text-5xl font-bold text-gray-900">Resumen General</h1>
+      <p class="text-gray-500 text-lg ml-1">Estadísticas en tiempo real de la asociación.</p>
+    </div>
+
+    <div
+      class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium shadow-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors"
+    >
+      <i class="fa-regular fa-calendar"></i>
+      <span>{{ anioActual() }}</span>
+      <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div
+      class="bg-[#2563eb] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-blue-200"
+    >
+      <div
+        class="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"
+      ></div>
+      <p class="text-xs font-bold uppercase tracking-wider text-blue-100 mb-1">
+        Voluntarios Activos
+      </p>
+      <div class="flex items-end gap-3 mb-2">
+        <span class="text-5xl font-bold">{{ stats().voluntariosActivos }}</span>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between"
+    >
+      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">
+        Organizaciones Colaboradoras
+      </p>
+      <div class="flex items-baseline gap-2">
+        <span class="text-4xl font-bold text-gray-900">{{ stats().organizacionesActivas }}</span>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between"
+    >
+      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Actividades Totales</p>
+      <div>
+        <span class="text-4xl font-bold text-gray-900">{{ stats().actividadesTotales }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div
+      class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden"
+    >
+      <div
+        class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 pointer-events-none"
+      ></div>
+
+      <div
+        class="w-32 h-32 rounded-full flex-0 z-10 border-4 border-white shadow-xl overflow-hidden bg-gray-100"
+      >
+        @if (perfil().foto) {
+        <img [src]="perfil().foto" alt="Perfil" class="w-full h-full object-cover" />
+        } @else {
+        <div
+          class="w-full h-full bg-[#2563eb] flex items-center justify-center text-white text-5xl font-bold"
+        >
+          {{ perfil().nombre.charAt(0) }}
+        </div>
+        }
+      </div>
+
+      <div class="flex-1 text-center md:text-left z-10 space-y-4 w-full">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">{{ perfil().nombre }}</h2>
+          <p class="text-blue-600 font-medium">{{ perfil().cargo }}</p>
+        </div>
+
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl border border-gray-100"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"
+            >
+              <i class="fa-solid fa-envelope"></i>
+            </div>
+            <span>{{ perfil().email }}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"
+            >
+              <i class="fa-solid fa-phone"></i>
+            </div>
+            <span>{{ perfil().telefono }}</span>
+          </div>
+        </div>
+
+        <div class="flex justify-center md:justify-start">
+          <button
+            (click)="abrirModalPerfil()"
+            class="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all shadow-md text-sm font-bold"
+          >
+            <i class="fa-solid fa-pen-to-square"></i>
+            Editar Perfil
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <h3 class="font-bold text-gray-900 mb-6">Avisos</h3>
+
+      <div class="space-y-4">
+        @for (aviso of avisos(); track aviso.id) {
+        <div
+          class="p-4 rounded-2xl flex items-start gap-3 transition-colors"
+          [class.bg-orange-50]="aviso.tipo === 'alerta'"
+          [class.bg-blue-50]="aviso.tipo === 'info'"
+        >
+          @if (aviso.tipo === 'alerta') {
+          <i class="fa-solid fa-circle-exclamation text-orange-500 mt-1"></i>
+          } @else {
+          <i class="fa-solid fa-circle-info text-blue-500 mt-1"></i>
+          }
+
+          <div>
+            <p class="text-sm font-bold text-gray-900">{{ aviso.titulo }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">{{ aviso.subtitulo }}</p>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (modalPerfilVisible()) {
+  <app-modal-editar-perfil
+    [usuarioActual]="perfil()"
+    (close)="cerrarModalPerfil()"
+    (save)="actualizarPerfil($event)"
+  >
+  </app-modal-editar-perfil>
+  }
+</div>

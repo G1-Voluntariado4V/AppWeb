@@ -1,73 +1,100 @@
-<div class="w-64 bg-white h-full border-r border-gray-100 p-6 flex flex-col rounded-r-3xl shadow-sm">
-    
-    <div class="flex items-center gap-3 mb-10 pl-2">
-        <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
-            @if (userPhoto()) {
-                <img [src]="userPhoto()" alt="User" class="w-full h-full object-cover">
-            } @else {
+<div class="h-full">
+    <button type="button"
+        class="md:hidden fixed top-4 right-4 z-40 inline-flex items-center gap-2 bg-white text-gray-800 border border-gray-200 shadow-lg rounded-full px-3 py-2"
+        (click)="toggleSidebar()">
+        <span class="material-symbols-outlined text-xl">{{ isOpen() ? 'close' : 'menu' }}</span>
+        <!-- <span class="text-sm font-semibold">{{ isOpen() ? 'Cerrar' : 'Menú' }}</span> -->
+    </button>
+
+    <div
+        class="fixed md:static inset-y-0 left-0 w-[clamp(16rem,20vw,18rem)] bg-white h-screen md:h-full border-r border-gray-100 p-6 flex flex-col rounded-none md:rounded-3xl shadow-lg md:shadow-sm transition-transform duration-300 transform md:transform-none z-30"
+        [class.-translate-x-full]="isMobileView() && !isOpen()" [class.translate-x-0]="isMobileView() && isOpen()"
+        [class.is-open]="isOpen()">
+        <div class="flex items-center gap-3 mb-5 md:mb-7 pl-2">
+            <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+                @if (displayPhoto()) {
+                <img [src]="displayPhoto()" alt="User" class="w-full h-full object-cover">
+                } @else {
                 <div class="w-full h-full bg-[#2563eb] flex items-center justify-center text-white font-bold text-lg">
-                    {{ userName().charAt(0) }}
+                    {{ (displayName() || 'U').charAt(0) }}
                 </div>
-            }
+                }
+            </div>
+            <div class="overflow-hidden">
+                <h3 class="font-bold text-gray-900 text-sm truncate">{{ displayName() }}</h3>
+                <p class="text-xs text-gray-500 truncate">{{ displayRole() }}</p>
+            </div>
         </div>
-        <div class="overflow-hidden">
-            <h3 class="font-bold text-gray-900 text-sm truncate">{{ userName() }}</h3>
-            <p class="text-xs text-gray-500 truncate">{{ userRole() }}</p>
-        </div>
-    </div>
 
-    <nav class="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
-        
-        @for (link of links(); track link.label) {
-            
-            @if (!link.children) {
-                <a [routerLink]="link.route" 
-                   routerLinkActive="bg-blue-50 text-[#2563eb] font-bold shadow-sm"
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 group text-sm font-medium">
-                    <i [class]="link.icon + ' text-lg w-5 text-center'"></i>
-                    {{ link.label }}
-                </a>
-            } 
-            
-            @else {
-                <div class="space-y-1">
-                    <button (click)="toggleMenu(link.label)" 
-                            class="w-full flex items-center justify-between px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors font-bold text-sm mt-2 mb-1 group">
-                        <div class="flex items-center gap-3">
-                            <i [class]="link.icon + ' text-gray-500 text-lg w-5 text-center'"></i>
-                            <span>{{ link.label }}</span>
-                        </div>
-                        
-                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"
-                           [class.rotate-180]="isMenuOpen(link.label)"></i>
-                    </button>
+        <nav class="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
+            @for (link of links(); track link.label) {
+            @if (!link.children?.length) {
+            <a [routerLink]="link.route" routerLinkActive="bg-blue-50 text-[#2563eb] font-bold shadow-sm"
+                class="flex items-center gap-3 px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 group text-sm font-medium">
+                @if (link.icon) {
+                <span class="material-symbols-outlined text-lg w-5 text-center">{{ link.icon }}</span>
+                }
+                <span>{{ link.label }}</span>
+            </a>
+            } @else {
+            <div class="space-y-1">
+                <button (click)="toggleMenu(link.label)"
+                    class="w-full flex items-center justify-between px-4 text-gray-600 hover:text-gray-900 transition-colors font-bold text-sm mt-2 mb-1 group">
+                    <div class="flex items-center gap-3">
+                        @if (link.icon) {
+                        <span class="material-symbols-outlined text-lg w-5 text-center text-gray-500">{{ link.icon }}</span>
+                        }
+                        <span>{{ link.label }}</span>
+                    </div>
+                </button>
 
-                    @if (isMenuOpen(link.label)) {
-                        <div class="ml-[2.25rem] space-y-1 border-l-2 border-gray-100 pl-4 animate-in slide-in-from-top-1 duration-200">
-                            @for (child of link.children; track child.label) {
-                                <a [routerLink]="child.route"
-                                   routerLinkActive="text-[#2563eb] font-bold"
-                                   class="flex items-center gap-2 py-2 text-gray-500 hover:text-gray-900 transition-colors text-sm font-medium group">
-                                    
-                                    @if (child.icon) {
-                                        <i [class]="child.icon + ' text-xs w-4 text-center opacity-70 group-hover:opacity-100'"></i>
-                                    }
-                                    
-                                    {{ child.label }}
-                                </a>
-                            }
-                        </div>
+                @if (!isMenuOpen(link.label)) {
+                <div
+                    class="ml-8 space-y-1 border-l-2 border-gray-100 pl-4 animate-in slide-in-from-top-1 duration-200">
+                    @for (child of link.children; track child.label) {
+                    <a [routerLink]="child.route"
+                        routerLinkActive="text-[#2563eb] font-bold bg-blue-50 rounded-lg shadow-sm"
+                        class="flex items-center gap-5 py-2 px-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors text-sm font-medium group">
+                        @if (child.icon) {
+                        <span
+                            class="material-symbols-outlined text-xs w-4 text-center opacity-70 group-hover:opacity-100">{{
+                            child.icon }}</span>
+                        }
+                        <span>{{ child.label }}</span>
+                    </a>
                     }
                 </div>
+                }
+            </div>
             }
-        }
-    </nav>
+            }
+        </nav>
 
-    <div class="pt-4 mt-auto">
-        <button (click)="onLogout.emit()" 
+        <div class="mt-auto space-y-3 pt-4">
+            @if (profileLink()) {
+            <a [routerLink]="profileLink()?.route"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 font-medium text-sm w-full">
+                @if (profileLink()?.icon) {
+                <span class="material-symbols-outlined text-lg w-5 text-center">{{ profileLink()?.icon }}</span>
+                } @else {
+                <span class="material-symbols-outlined text-lg w-5 text-center">account_circle</span>
+                }
+                <div class="text-left">
+                    <div class="font-semibold text-gray-900">{{ profileLink()?.label || 'Mi perfil' }}</div>
+                    <div class="text-xs text-gray-500">Ver y editar tu perfil</div>
+                </div>
+            </a>
+            }
+
+            <button (click)="handleLogout()"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-gray-900 transition-all duration-200 font-medium text-sm w-full">
-            <i class="fa-solid fa-arrow-right-from-bracket text-lg w-5 text-center"></i>
-            Cerrar sesión
-        </button>
+                <span class="material-symbols-outlined text-lg w-5 text-center">logout</span>
+                Cerrar sesión
+            </button>
+        </div>
     </div>
+
+    @if (isMobileView() && isOpen()) {
+    <div class="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-20 md:hidden" (click)="closeSidebar()"></div>
+    }
 </div>

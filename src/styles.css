@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0");
 @import "tailwindcss";
-
 html {
   /* overflow-y: hidden; */
   overflow-x: hidden;

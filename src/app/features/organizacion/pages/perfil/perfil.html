@@ -10,8 +10,8 @@
     <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center text-center h-fit">
       
       <div class="relative group cursor-pointer w-32 h-32 mb-4" (click)="fileInput.click()">
-        @if (fotoPreview()) {
-            <img [src]="fotoPreview()" class="w-full h-full rounded-full object-cover border-4 border-gray-50 shadow-md">
+        @if (fotoMostrar()) {
+            <img [src]="fotoMostrar()" class="w-full h-full rounded-full object-cover border-4 border-gray-50 shadow-md">
         } @else {
             <div class="w-full h-full rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-5xl font-bold border-4 border-white shadow-md">
                 {{ nombre().charAt(0) }}

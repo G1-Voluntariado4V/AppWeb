@@ -1,7 +1,8 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; 
 import { VoluntarioService } from '../../services/voluntario.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-perfil',
@@ -12,8 +13,10 @@ import { VoluntarioService } from '../../services/voluntario.service';
 export class Perfil implements OnInit {
   
   private voluntarioService = inject(VoluntarioService);
+  private authService = inject(AuthService);
 
-  perfil = signal<any>({
+  // Signal local para edición
+  perfilEditable = signal<any>({
     nombre: '',
     apellidos: '',
     dni: '',
@@ -22,21 +25,33 @@ export class Perfil implements OnInit {
     horasTotales: 0,
     cochePropio: false,
     experiencia: '',
-    foto: '' // Aseguramos que existe la propiedad foto
+    foto: ''
+  });
+
+  // Computed para mostrar la foto de Google con prioridad
+  perfil = computed(() => {
+    const datos = this.perfilEditable();
+    const googlePhoto = this.authService.getGooglePhoto();
+    
+    return {
+      ...datos,
+      // PRIORIDAD: Google photo > foto subida > Backend photo
+      foto: googlePhoto || datos.foto
+    };
   });
 
   ngOnInit() {
-    this.voluntarioService.getPerfil().subscribe(datos => {
-      this.perfil.set({ ...datos }); 
-    });
+    // Cargar datos del servicio
+    const datos = this.voluntarioService.perfilSignal();
+    this.perfilEditable.set({ ...datos }); 
   }
 
-  // --- NUEVA FUNCIÓN PARA PROCESAR LA IMAGEN ---
+  // --- FUNCIÓN PARA PROCESAR LA IMAGEN ---
+  // Nota: La foto de Google siempre tendrá prioridad, esta solo se usa si no hay foto de Google
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
     
     if (file) {
-      // Validar que sea una imagen (opcional pero recomendable)
       if (!file.type.startsWith('image/')) {
         alert('Por favor, selecciona un archivo de imagen válido.');
         return;
@@ -44,26 +59,21 @@ export class Perfil implements OnInit {
 
       const reader = new FileReader();
       
-      // Cuando el lector termine de leer el archivo...
       reader.onload = (e: any) => {
         const base64Image = e.target.result;
-        
-        // Actualizamos la señal del perfil con la nueva imagen en Base64
-        // Esto hace que la vista se actualice automáticamente
-        this.perfil.update(current => ({
+        this.perfilEditable.update(current => ({
           ...current,
           foto: base64Image
         }));
       };
 
-      // Leemos el archivo como una URL de datos (Base64)
       reader.readAsDataURL(file);
     }
   }
 
   guardarCambios() {
-    // Al guardar, se enviará todo el objeto perfil, incluida la nueva foto en Base64
-    this.voluntarioService.updatePerfil(this.perfil()).subscribe(() => {
+    // Al guardar, se enviará todo el objeto perfil
+    this.voluntarioService.updatePerfil(this.perfilEditable()).subscribe(() => {
       alert('¡Perfil actualizado correctamente!');
     });
   }

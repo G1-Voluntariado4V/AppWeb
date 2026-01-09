@@ -1,11 +1,10 @@
 <div class="flex h-screen w-screen bg-[#F3F5F9] overflow-hidden p-4 gap-4">
 
   <div class="h-full flex-shrink-0">
-    <app-sidebar 
+    <app-sidebar
       [links]="menuLinks()"
-      [userName]="usuario().nombre"
-      [userRole]="usuario().rol" 
-      [userPhoto]="usuario().foto || ''"
+      [profileLink]="profileLink"
+      [user]="usuario()"
       (onLogout)="handleLogout()">
     </app-sidebar>
   </div>

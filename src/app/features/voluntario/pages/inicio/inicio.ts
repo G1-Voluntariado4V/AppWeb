@@ -2,6 +2,7 @@ import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { VoluntarioService } from '../../services/voluntario.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-inicio',
@@ -12,16 +13,27 @@ import { VoluntarioService } from '../../services/voluntario.service';
 export class Inicio implements OnInit {
 
   private voluntarioService = inject(VoluntarioService);
+  private authService = inject(AuthService);
 
   // 1. Cargamos el Perfil y las Actividades del servicio
-  perfil = signal<any>({});
   actividades = signal<any[]>([]);
 
   ngOnInit() {
-    // Obtenemos los datos reales al entrar
-    this.voluntarioService.getPerfil().subscribe(p => this.perfil.set(p));
+    // Obtenemos las actividades al entrar
     this.actividades.set(this.voluntarioService.getActividades());
   }
+
+  // Computed para el perfil con foto de Google
+  perfil = computed(() => {
+    const datos = this.voluntarioService.perfilSignal();
+    const googlePhoto = this.authService.getGooglePhoto();
+    
+    return {
+      ...datos,
+      // PRIORIDAD: Google photo > Backend photo
+      foto: googlePhoto || datos.foto
+    };
+  });
 
   // 2. Lógica Inteligente para el Banner (Nombre Usuario)
   usuario = computed(() => {
@@ -34,8 +46,11 @@ export class Inicio implements OnInit {
       mensaje = `Tu próxima actividad es: ${proxima.titulo} (${proxima.estado}).`;
     }
 
+    // Usar nombre de la BD
+    const nombreCompleto = [p.nombre, p.apellidos].filter(Boolean).join(' ').trim();
+
     return {
-      nombre: p.nombre || 'Voluntario',
+      nombre: nombreCompleto || p.nombre || 'Voluntario',
       mensaje: mensaje
     };
   });

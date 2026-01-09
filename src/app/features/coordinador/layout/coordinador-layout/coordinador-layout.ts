@@ -1,8 +1,9 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, computed } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
-import { Sidebar, SidebarLink } from '../../../../shared/components/sidebar/sidebar';
-// CORRECCIÓN: Ruta correcta (subir 2 niveles)
+import { Sidebar } from '../../../../shared/components/sidebar/sidebar';
 import { CoordinadorService } from '../../services/coordinador';
+import { SidebarItem } from '@app/shared/models/interfaces/sidebarItem';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'coordinador-layout',
@@ -11,49 +12,52 @@ import { CoordinadorService } from '../../services/coordinador';
   templateUrl: './coordinador-layout.html',
 })
 export class CoordinadorLayout {
-  
-  private router = inject(Router);
-  // Inyectamos el servicio
-  public coordinadorService = inject(CoordinadorService); // Poner 'public' ayuda en algunos casos de template
 
-  menuLinks = signal<SidebarLink[]>([
-    { 
-      label: 'Dashboard', 
-      route: '/coordinador/dashboard', 
-      icon: 'fa-solid fa-chart-pie' 
-    },
-    { 
-      label: 'Actividades', 
-      route: '/coordinador/actividades', 
-      icon: 'fa-regular fa-calendar' 
-    },
-    
-    // GRUPO USUARIOS
-    { 
-      label: 'Usuarios', 
-      icon: 'fa-solid fa-users',
-      children: [
-        { label: 'Organizaciones', route: '/coordinador/usuarios/organizaciones', icon: 'fa-solid fa-building' },
-        { label: 'Voluntarios', route: '/coordinador/usuarios/voluntarios', icon: 'fa-solid fa-user-group' }
+  menuLinks = signal<SidebarItem[]>([
+    { label: 'Inicio', route: '/coordinador/inicio', icon: 'home' },
+    { label: "Actividades", route: '/coordinador/actividades', icon: 'event' },
+    {
+      label: 'Usuarios', route: '/coordinador/usuarios', icon: 'group', children: [
+        { label: 'Voluntarios', route: '/coordinador/usuarios/voluntarios', icon: 'school' },
+        { label: 'Organizaciones', route: '/coordinador/usuarios/organizaciones', icon: 'business' },
       ]
     },
-    
-    // GRUPO APROBACIONES
-    { 
-      label: 'Aprobaciones', 
-      icon: 'fa-solid fa-circle-check', 
+    { label: 'Aprobaciones', route: '/coordinador/aprobaciones', icon: 'check_circle',
       children: [
-        { label: 'Organizaciones', route: '/coordinador/aprobaciones/organizaciones', icon: 'fa-solid fa-building-circle-check' },
-        { label: 'Voluntarios', route: '/coordinador/aprobaciones/voluntarios', icon: 'fa-solid fa-user-check' },
-        { label: 'Actividades', route: '/coordinador/aprobaciones/actividades', icon: 'fa-solid fa-calendar-check' }
+        { label: 'Voluntarios', route: '/coordinador/aprobaciones/voluntarios', icon: 'school' },
+        { label: 'Organizaciones', route: '/coordinador/aprobaciones/organizaciones', icon: 'business' },
+        { label: 'Actividades', route: '/coordinador/aprobaciones/actividades', icon: 'event' },
       ]
     },
+
   ]);
 
-  // Enlazamos al servicio
-  usuario = this.coordinadorService.perfilUsuario;
+  profileLink: SidebarItem = {
+    label: 'Mi perfil',
+    route: '/coordinador/perfil',
+    icon: 'account_circle',
+  };
+
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  public coordinadorService = inject(CoordinadorService);
+
+  // Computed para asegurar foto de Google tiene prioridad
+  usuario = computed(() => {
+    const perfil = this.coordinadorService.perfilUsuario();
+    const googlePhoto = this.authService.getGooglePhoto();
+
+    return {
+      nombre: perfil.nombre,
+      cargo: perfil.cargo,
+      email: perfil.email,
+      telefono: perfil.telefono,
+      // PRIORIDAD: Google photo > Backend photo
+      foto: googlePhoto || perfil.foto
+    };
+  });
 
   handleLogout() {
-    this.router.navigate(['/']);
+    this.authService.logout().finally(() => this.router.navigate(['/']));
   }
 }

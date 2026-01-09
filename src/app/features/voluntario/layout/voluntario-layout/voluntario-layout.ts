@@ -1,8 +1,9 @@
-import { Component, signal, inject, computed } from '@angular/core'; // 1. Añadimos computed
+import { Component, signal, inject, computed } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
-import { Sidebar, SidebarLink } from '../../../../shared/components/sidebar/sidebar';
-// 2. Importamos el servicio para escuchar los cambios de perfil
+import { Sidebar } from '../../../../shared/components/sidebar/sidebar';
+import { SidebarItem } from '@app/shared/models/interfaces/sidebarItem';
 import { VoluntarioService } from '../../services/voluntario.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'voluntario-layout',
@@ -11,33 +12,42 @@ import { VoluntarioService } from '../../services/voluntario.service';
   templateUrl: './voluntario-layout.html',
 })
 export class VoluntarioLayout {
-  
+
   private router = inject(Router);
-  // 3. Inyectamos el servicio
   private voluntarioService = inject(VoluntarioService);
-  
-  menuLinks = signal<SidebarLink[]>([
-    { label: 'Inicio', route: '/voluntario/inicio', icon: 'fa-solid fa-house' },
-    { label: 'Mi Perfil', route: '/voluntario/perfil', icon: 'fa-solid fa-user' },
-    { label: 'Historial', route: '/voluntario/historial', icon: 'fa-solid fa-clock-rotate-left' },
+  private authService = inject(AuthService);
+
+  menuLinks = signal<SidebarItem[]>([
+    { label: 'Inicio', route: '/voluntario/inicio', icon: 'home' },
+    { label: 'Historial', route: '/voluntario/historial', icon: 'history' },
   ]);
 
-  // 4. CAMBIO CLAVE: Usamos 'computed' para conectar con la señal global del servicio.
-  // Esto hace que el sidebar reaccione en tiempo real a los cambios de foto/nombre.
+  profileLink: SidebarItem = {
+    label: 'Mi perfil',
+    route: '/voluntario/perfil',
+    icon: 'account_circle',
+  };
+
+  // Conectamos con la señal global del servicio + foto de Google
   usuario = computed(() => {
     const datos = this.voluntarioService.perfilSignal();
-    
-    // Formateamos el nombre (Ej: "Juan G.")
-    const inicialApellido = datos.apellidos ? datos.apellidos.charAt(0) + '.' : '';
-    
+    const googlePhoto = this.authService.getGooglePhoto();
+
+    // Formateamos el nombre (Ej: "Juan G." o nombre completo si hay)
+    const nombreCompleto = [datos.nombre, datos.apellidos].filter(Boolean).join(' ').trim();
+    const nombreCorto = datos.apellidos 
+      ? `${datos.nombre} ${datos.apellidos.charAt(0)}.`
+      : datos.nombre;
+
     return {
-      nombre: `${datos.nombre} ${inicialApellido}`,
+      nombre: nombreCorto || nombreCompleto || 'Voluntario',
       rol: 'Voluntario',
-      foto: datos.foto || '' // Si hay foto nueva (base64), se pasa aquí
+      // PRIORIDAD: Google photo > Backend photo
+      foto: googlePhoto || datos.foto || ''
     };
   });
 
   handleLogout() {
-    this.router.navigate(['/']);
+    this.authService.logout().finally(() => this.router.navigate(['/']));
   }
 }

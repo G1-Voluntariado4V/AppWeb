@@ -1,5 +1,10 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { of, Observable, delay } from 'rxjs';
+
+import { BackendUser } from '../../../shared/models/interfaces/backend-user';
+import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 // --- INTERFACES ---
 export interface DashboardStats {
@@ -11,6 +16,29 @@ export interface DashboardStats {
 
 export interface ActividadSemanal { dia: string; valor: number; }
 export interface Aviso { id: number; titulo: string; subtitulo: string; tipo: 'alerta' | 'info'; }
+
+export interface PerfilCoordinadorUI {
+  nombre: string;
+  cargo: string;
+  email: string;
+  telefono: string | null;
+  foto: string | null;  // Foto de Google o del backend
+}
+
+interface CoordinadorPerfilResponse {
+  nombre?: string | null;
+  apellidos?: string | null;
+  telefono?: string | null;
+  img_perfil?: string | null;
+  usuario?: {
+    id_usuario?: number;
+    correo?: string;
+    estado_cuenta?: string;
+    rol?: { nombre?: string } | string | null;
+  } | null;
+  correo?: string | null;
+  rol?: string | null;
+}
 
 export interface OrganizacionAdmin {
   id: number; nombre: string; tipo: string; contacto: string; email: string; actividadesCount: number; estado: 'Active' | 'Pending' | 'Inactive'; logo?: string; 
@@ -36,22 +64,75 @@ export interface SolicitudActividad { id: number; actividad: string; organizacio
 export class CoordinadorService {
 
   // --- 1. ESTADO GLOBAL REACTIVO (SIGNALS) ---
-  
-  // *** AÑADIDO: PERFIL DE USUARIO GLOBAL ***
-  public perfilUsuario = signal({
-    nombre: 'Admin General',
-    cargo: 'Coordinador Principal',
-    email: 'admin@cuatrovientos.org',
-    telefono: '+34 600 123 456',
-    foto: null as string | null
-  });
+  private perfilPorDefecto: PerfilCoordinadorUI = {
+    nombre: 'Coordinador',
+    cargo: 'Coordinador',
+    email: '',
+    telefono: null,
+    foto: null,
+  };
 
-  // *** AÑADIDO: MÉTODO PARA ACTUALIZARLO ***
-  actualizarPerfilUsuario(datos: any) {
-    this.perfilUsuario.update(actual => ({
+  public perfilUsuario = signal<PerfilCoordinadorUI>({ ...this.perfilPorDefecto });
+
+  private backendUserCache: BackendUser | null = null;
+  private perfilCargadoPara: number | null = null;
+  private googlePhoto: string | null = null;
+  private googleEmail: string | null = null;
+
+  constructor(private http: HttpClient, private authService: AuthService) {
+    // Obtener foto y correo de Google al iniciar
+    this.googlePhoto = this.authService.getGooglePhoto();
+    this.googleEmail = this.authService.getGoogleEmail();
+
+    this.authService.backendUser$.subscribe((backendUser) => {
+      this.backendUserCache = backendUser;
+
+      if (backendUser?.id_usuario) {
+        this.cargarPerfilDesdeBackend(backendUser);
+        return;
+      }
+
+      if (!backendUser) {
+        this.resetPerfil();
+        this.perfilCargadoPara = null;
+      }
+    });
+
+    // Escuchar cambios en Firebase user para actualizar foto y correo de Google
+    this.authService.user$.subscribe((firebaseUser) => {
+      if (!firebaseUser) return;
+
+      // Actualizar foto de Google
+      if (firebaseUser.photoURL) {
+        this.googlePhoto = firebaseUser.photoURL;
+      }
+
+      // Actualizar correo de Google
+      if (firebaseUser.email) {
+        this.googleEmail = firebaseUser.email;
+      }
+
+      // Actualizar foto y correo de Google
+      this.perfilUsuario.update((actual) => ({
+        ...actual,
+        foto: this.googlePhoto ?? actual.foto,
+        email: this.googleEmail ?? actual.email,
+      }));
+    });
+  }
+
+  actualizarPerfilUsuario(datos: Partial<PerfilCoordinadorUI>) {
+    this.perfilUsuario.update((actual) => ({
       ...actual,
-      ...datos
+      ...datos,
     }));
+  }
+
+  sincronizarPerfil() {
+    const backendUser = this.backendUserCache ?? this.authService.getBackendUserSnapshot();
+    if (backendUser?.id_usuario) {
+      this.cargarPerfilDesdeBackend(backendUser);
+    }
   }
 
   // --- RESTO DE DATOS "VIVOS" DE TU APLICACIÓN ---
@@ -225,5 +306,60 @@ export class CoordinadorService {
   rechazarActividad(id: number): Observable<boolean> {
     this._solicitudesAct.update(l => l.filter(s => s.id !== id));
     return of(true);
+  }
+
+  private cargarPerfilDesdeBackend(backendUser: BackendUser) {
+    if (!backendUser.id_usuario) return;
+    if (this.perfilCargadoPara === backendUser.id_usuario) return;
+
+    this.perfilCargadoPara = backendUser.id_usuario;
+
+    this.http
+      .get<CoordinadorPerfilResponse>(`${environment.apiUrl}/coordinadores/${backendUser.id_usuario}`)
+      .subscribe({
+        next: (respuesta) => {
+          this.perfilUsuario.set(this.mapearPerfil(respuesta, backendUser));
+        },
+        error: () => {
+          this.perfilUsuario.update((actual) => ({
+            ...actual,
+            email: this.googleEmail ?? backendUser.correo ?? actual.email,
+            cargo: this.resolverCargo(backendUser.rol),
+          }));
+        },
+      });
+  }
+
+  private mapearPerfil(respuesta: CoordinadorPerfilResponse, backendUser: BackendUser): PerfilCoordinadorUI {
+    // PRIORIDAD NOMBRE: Backend > BackendUser nombre+apellidos > correo
+    const nombreCompleto = [respuesta.nombre, respuesta.apellidos].filter(Boolean).join(' ').trim();
+    const nombreBackendUser = [backendUser.nombre, backendUser.apellidos].filter(Boolean).join(' ').trim();
+
+    // PRIORIDAD CORREO: Google > Backend
+    const correoGoogle = this.googleEmail;
+    const correoBackend = respuesta.usuario?.correo ?? respuesta.correo ?? backendUser.correo;
+
+    // PRIORIDAD FOTO: Google > Backend img_perfil
+    const fotoGoogle = this.googlePhoto;
+    const fotoBackend = respuesta.img_perfil || backendUser.img_perfil;
+
+    return {
+      nombre: nombreCompleto || nombreBackendUser || correoGoogle?.split('@')[0] || this.perfilPorDefecto.nombre,
+      cargo: this.resolverCargo((respuesta.usuario as any)?.rol?.nombre || (respuesta.rol as string) || backendUser.rol),
+      email: correoGoogle ?? correoBackend ?? this.perfilPorDefecto.email,  // Google tiene prioridad
+      telefono: respuesta.telefono ?? backendUser.telefono ?? null,
+      foto: fotoGoogle ?? fotoBackend ?? null,  // Google tiene prioridad
+    };
+  }
+
+  private resolverCargo(valor?: string | null) {
+    if (!valor) return 'Coordinador';
+    const normalizado = valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if (normalizado.includes('coordin')) return 'Coordinador';
+    return valor;
+  }
+
+  private resetPerfil() {
+    this.perfilUsuario.set({ ...this.perfilPorDefecto });
   }
 }

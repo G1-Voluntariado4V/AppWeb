@@ -1,52 +1,101 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, HostListener, OnInit, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { SidebarItem } from '@app/shared/models/interfaces/sidebarItem';
 
-// 1. Modificamos la interfaz para admitir submenús (children)
-export interface SidebarLink {
-  label: string;
-  route?: string; // Ahora es opcional, porque un padre desplegable puede no tener ruta propia
-  icon: string;
-  children?: SidebarLink[]; // NUEVO: Lista de sub-enlaces
-}
+type SidebarUser = {
+  nombre?: string;
+  rol?: string | { nombre_rol?: string };
+  foto?: string | null;
+};
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
-  // Eliminamos el styleUrl si no tienes estilos específicos, o lo dejamos si existe.
 })
-export class Sidebar {
-  // Inputs
-  links = input.required<SidebarLink[]>();
-  userName = input.required<string>();
-  userRole = input.required<string>();
-  userPhoto = input<string>();
+export class Sidebar implements OnInit {
+  links = input.required<SidebarItem[]>();
+  user = input<SidebarUser | null>(null);
+  userName = input<string>(''); // Compatibilidad: se usa si no se pasa user
+  userRole = input<string | { nombre_rol?: string }>('');
+  userPhoto = input<string>('');
+  profileLink = input<SidebarItem | undefined>();
 
-  // Outputs
   onLogout = output<void>();
 
-  // 2. Control de menús abiertos
-  // Usamos un Set para guardar los nombres de los menús desplegados.
-  // Inicializamos con 'Usuarios' y 'Aprobaciones' para que salgan abiertos por defecto.
-  openMenus = signal<Set<string>>(new Set(['Usuarios', 'Aprobaciones']));
+  isOpen = signal<boolean>(true);
+  isMobileView = signal<boolean>(false);
+  private readonly mobileBreakpoint = 768;
+  private openMenus = signal<Set<string>>(new Set());
 
-  // Método para alternar (abrir/cerrar)
-  toggleMenu(label: string) {
-    this.openMenus.update(set => {
-      const newSet = new Set(set);
-      if (newSet.has(label)) {
-        newSet.delete(label); // Si está abierto, lo cierra
-      } else {
-        newSet.add(label); // Si está cerrado, lo abre
-      }
-      return newSet;
-    });
+  ngOnInit() {
+    this.syncViewportState();
   }
 
-  // Helper para saber si un menú está abierto en el HTML
-  isMenuOpen(label: string): boolean {
+  @HostListener('window:resize')
+  onWindowResize() {
+    this.syncViewportState();
+  }
+
+  trackByRoute = (_: number, item: SidebarItem) => item.route ?? item.label;
+
+  private currentUser() {
+    return this.user();
+  }
+
+  displayName() {
+    return this.currentUser()?.nombre || this.userName() || 'Usuario';
+  }
+
+  displayRole() {
+    const role = this.currentUser()?.rol ?? this.userRole();
+    return typeof role === 'string' ? role || 'Rol' : role?.nombre_rol || 'Rol';
+  }
+
+  displayPhoto() {
+    return this.currentUser()?.foto || this.userPhoto() || '';
+  }
+
+  handleLogout() {
+    this.onLogout.emit();
+  }
+
+  toggleMenu(label: string) {
+    const next = new Set(this.openMenus());
+    next.has(label) ? next.delete(label) : next.add(label);
+    this.openMenus.set(next);
+  }
+
+  isMenuOpen(label: string) {
     return this.openMenus().has(label);
+  }
+
+  toggleSidebar() {
+    if (this.isMobileView()) {
+      this.isOpen.update((open) => !open);
+    }
+  }
+
+  closeSidebar() {
+    if (this.isMobileView()) {
+      this.isOpen.set(false);
+    }
+  }
+
+  private syncViewportState() {
+    const mobile = window.innerWidth < this.mobileBreakpoint;
+    const wasMobile = this.isMobileView();
+
+    this.isMobileView.set(mobile);
+
+    if (mobile && !wasMobile) {
+      this.isOpen.set(false);
+    }
+
+    if (!mobile) {
+      this.isOpen.set(true);
+    }
   }
 }

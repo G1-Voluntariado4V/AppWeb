@@ -1,13 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { signInWithPopup, User, signOut, onAuthStateChanged } from 'firebase/auth';
 
 import { auth, googleProvider } from '../config/firebase.config';
 import { environment } from '../../../environments/environment';
-import { BackendUser } from '../../shared/models/interfaces/backend-user';
+import { BackendUser, UserProfile } from '../../shared/models/interfaces/backend-user';
 
 const BACKEND_USER_KEY = 'voluntariado_backend_user';
+const GOOGLE_PHOTO_KEY = 'voluntariado_google_photo';
+const GOOGLE_EMAIL_KEY = 'voluntariado_google_email';
 
 @Injectable({
     providedIn: 'root'
@@ -20,11 +22,48 @@ export class AuthService {
     private backendUserSubject = new BehaviorSubject<BackendUser | null>(this.loadBackendUserFromStorage());
     backendUser$ = this.backendUserSubject.asObservable();
 
+    // Signal reactivo para la foto de Google (persistida)
+    private googlePhotoSignal = signal<string | null>(this.loadGooglePhotoFromStorage());
+    
+    // Signal reactivo para el correo de Google (persistido)
+    private googleEmailSignal = signal<string | null>(this.loadGoogleEmailFromStorage());
+
+    // Computed: Perfil unificado para usar en toda la app
+    public userProfile = computed<UserProfile>(() => {
+        const backendUser = this.backendUserSubject.getValue();
+        const googlePhoto = this.googlePhotoSignal();
+        const googleEmail = this.googleEmailSignal();
+        
+        // Construir nombre completo desde backend o usar correo como fallback
+        const nombreBackend = [backendUser?.nombre, backendUser?.apellidos]
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+        
+        return {
+            nombre: nombreBackend || googleEmail?.split('@')[0] || 'Usuario',
+            rol: this.formatRol(backendUser?.rol),
+            foto: googlePhoto || backendUser?.img_perfil || null,
+            email: googleEmail || backendUser?.correo || undefined
+        };
+    });
+
     constructor(private http: HttpClient) {
         // Listen to auth state changes
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 this.userSubject.next(user);
+                
+                // Guardar foto de Google
+                if (user.photoURL) {
+                    this.persistGooglePhoto(user.photoURL);
+                }
+                
+                // Guardar correo de Google
+                if (user.email) {
+                    this.persistGoogleEmail(user.email);
+                }
+                
                 const googleId = user.providerData[0]?.uid || user.uid;
                 // Drop cached backend user if it belongs to a different Google account
                 const cached = this.backendUserSubject.getValue();
@@ -36,6 +75,26 @@ export class AuthService {
                 this.clearBackendUser();
             }
         });
+    }
+
+    // Getter para la foto de Google
+    getGooglePhoto(): string | null {
+        return this.googlePhotoSignal();
+    }
+
+    // Getter para el correo de Google
+    getGoogleEmail(): string | null {
+        return this.googleEmailSignal();
+    }
+
+    // Formato del rol para mostrar
+    private formatRol(rol?: string | null): string {
+        if (!rol) return 'Usuario';
+        const normalizado = rol.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        if (normalizado.includes('coordin')) return 'Coordinador';
+        if (normalizado.includes('voluntar')) return 'Voluntario';
+        if (normalizado.includes('organiz')) return 'Organización';
+        return rol;
     }
 
     async loginWithGoogle(): Promise<User> {
@@ -85,6 +144,8 @@ export class AuthService {
     clearBackendUser(): void {
         this.backendUserSubject.next(null);
         localStorage.removeItem(BACKEND_USER_KEY);
+        this.clearGooglePhoto();
+        this.clearGoogleEmail();
     }
 
     private persistBackendUser(user: BackendUser): void {
@@ -104,6 +165,45 @@ export class AuthService {
             console.warn('Unable to parse cached backend user', error);
             localStorage.removeItem(BACKEND_USER_KEY);
             return null;
+        }
+    }
+
+    // Métodos para la foto de Google
+    private persistGooglePhoto(photoUrl: string): void {
+        this.googlePhotoSignal.set(photoUrl);
+        localStorage.setItem(GOOGLE_PHOTO_KEY, photoUrl);
+    }
+
+    private loadGooglePhotoFromStorage(): string | null {
+        return localStorage.getItem(GOOGLE_PHOTO_KEY);
+    }
+
+    private clearGooglePhoto(): void {
+        this.googlePhotoSignal.set(null);
+        localStorage.removeItem(GOOGLE_PHOTO_KEY);
+    }
+
+    // Métodos para el correo de Google
+    private persistGoogleEmail(email: string): void {
+        this.googleEmailSignal.set(email);
+        localStorage.setItem(GOOGLE_EMAIL_KEY, email);
+    }
+
+    private loadGoogleEmailFromStorage(): string | null {
+        return localStorage.getItem(GOOGLE_EMAIL_KEY);
+    }
+
+    private clearGoogleEmail(): void {
+        this.googleEmailSignal.set(null);
+        localStorage.removeItem(GOOGLE_EMAIL_KEY);
+    }
+
+    // Actualizar datos del backend user (para cuando cambie el perfil)
+    updateBackendUserData(partialData: Partial<BackendUser>): void {
+        const current = this.backendUserSubject.getValue();
+        if (current) {
+            const updated = { ...current, ...partialData };
+            this.persistBackendUser(updated);
         }
     }
 }

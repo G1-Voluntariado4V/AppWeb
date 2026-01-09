@@ -1,15 +1,15 @@
 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity"
      (click)="cerrar()">
-  
+
   <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden h-[80vh] flex flex-col md:flex-row animate-in zoom-in-95 duration-200"
        (click)="$event.stopPropagation()">
-    
+
     <div class="w-full md:w-72 bg-gray-50 p-8 border-r border-gray-100 flex flex-col items-center text-center">
       <div class="w-28 h-28 rounded-full bg-[#8d6e63] text-4xl flex items-center justify-center text-white font-light mb-4 relative shadow-lg ring-4 ring-white">
         {{ vol().nombre.substring(0,2).toUpperCase() }}
         <div class="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-white rounded-full"></div>
       </div>
-      
+
       <h2 class="text-lg font-bold text-gray-900 leading-tight mb-1">{{ vol().nombre }}</h2>
       <p class="text-sm text-gray-500 mb-8 font-medium">{{ vol().curso }}</p>
 
@@ -20,7 +20,7 @@
     </div>
 
     <div class="flex-1 p-8 overflow-y-auto bg-white">
-      
+
       <div class="flex justify-between items-start mb-8 pb-4 border-b border-gray-100">
         <div>
           <h3 class="text-xl font-bold text-gray-900">Información personal</h3>
