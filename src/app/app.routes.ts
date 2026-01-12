@@ -13,39 +13,19 @@ export const routes: Routes = [
   {
     path: 'voluntario',
     loadChildren: () => import('./features/voluntario/voluntario.routes').then(m => m.VOLUNTARIO_ROUTES),
-<<<<<<< HEAD
-    // canActivate: [authGuard],
-    // data: { roles: ['Voluntario'] }
-=======
-    // canActivate: [authGuard], <--- DESACTIVADO
-    data: { roles: ['Voluntario'] }
->>>>>>> 3325b587541e244957e9d5679cc35bc13e3ce0df
   },
 
   // 3. Ruta COORDINADOR
   {
     path: 'coordinador',
     loadChildren: () => import('./features/coordinador/coordinador.routes').then(m => m.COORDINADOR_ROUTES),
-<<<<<<< HEAD
-    // canActivate: [authGuard],
-    // data: { roles: ['Coordinador'] }
-=======
-    // canActivate: [authGuard], <--- DESACTIVADO
-    data: { roles: ['Coordinador'] }
->>>>>>> 3325b587541e244957e9d5679cc35bc13e3ce0df
+
   },
 
   // 4. NUEVA RUTA: ORGANIZACION (Añadida aquí)
   {
     path: 'organizacion',
     loadChildren: () => import('./features/organizacion/organizacion.routes').then(m => m.ORGANIZACION_ROUTES),
-<<<<<<< HEAD
-    // canActivate: [authGuard],
-    // data: { roles: ['Organizacion', 'Organización'] }
-=======
-    // canActivate: [authGuard], <--- DESACTIVADO
-    data: { roles: ['Organizacion', 'Organización', 'Organizador'] }
->>>>>>> 3325b587541e244957e9d5679cc35bc13e3ce0df
   },
 
   // 5. Ruta de Autenticación
