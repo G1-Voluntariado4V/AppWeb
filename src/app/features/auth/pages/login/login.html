@@ -1,6 +1,5 @@
-
 <div class="min-h-screen w-full flex items-center justify-center bg-gray-50/50 p-4 sm:p-6 lg:p-8">
-    <a routerLink="/"
+  <a routerLink="/"
     class="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors duration-300 font-medium group w-fit">
     <div
       class="flex gap-4 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm group-hover:shadow-md transition-all border border-gray-200/50">
@@ -35,7 +34,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 0 01-3-3V7a3 0 013-3h7a3 0 013 3v1" />
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
           </div>
           <div>
@@ -48,7 +47,6 @@
 
     <!-- Right Side: Action Area (Card) -->
     <div class="order-2 w-full max-w-md mx-auto lg:mr-0">
-      @if (!user()) {
       <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden relative flex flex-col">
 
         <!-- Header of the Card -->
@@ -65,6 +63,17 @@
 
           <button (click)="loginWithGoogle()" [disabled]="loading()"
             class="w-full relative flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3.5 px-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed">
+
+            @if (loading()) {
+            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+            <span>Verificando...</span>
+            } @else {
             <div
               class="absolute inset-0 bg-gradient-to-r from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             </div>
@@ -83,12 +92,13 @@
                 fill="#EA4335" />
             </svg>
             <span class="relative z-10">Continuar con Google</span>
+            }
           </button>
 
           @if (errorMessage()) {
-            <div class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">
-              {{ errorMessage() }}
-            </div>
+          <div class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3 text-center">
+            {{ errorMessage() }}
+          </div>
           }
 
           <div class="text-center">
@@ -110,25 +120,6 @@
         </div>
 
       </div>
-      } @else {
-      <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden relative flex flex-col p-8">
-        <div class="flex flex-col items-center text-center mb-8">
-          <img [src]="user().photoURL" alt="Profile"
-            class="w-20 h-20 rounded-full mb-4 border-2 border-blue-500 shadow-md">
-          <h2 class="text-2xl font-bold text-gray-900">Hola, {{ user().displayName }}</h2>
-          <p class="text-gray-500">{{ user().email }}</p>
-        </div>
-
-        <div class="bg-gray-50 rounded-lg p-4 mb-6 overflow-auto max-h-60 text-left border border-gray-100">
-          <pre class="text-xs text-gray-700 whitespace-pre-wrap">{{ user() | json }}</pre>
-        </div>
-
-        <button (click)="logout()"
-          class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-3 px-4 rounded-xl transition-colors duration-300 border border-red-100">
-          Cerrar Sesión
-        </button>
-      </div>
-      }
     </div>
   </div>
 </div>

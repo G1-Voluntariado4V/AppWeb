@@ -1,71 +1,105 @@
 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden h-[80vh] flex flex-col">
-    
-    <div class="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative shrink-0">
-        <button (click)="cerrar()" class="absolute top-4 right-4 w-8 h-8 bg-black/20 text-white rounded-full flex items-center justify-center hover:bg-black/40 backdrop-blur-sm transition-colors">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-        <div class="absolute -bottom-8 left-8 w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-lg font-bold text-blue-600">
-            {{ act().nombre.charAt(0) }}
-        </div>
-    </div>
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden max-h-[85vh] flex flex-col">
 
-    <div class="pt-12 px-8 pb-8 overflow-y-auto">
-        
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900">{{ act().nombre }}</h2>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="text-sm font-bold text-blue-600">{{ act().organizador }}</span>
-                    <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-                    <span class="text-sm text-gray-500">{{ act().tipo }}</span>
+        <!-- Header con gradiente -->
+        <div class="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative shrink-0">
+            <button (click)="cerrar()"
+                class="absolute top-4 right-4 w-8 h-8 bg-black/20 text-white rounded-full flex items-center justify-center hover:bg-black/40 backdrop-blur-sm transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div
+                class="absolute -bottom-8 left-8 w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-lg font-bold text-blue-600">
+                {{ act().titulo.charAt(0) }}
+            </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="pt-12 px-8 pb-8 overflow-y-auto">
+
+            <!-- Título y estado -->
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">{{ act().titulo }}</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-sm font-bold text-blue-600">{{ act().organizacion }}</span>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                    [class]="getEstadoClase()">
+                    {{ act().estado }}
+                </span>
+            </div>
+
+            <!-- Info cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">FECHA</p>
+                    <p class="text-sm font-bold text-gray-900">
+                        <i class="fa-regular fa-calendar mr-2 text-blue-500"></i>{{ fechaFormateada() }}
+                    </p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">DURACIÓN</p>
+                    <p class="text-sm font-bold text-gray-900">
+                        <i class="fa-regular fa-clock mr-2 text-blue-500"></i>{{ act().duracion_horas || 'N/A' }} Horas
+                    </p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">CUPO</p>
+                    <p class="text-sm font-bold text-gray-900">
+                        <i class="fa-solid fa-users mr-2 text-blue-500"></i>{{ act().cupo_maximo || 'N/A' }} plazas
+                    </p>
                 </div>
             </div>
-            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">
-                {{ act().estado }}
-            </span>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p class="text-xs text-gray-400 font-bold uppercase mb-1">FECHA</p>
-                <p class="text-sm font-bold text-gray-900"><i class="fa-regular fa-calendar mr-2"></i>{{ act().fecha }}</p>
+            <!-- Ubicación -->
+            @if (act().ubicacion) {
+            <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <p class="text-xs text-blue-600 font-bold uppercase mb-1">UBICACIÓN</p>
+                <p class="text-sm font-bold text-gray-900">
+                    <i class="fa-solid fa-location-dot mr-2 text-blue-500"></i>{{ act().ubicacion }}
+                </p>
             </div>
-            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p class="text-xs text-gray-400 font-bold uppercase mb-1">DURACIÓN</p>
-                <p class="text-sm font-bold text-gray-900"><i class="fa-regular fa-clock mr-2"></i>{{ act().duracionHoras || 2 }} Horas</p>
-            </div>
-            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p class="text-xs text-gray-400 font-bold uppercase mb-1">UBICACIÓN</p>
-                <p class="text-sm font-bold text-gray-900"><i class="fa-solid fa-location-dot mr-2"></i>{{ act().ubicacion || 'Pamplona' }}</p>
-            </div>
-        </div>
+            }
 
-        <div class="mb-8">
-            <h3 class="font-bold text-gray-900 mb-2">Descripción</h3>
-            <p class="text-gray-600 text-sm leading-relaxed">
-                {{ act().descripcion || 'No hay descripción detallada disponible para esta actividad. Ponte en contacto con el organizador para más información.' }}
-            </p>
-        </div>
-
-        <div>
-            <h3 class="font-bold text-gray-900 mb-4 flex justify-between items-center">
-                Voluntarios Inscritos 
-                <span class="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500">2 / {{ act().cupoMaximo || 10 }}</span>
-            </h3>
-            <div class="space-y-2">
-                @for (p of participantes; track p.nombre) {
-                    <div class="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">{{ p.nombre.charAt(0) }}</div>
-                            <span class="text-sm font-medium text-gray-900">{{ p.nombre }}</span>
-                        </div>
-                        <span class="text-xs text-gray-500 bg-white border px-2 py-1 rounded">{{ p.curso }}</span>
-                    </div>
-                }
+            <!-- Descripción -->
+            <div class="mb-8">
+                <h3 class="font-bold text-gray-900 mb-2">Descripción</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    {{ act().descripcion || 'No hay descripción disponible para esta actividad.' }}
+                </p>
             </div>
-        </div>
 
+            <!-- ODS si existen -->
+            @if (act().ods && act().ods!.length > 0) {
+            <div class="mb-8">
+                <h3 class="font-bold text-gray-900 mb-3">Objetivos de Desarrollo Sostenible</h3>
+                <div class="flex flex-wrap gap-2">
+                    @for (ods of act().ods!; track ods.id) {
+                    <span
+                        class="px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100">
+                        ODS {{ ods.id }}: {{ ods.nombre }}
+                    </span>
+                    }
+                </div>
+            </div>
+            }
+
+            <!-- Tipos de voluntariado si existen -->
+            @if (act().tipos && act().tipos!.length > 0) {
+            <div>
+                <h3 class="font-bold text-gray-900 mb-3">Tipos de Voluntariado</h3>
+                <div class="flex flex-wrap gap-2">
+                    @for (tipo of act().tipos!; track tipo.id) {
+                    <span
+                        class="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-xs font-bold border border-purple-100">
+                        {{ tipo.nombreTipo }}
+                    </span>
+                    }
+                </div>
+            </div>
+            }
+
+        </div>
     </div>
-  </div>
 </div>

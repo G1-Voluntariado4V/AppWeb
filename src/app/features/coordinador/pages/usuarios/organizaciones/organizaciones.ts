@@ -1,38 +1,48 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-// Ajusta la ruta de imports según tu estructura de carpetas
 import { CoordinadorService, OrganizacionAdmin } from '../../../services/coordinador';
-// Importamos AMBOS modales
-import { ModalCrearOrganizacion } from '../../../components/modal-crear-organizacion/modal-crear-organizacion';
 import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-organizacion/modal-detalle-organizacion';
 
 @Component({
   selector: 'app-organizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalCrearOrganizacion, ModalDetalleOrganizacion],
+  imports: [CommonModule, FormsModule, ModalDetalleOrganizacion],
   templateUrl: './organizaciones.html',
 })
 export class Organizaciones implements OnInit {
-  
+
   private coordinadorService = inject(CoordinadorService);
 
   organizaciones = signal<OrganizacionAdmin[]>([]);
   busqueda = signal('');
-  
-  // Signal para controlar el modal de CREACIÓN
-  modalCrearVisible = signal(false);
-  
-  // Signal para el modal de DETALLE (guarda la org seleccionada o null)
+  cargando = signal(true);
+
+  // Filtros
+  filtroEstado = signal('Todos');
+  menuFiltroAbierto = signal(false);
+
+  // Menú de acciones por fila
+  menuAccionesAbiertoId = signal<number | null>(null);
+
+  // Estados disponibles
+  estadosDisponibles = ['Todos', 'Activa', 'Pendiente', 'Bloqueada', 'Rechazada'];
+
+  // Modal de detalle
   orgSeleccionada = signal<OrganizacionAdmin | null>(null);
 
-  // Filtro
+  // Filtrado
   organizacionesFiltradas = computed(() => {
     const term = this.busqueda().toLowerCase();
-    return this.organizaciones().filter(org => 
-      org.nombre.toLowerCase().includes(term) || 
-      org.contacto.toLowerCase().includes(term)
-    );
+    const estado = this.filtroEstado();
+
+    return this.organizaciones().filter(org => {
+      const matchTexto = org.nombre.toLowerCase().includes(term) ||
+        org.email.toLowerCase().includes(term) ||
+        (org.cif?.toLowerCase().includes(term) ?? false);
+      const matchEstado = estado === 'Todos' || org.estado === estado;
+      return matchTexto && matchEstado;
+    });
   });
 
   ngOnInit() {
@@ -40,53 +50,108 @@ export class Organizaciones implements OnInit {
   }
 
   cargarDatos() {
-    this.coordinadorService.getOrganizaciones().subscribe(data => {
-      this.organizaciones.set(data);
+    this.cargando.set(true);
+    this.coordinadorService.getOrganizaciones().subscribe({
+      next: (data) => {
+        this.organizaciones.set(data);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.cargando.set(false);
+      }
     });
   }
 
-  // --- MÉTODOS DEL MODAL CREAR ---
-  abrirModalCrear() { 
-    this.modalCrearVisible.set(true); 
-  }
-  
-  cerrarModalCrear() { 
-    this.modalCrearVisible.set(false); 
+  // Filtros
+  toggleFiltro() {
+    this.menuFiltroAbierto.update(v => !v);
   }
 
-  guardarNuevaOrganizacion(datos: any) {
-    const nuevaOrg: OrganizacionAdmin = {
-      id: Date.now(),
-      nombre: datos.nombre,
-      tipo: datos.tipo,
-      contacto: datos.contacto || 'Pendiente',
-      email: datos.email,
-      actividadesCount: 0,
-      estado: 'Active',
-      cif: datos.cif,
-      telefono: datos.telefono,
-      direccion: datos.direccion,
-      sitioWeb: datos.sitioWeb,
-      descripcion: 'Organización añadida manualmente.'
-    };
-    
-    this.coordinadorService.addOrganizacion(nuevaOrg);
-    this.cargarDatos(); // Recargar para verla en la tabla
-    alert('Organización creada.');
+  seleccionarFiltro(estado: string) {
+    this.filtroEstado.set(estado);
+    this.menuFiltroAbierto.set(false);
   }
 
-  // --- MÉTODOS DEL MODAL DETALLE (Ver Ficha) ---
+  // Menú de acciones
+  toggleMenuAcciones(id: number, event: Event) {
+    event.stopPropagation();
+    this.menuAccionesAbiertoId.update(currentId => currentId === id ? null : id);
+  }
+
+  cerrarMenuAcciones() {
+    this.menuAccionesAbiertoId.set(null);
+  }
+
+  // Acciones
+  activar(org: OrganizacionAdmin, event: Event) {
+    event.stopPropagation();
+    if (confirm(`¿Activar cuenta de ${org.nombre}?`)) {
+      this.coordinadorService.cambiarEstadoUsuario(org.id, 'organizaciones', 'Activa').subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.cerrarMenuAcciones();
+        },
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+      });
+    }
+  }
+
+  bloquear(org: OrganizacionAdmin, event: Event) {
+    event.stopPropagation();
+    if (confirm(`¿Bloquear cuenta de ${org.nombre}?`)) {
+      this.coordinadorService.bloquearUsuario(org.id, 'organizaciones').subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.cerrarMenuAcciones();
+        },
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+      });
+    }
+  }
+
+  rechazar(org: OrganizacionAdmin, event: Event) {
+    event.stopPropagation();
+    if (confirm(`¿Rechazar cuenta de ${org.nombre}?`)) {
+      this.coordinadorService.rechazarOrganizacion(org.id).subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.cerrarMenuAcciones();
+        },
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+      });
+    }
+  }
+
+  eliminar(org: OrganizacionAdmin, event: Event) {
+    event.stopPropagation();
+    if (confirm(`¿Eliminar permanentemente a ${org.nombre}? Esta acción no se puede deshacer.`)) {
+      this.coordinadorService.eliminarUsuario(org.id).subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.cerrarMenuAcciones();
+        },
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+      });
+    }
+  }
+
+  // Detalle
   verDetalle(org: OrganizacionAdmin) {
-    this.orgSeleccionada.set(org); 
+    this.orgSeleccionada.set(org);
   }
 
   cerrarDetalle() {
     this.orgSeleccionada.set(null);
   }
 
-  // Evita que el click en editar abra también el detalle
-  editar(id: number, event: Event) {
-    event.stopPropagation(); 
-    console.log('Editar organización', id);
+  // Helpers
+  getEstadoClase(estado: string): string {
+    const clases: Record<string, string> = {
+      'Activa': 'bg-green-50 text-green-600 border-green-100',
+      'Pendiente': 'bg-orange-50 text-orange-600 border-orange-100',
+      'Bloqueada': 'bg-red-50 text-red-600 border-red-100',
+      'Rechazada': 'bg-gray-100 text-gray-500 border-gray-200'
+    };
+    return clases[estado] || 'bg-gray-100 text-gray-500 border-gray-200';
   }
 }

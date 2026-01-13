@@ -5,24 +5,26 @@
     <p class="text-gray-500 text-sm">Revisa y aprueba estos voluntarios que desean colaborar.</p>
   </div>
 
+  <!-- Tabs -->
   <div class="flex gap-2">
-    <a routerLink="/coordinador/aprobaciones/organizaciones" 
-       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+    <a routerLink="/coordinador/aprobaciones/organizaciones"
+      class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Organizaciones
       <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
         {{ countOrganizaciones() }}
       </span>
     </a>
 
-    <button class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2 cursor-default">
+    <button
+      class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2 cursor-default">
       Voluntarios
       <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
         {{ countVoluntarios() }}
       </span>
     </button>
 
-    <a routerLink="/coordinador/aprobaciones/actividades" 
-       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+    <a routerLink="/coordinador/aprobaciones/actividades"
+      class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Actividades
       <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
         {{ countActividades() }}
@@ -30,80 +32,89 @@
     </a>
   </div>
 
+  <!-- Tabla -->
   <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    @if (cargando()) {
+    <div class="p-10 text-center text-gray-400">
+      <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+      <p>Cargando solicitudes...</p>
+    </div>
+    } @else {
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
         <thead class="bg-gray-50/50 border-b border-gray-100">
           <tr>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actividad Interés</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Voluntario</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Curso</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Email</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Decisión</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
-          @for (sol of solicitudes(); track sol.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(sol)">
-              
-              <td class="px-6 py-4">
-                <span class="font-bold text-gray-900 text-sm">{{ sol.actividadInteres }}</span>
-              </td>
+          @for (vol of solicitudes(); track vol.id) {
+          <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(vol)">
 
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                    <i class="fa-solid fa-user"></i>
-                  </div>
-                  <div>
-                    <p class="font-medium text-gray-900 text-sm">{{ sol.nombre }}</p>
-                    <p class="text-[10px] text-gray-400">{{ sol.email }}</p>
-                  </div>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                  <i class="fa-solid fa-user"></i>
                 </div>
-              </td>
-
-              <td class="px-6 py-4">
-                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">{{ sol.curso }}</span>
-              </td>
-
-              <td class="px-6 py-4">
-                <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs font-bold">En revisión</span>
-              </td>
-
-              <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-2">
-                  <button (click)="aprobar(sol.id, $event)" 
-                          class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm">
-                    <i class="fa-solid fa-check"></i>
-                  </button>
-                  <button (click)="rechazar(sol.id, $event)" 
-                          class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm">
-                    <i class="fa-solid fa-xmark"></i>
-                  </button>
+                <div>
+                  <p class="font-medium text-gray-900 text-sm">{{ vol.nombre }} {{ vol.apellidos }}</p>
+                  <p class="text-[10px] text-gray-400">DNI: {{ vol.dni || 'No disponible' }}</p>
                 </div>
-              </td>
+              </div>
+            </td>
 
-            </tr>
+            <td class="px-6 py-4">
+              <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">{{ vol.curso }}</span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-600">{{ vol.email }}</span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs font-bold">{{ vol.estado
+                }}</span>
+            </td>
+
+            <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button (click)="aprobar(vol.id, $event)"
+                  class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm"
+                  title="Aprobar">
+                  <i class="fa-solid fa-check"></i>
+                </button>
+                <button (click)="rechazar(vol.id, $event)"
+                  class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm"
+                  title="Rechazar">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </td>
+
+          </tr>
           }
-          
+
           @if (solicitudes().length === 0) {
-            <tr>
-              <td colspan="5" class="px-6 py-10 text-center text-gray-400">
-                <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-100"></i>
-                <p>¡Todo al día! No hay voluntarios pendientes de aprobación.</p>
-              </td>
-            </tr>
+          <tr>
+            <td colspan="5" class="px-6 py-10 text-center text-gray-400">
+              <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-200"></i>
+              <p>¡Todo al día! No hay voluntarios pendientes de aprobación.</p>
+            </td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
+    }
   </div>
 
   @if (volParaVer()) {
-    <app-modal-detalle-voluntario 
-      [vol]="volParaVer()!" 
-      (close)="cerrarDetalle()">
-    </app-modal-detalle-voluntario>
+  <app-modal-detalle-voluntario [vol]="volParaVer()!" (close)="cerrarDetalle()">
+  </app-modal-detalle-voluntario>
   }
 
 </div>

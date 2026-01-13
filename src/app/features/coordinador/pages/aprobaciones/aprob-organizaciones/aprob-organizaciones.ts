@@ -1,9 +1,7 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router'; // Necesario para routerLink
-// Importamos los tipos y el servicio
-import { CoordinadorService, SolicitudOrganizacion, OrganizacionAdmin } from '../../../services/coordinador';
-// Importamos el Modal de Detalle
+import { RouterModule } from '@angular/router';
+import { CoordinadorService, OrganizacionAdmin } from '../../../services/coordinador';
 import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-organizacion/modal-detalle-organizacion';
 
 @Component({
@@ -13,16 +11,17 @@ import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-orga
   templateUrl: './aprob-organizaciones.html',
 })
 export class AprobOrganizaciones implements OnInit {
-  
+
   private coordinadorService = inject(CoordinadorService);
 
-  solicitudes = signal<SolicitudOrganizacion[]>([]);
-  
-  // Signals para los contadores de los otros botones
+  solicitudes = signal<OrganizacionAdmin[]>([]);
+  cargando = signal(true);
+
+  // Contadores
   countVoluntarios = signal(0);
   countActividades = signal(0);
-  
-  // Signal para controlar el modal de detalle
+
+  // Modal de detalle
   orgParaVer = signal<OrganizacionAdmin | null>(null);
 
   ngOnInit() {
@@ -30,12 +29,20 @@ export class AprobOrganizaciones implements OnInit {
   }
 
   cargarDatos() {
-    // 1. Cargar las solicitudes de esta página (Organizaciones)
-    this.coordinadorService.getSolicitudesOrganizaciones().subscribe(data => {
-      this.solicitudes.set(data);
+    this.cargando.set(true);
+
+    // Cargar organizaciones pendientes
+    this.coordinadorService.getSolicitudesOrganizaciones().subscribe({
+      next: (data) => {
+        this.solicitudes.set(data);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.cargando.set(false);
+      }
     });
 
-    // 2. Cargar contadores de las otras secciones para los botones
+    // Cargar contadores de otras secciones
     this.coordinadorService.getSolicitudesVoluntarios().subscribe(data => {
       this.countVoluntarios.set(data.length);
     });
@@ -45,42 +52,28 @@ export class AprobOrganizaciones implements OnInit {
     });
   }
 
-  // Métodos de acción
   aprobar(id: number, event: Event) {
     event.stopPropagation();
-    if(confirm('¿Aprobar esta organización? Pasará a ser un usuario activo.')) {
-      this.coordinadorService.aprobarOrganizacion(id).subscribe(() => {
-        this.cargarDatos(); 
+    if (confirm('¿Aprobar esta organización? Pasará a ser un usuario activo.')) {
+      this.coordinadorService.aprobarOrganizacion(id).subscribe({
+        next: () => this.cargarDatos(),
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
 
   rechazar(id: number, event: Event) {
     event.stopPropagation();
-    if(confirm('¿Rechazar solicitud? Se eliminará permanentemente.')) {
-      this.coordinadorService.rechazarOrganizacion(id).subscribe(() => {
-        this.cargarDatos();
+    if (confirm('¿Rechazar solicitud?')) {
+      this.coordinadorService.rechazarOrganizacion(id).subscribe({
+        next: () => this.cargarDatos(),
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
 
-  // --- LÓGICA DE DETALLE ---
-  verDetalle(solicitud: SolicitudOrganizacion) {
-    const orgTemp: OrganizacionAdmin = {
-      id: solicitud.id,
-      nombre: solicitud.organizacion,
-      tipo: solicitud.tipo,
-      email: solicitud.email,
-      contacto: 'Solicitante (Pendiente)',
-      actividadesCount: 0,
-      estado: 'Pending', // Usamos el estado en español si ya actualizaste el servicio, o 'Pending' si no.
-      descripcion: 'Solicitud de registro pendiente de aprobación.',
-      direccion: 'Dirección pendiente',
-      sitioWeb: 'Pendiente',
-      telefono: 'Pendiente'
-    };
-    
-    this.orgParaVer.set(orgTemp);
+  verDetalle(org: OrganizacionAdmin) {
+    this.orgParaVer.set(org);
   }
 
   cerrarDetalle() {

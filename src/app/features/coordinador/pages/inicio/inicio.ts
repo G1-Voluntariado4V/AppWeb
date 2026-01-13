@@ -18,27 +18,17 @@ export class Inicio implements OnInit {
   stats = signal<DashboardStats>({
     voluntariosActivos: 0,
     organizacionesActivas: 0,
-    horasTotales: 0,
-    actividadesTotales: 0
+    actividadesTotales: 0,
+    usuariosPendientes: 0
   });
 
   avisos = signal<Aviso[]>([]);
-  anioActual = signal('2025/2026');
+  anioActual = signal(this.getAnioAcademico());
+  cargando = signal(true);
 
   // --- DATOS DEL PERFIL ---
-  // Computed que garantiza foto de Google con prioridad
-  perfil = computed(() => {
-    const perfilBase = this.coordinadorService.perfilUsuario();
-    const googlePhoto = this.authService.getGooglePhoto();
+  perfil = computed(() => this.coordinadorService.perfilUsuario());
 
-    return {
-      ...perfilBase,
-      // PRIORIDAD: Google photo > Backend photo
-      foto: googlePhoto || perfilBase.foto
-    };
-  });
-
-  // Control del modal
   modalPerfilVisible = signal(false);
 
   ngOnInit() {
@@ -46,7 +36,18 @@ export class Inicio implements OnInit {
   }
 
   cargarDatos() {
-    this.coordinadorService.getDashboardStats().subscribe(data => this.stats.set(data));
+    this.cargando.set(true);
+
+    this.coordinadorService.getDashboardStats().subscribe({
+      next: (data) => {
+        this.stats.set(data);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.cargando.set(false);
+      }
+    });
+
     this.coordinadorService.getAvisos().subscribe(data => this.avisos.set(data));
   }
 
@@ -60,7 +61,17 @@ export class Inicio implements OnInit {
   }
 
   actualizarPerfil(nuevosDatos: any) {
-    // Llamamos al método del servicio para actualizar el estado global
     this.coordinadorService.actualizarPerfilUsuario(nuevosDatos);
+  }
+
+  private getAnioAcademico(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    // Si estamos después de agosto, el año académico es year/year+1
+    if (month >= 8) {
+      return `${year}/${year + 1}`;
+    }
+    return `${year - 1}/${year}`;
   }
 }

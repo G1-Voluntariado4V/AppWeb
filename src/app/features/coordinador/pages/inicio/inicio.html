@@ -6,67 +6,90 @@
     </div>
 
     <div
-      class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium shadow-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors"
-    >
+      class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium shadow-sm flex items-center gap-2">
       <i class="fa-regular fa-calendar"></i>
       <span>{{ anioActual() }}</span>
-      <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div
-      class="bg-[#2563eb] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-blue-200"
-    >
-      <div
-        class="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"
-      ></div>
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Voluntarios Activos -->
+    <div class="bg-[#2563eb] rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-blue-200">
+      <div class="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
       <p class="text-xs font-bold uppercase tracking-wider text-blue-100 mb-1">
         Voluntarios Activos
       </p>
       <div class="flex items-end gap-3 mb-2">
+        @if (cargando()) {
+        <span class="text-5xl font-bold animate-pulse">...</span>
+        } @else {
         <span class="text-5xl font-bold">{{ stats().voluntariosActivos }}</span>
+        }
       </div>
+      <p class="text-xs text-blue-200">Alumnos registrados y activos</p>
     </div>
 
-    <div
-      class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between"
-    >
+    <!-- Organizaciones -->
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
       <p class="text-xs font-bold uppercase tracking-wider text-gray-400">
-        Organizaciones Colaboradoras
+        Organizaciones
       </p>
       <div class="flex items-baseline gap-2">
+        @if (cargando()) {
+        <span class="text-4xl font-bold text-gray-900 animate-pulse">...</span>
+        } @else {
         <span class="text-4xl font-bold text-gray-900">{{ stats().organizacionesActivas }}</span>
+        }
       </div>
+      <p class="text-xs text-gray-400 mt-1">Colaboradoras activas</p>
     </div>
 
-    <div
-      class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between"
-    >
-      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Actividades Totales</p>
+    <!-- Actividades Totales -->
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+      <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Actividades</p>
       <div>
+        @if (cargando()) {
+        <span class="text-4xl font-bold text-gray-900 animate-pulse">...</span>
+        } @else {
         <span class="text-4xl font-bold text-gray-900">{{ stats().actividadesTotales }}</span>
+        }
       </div>
+      <p class="text-xs text-gray-400 mt-1">Total publicadas</p>
+    </div>
+
+    <!-- Pendientes -->
+    <div
+      class="bg-gradient-to-br from-orange-500 to-amber-500 rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-orange-200">
+      <div class="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+      <p class="text-xs font-bold uppercase tracking-wider text-orange-100 mb-1">
+        Pendientes
+      </p>
+      <div class="flex items-end gap-3 mb-2">
+        @if (cargando()) {
+        <span class="text-5xl font-bold animate-pulse">...</span>
+        } @else {
+        <span class="text-5xl font-bold">{{ stats().usuariosPendientes }}</span>
+        }
+      </div>
+      <p class="text-xs text-orange-200">Usuarios por aprobar</p>
     </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Perfil Card -->
     <div
-      class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden"
-    >
+      class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden">
       <div
-        class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 pointer-events-none"
-      ></div>
+        class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 pointer-events-none">
+      </div>
 
-      <div
-        class="w-32 h-32 rounded-full flex-0 z-10 border-4 border-white shadow-xl overflow-hidden bg-gray-100"
-      >
+      <div class="w-32 h-32 rounded-full flex-0 z-10 border-4 border-white shadow-xl overflow-hidden bg-gray-100">
         @if (perfil().foto) {
-        <img [src]="perfil().foto" alt="Perfil" class="w-full h-full object-cover" />
+        <img [src]="perfil().foto" (error)="actualizarPerfil({foto: null})" alt="Perfil"
+          class="w-full h-full object-cover" />
         } @else {
-        <div
-          class="w-full h-full bg-[#2563eb] flex items-center justify-center text-white text-5xl font-bold"
-        >
+        <div class="w-full h-full bg-[#2563eb] flex items-center justify-center text-white text-5xl font-bold">
           {{ perfil().nombre.charAt(0) }}
         </div>
         }
@@ -79,31 +102,24 @@
         </div>
 
         <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl border border-gray-100"
-        >
+          class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl border border-gray-100">
           <div class="flex items-center gap-3">
-            <div
-              class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"
-            >
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm">
               <i class="fa-solid fa-envelope"></i>
             </div>
-            <span>{{ perfil().email }}</span>
+            <span class="truncate">{{ perfil().email }}</span>
           </div>
           <div class="flex items-center gap-3">
-            <div
-              class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm"
-            >
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gray-400 shadow-sm">
               <i class="fa-solid fa-phone"></i>
             </div>
-            <span>{{ perfil().telefono }}</span>
+            <span>{{ perfil().telefono || 'Sin teléfono' }}</span>
           </div>
         </div>
 
         <div class="flex justify-center md:justify-start">
-          <button
-            (click)="abrirModalPerfil()"
-            class="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all shadow-md text-sm font-bold"
-          >
+          <button (click)="abrirModalPerfil()"
+            class="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all shadow-md text-sm font-bold">
             <i class="fa-solid fa-pen-to-square"></i>
             Editar Perfil
           </button>
@@ -111,16 +127,14 @@
       </div>
     </div>
 
+    <!-- Avisos -->
     <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
       <h3 class="font-bold text-gray-900 mb-6">Avisos</h3>
 
       <div class="space-y-4">
         @for (aviso of avisos(); track aviso.id) {
-        <div
-          class="p-4 rounded-2xl flex items-start gap-3 transition-colors"
-          [class.bg-orange-50]="aviso.tipo === 'alerta'"
-          [class.bg-blue-50]="aviso.tipo === 'info'"
-        >
+        <div class="p-4 rounded-2xl flex items-start gap-3 transition-colors"
+          [class.bg-orange-50]="aviso.tipo === 'alerta'" [class.bg-blue-50]="aviso.tipo === 'info'">
           @if (aviso.tipo === 'alerta') {
           <i class="fa-solid fa-circle-exclamation text-orange-500 mt-1"></i>
           } @else {
@@ -138,11 +152,7 @@
   </div>
 
   @if (modalPerfilVisible()) {
-  <app-modal-editar-perfil
-    [usuarioActual]="perfil()"
-    (close)="cerrarModalPerfil()"
-    (save)="actualizarPerfil($event)"
-  >
+  <app-modal-editar-perfil [usuarioActual]="perfil()" (close)="cerrarModalPerfil()" (save)="actualizarPerfil($event)">
   </app-modal-editar-perfil>
   }
 </div>

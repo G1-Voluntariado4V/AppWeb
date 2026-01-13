@@ -3,28 +3,57 @@
   <div class="flex flex-col md:flex-row justify-between items-end gap-4">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">Organizaciones</h1>
-      <p class="text-gray-500 text-sm">Gestiona las organizaciones colaboradoras.</p>
+      <p class="text-gray-500 text-sm">Gestiona las organizaciones colaboradoras registradas.</p>
     </div>
-    
-    <button (click)="abrirModalCrear()" 
-            class="bg-[#2563eb] hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2">
-      <i class="fa-solid fa-plus"></i> Nueva organización
-    </button>
   </div>
 
-  <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
-    
-    <div class="relative w-full"> <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-      <input type="text" 
-             [(ngModel)]="busqueda"
-             placeholder="Buscar organización..." 
-             class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
+  <!-- Filtros -->
+  <div
+    class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center relative z-20">
+
+    <div class="relative w-full md:w-96">
+      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por nombre, email o CIF..."
+        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
     </div>
 
+    <div class="relative">
+      <button (click)="toggleFiltro()"
+        class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors min-w-[160px] justify-between">
+        <span>
+          @if(filtroEstado() === 'Todos') { Estado: Todos }
+          @else { Estado: {{ filtroEstado() }} }
+        </span>
+        <i class="fa-solid fa-chevron-down text-xs transition-transform" [class.rotate-180]="menuFiltroAbierto()"></i>
+      </button>
+
+      @if (menuFiltroAbierto()) {
+      <div class="fixed inset-0 z-10" (click)="toggleFiltro()"></div>
+
+      <div
+        class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in slide-in-from-top-2">
+        @for (estado of estadosDisponibles; track estado) {
+        <button (click)="seleccionarFiltro(estado)"
+          class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex justify-between items-center"
+          [class.font-bold]="filtroEstado() === estado" [class.text-blue-600]="filtroEstado() === estado">
+          {{ estado }}
+          @if(filtroEstado() === estado) { <i class="fa-solid fa-check text-blue-600"></i> }
+        </button>
+        }
+      </div>
+      }
+    </div>
   </div>
 
-  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="overflow-x-auto">
+  <!-- Tabla -->
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 relative z-10">
+    @if (cargando()) {
+    <div class="p-10 text-center text-gray-400">
+      <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+      <p>Cargando organizaciones...</p>
+    </div>
+    } @else {
+    <div class="overflow-x-auto rounded-3xl">
       <table class="w-full text-left border-collapse">
         <thead class="bg-gray-50/50 border-b border-gray-100">
           <tr>
@@ -37,74 +66,107 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
           @for (org of organizacionesFiltradas(); track org.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(org)">
-              
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm"
-                       [class.bg-purple-100]="org.id % 2 === 0" [class.text-purple-600]="org.id % 2 === 0"
-                       [class.bg-orange-100]="org.id % 2 !== 0" [class.text-orange-600]="org.id % 2 !== 0">
-                    {{ org.nombre.substring(0,2).toUpperCase() }}
-                  </div>
-                  <div>
-                    <p class="font-bold text-gray-900 text-sm">{{ org.nombre }}</p>
-                    <p class="text-xs text-gray-400">{{ org.tipo }}</p>
-                  </div>
+          <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer relative" (click)="verDetalle(org)">
+
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm"
+                  [class.bg-purple-100]="org.id % 2 === 0" [class.text-purple-600]="org.id % 2 === 0"
+                  [class.bg-orange-100]="org.id % 2 !== 0" [class.text-orange-600]="org.id % 2 !== 0">
+                  {{ org.nombre.substring(0,2).toUpperCase() }}
                 </div>
-              </td>
+                <div>
+                  <p class="font-bold text-gray-900 text-sm">{{ org.nombre }}</p>
+                  <p class="text-xs text-gray-400">{{ org.cif || 'Sin CIF' }}</p>
+                </div>
+              </div>
+            </td>
 
-              <td class="px-6 py-4">
-                <p class="text-sm font-medium text-gray-900">{{ org.contacto }}</p>
-                <p class="text-xs text-gray-400">{{ org.email }}</p>
-              </td>
+            <td class="px-6 py-4">
+              <p class="text-sm font-medium text-gray-900">{{ org.email }}</p>
+              <p class="text-xs text-gray-400">{{ org.telefono || 'Sin teléfono' }}</p>
+            </td>
 
-              <td class="px-6 py-4">
-                <span class="text-sm font-bold text-gray-700">{{ org.actividadesCount }}</span> 
-                <span class="text-xs text-gray-400 ml-1">Activas</span>
-              </td>
+            <td class="px-6 py-4">
+              <span class="text-sm font-bold text-gray-700">{{ org.actividadesCount || 0 }}</span>
+              <span class="text-xs text-gray-400 ml-1">Publicadas</span>
+            </td>
 
-              <td class="px-6 py-4">
-                <span class="px-2.5 py-1 rounded-lg text-xs font-bold border"
-                  [class.bg-green-50]="org.estado === 'Active'"
-                  [class.text-green-600]="org.estado === 'Active'"
-                  [class.border-green-100]="org.estado === 'Active'"
-                  [class.bg-orange-50]="org.estado === 'Pending'"
-                  [class.text-orange-600]="org.estado === 'Pending'"
-                  [class.border-orange-100]="org.estado === 'Pending'">
-                  {{ org.estado }}
-                </span>
-              </td>
+            <td class="px-6 py-4">
+              <span class="px-2.5 py-1 rounded-lg text-xs font-bold border" [class]="getEstadoClase(org.estado)">
+                {{ org.estado }}
+              </span>
+            </td>
 
-              <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-2 text-gray-400">
-                  <button (click)="$event.stopPropagation(); verDetalle(org)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
-                    <i class="fa-regular fa-eye"></i>
+            <td class="px-6 py-4 text-right">
+              <div class="relative inline-block text-left">
+                <button (click)="toggleMenuAcciones(org.id, $event)"
+                  class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+
+                <!-- Menú de acciones -->
+                @if (menuAccionesAbiertoId() === org.id) {
+                <div class="fixed inset-0 z-10" (click)="cerrarMenuAcciones()"></div>
+                <div
+                  class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden text-left">
+
+                  @if (org.estado !== 'Activa') {
+                  <button (click)="activar(org, $event)"
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600">
+                    <i class="fa-solid fa-check-circle"></i>
+                    Activar cuenta
                   </button>
-                  <button (click)="editar(org.id, $event)" class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-pen"></i>
+                  }
+
+                  @if (org.estado !== 'Bloqueada') {
+                  <button (click)="bloquear(org, $event)"
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 text-orange-600">
+                    <i class="fa-solid fa-ban"></i>
+                    Bloquear cuenta
+                  </button>
+                  }
+
+                  @if (org.estado === 'Pendiente') {
+                  <button (click)="rechazar(org, $event)"
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-600">
+                    <i class="fa-solid fa-times"></i>
+                    Rechazar solicitud
+                  </button>
+                  }
+
+                  <div class="border-t border-gray-100"></div>
+
+                  <button (click)="eliminar(org, $event)"
+                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-2 text-red-600">
+                    <i class="fa-solid fa-trash"></i>
+                    Eliminar organización
                   </button>
                 </div>
-              </td>
+                }
+              </div>
+            </td>
 
-            </tr>
+          </tr>
+          }
+
+          @if (organizacionesFiltradas().length === 0) {
+          <tr>
+            <td colspan="5" class="px-6 py-10 text-center text-gray-400">
+              <i class="fa-solid fa-building-circle-xmark text-3xl mb-2"></i>
+              <p>No se encontraron organizaciones</p>
+            </td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
+    }
   </div>
 
-  @if (modalCrearVisible()) {
-    <app-modal-crear-organizacion 
-        (close)="cerrarModalCrear()" 
-        (save)="guardarNuevaOrganizacion($event)">
-    </app-modal-crear-organizacion>
-  }
-
   @if (orgSeleccionada()) {
-    <app-modal-detalle-organizacion 
-      [org]="orgSeleccionada()!" 
-      (close)="cerrarDetalle()">
-    </app-modal-detalle-organizacion>
+  <app-modal-detalle-organizacion [org]="orgSeleccionada()!" (close)="cerrarDetalle()">
+  </app-modal-detalle-organizacion>
   }
 
 </div>

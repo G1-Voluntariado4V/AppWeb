@@ -2,27 +2,29 @@
 
   <div>
     <h1 class="text-2xl font-bold text-gray-900">Aprobaciones pendientes</h1>
-    <p class="text-gray-500 text-sm">Organizaciones externas que solicitan publicar actividades.</p>
+    <p class="text-gray-500 text-sm">Actividades propuestas por organizaciones que solicitan publicación.</p>
   </div>
 
+  <!-- Tabs -->
   <div class="flex gap-2">
-    <a routerLink="/coordinador/aprobaciones/organizaciones" 
-       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+    <a routerLink="/coordinador/aprobaciones/organizaciones"
+      class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Organizaciones
       <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
         {{ countOrganizaciones() }}
       </span>
     </a>
 
-    <a routerLink="/coordinador/aprobaciones/voluntarios" 
-       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+    <a routerLink="/coordinador/aprobaciones/voluntarios"
+      class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Voluntarios
       <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
         {{ countVoluntarios() }}
       </span>
     </a>
 
-    <button class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2 cursor-default">
+    <button
+      class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2 cursor-default">
       Actividades
       <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
         {{ solicitudes().length }}
@@ -30,82 +32,102 @@
     </button>
   </div>
 
+  <!-- Tabla -->
   <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-    
+
     <div class="bg-orange-50 px-6 py-3 border-b border-orange-100 flex justify-between items-center">
-        <div>
-            <h3 class="text-orange-800 font-bold text-sm">Solicitudes de Publicación</h3>
-            <p class="text-orange-600 text-xs">Organizaciones externas que solicitan publicar actividades.</p>
-        </div>
-        <span class="bg-orange-200 text-orange-800 text-[10px] px-2 py-1 rounded-full font-bold">
-            {{ solicitudes().length }} Pendientes
-        </span>
+      <div>
+        <h3 class="text-orange-800 font-bold text-sm">Solicitudes de Publicación</h3>
+        <p class="text-orange-600 text-xs">Actividades en revisión pendientes de aprobar.</p>
+      </div>
+      <span class="bg-orange-200 text-orange-800 text-[10px] px-2 py-1 rounded-full font-bold">
+        {{ solicitudes().length }} Pendientes
+      </span>
     </div>
 
+    @if (cargando()) {
+    <div class="p-10 text-center text-gray-400">
+      <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+      <p>Cargando solicitudes...</p>
+    </div>
+    } @else {
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
         <thead class="bg-gray-50/50 border-b border-gray-100">
           <tr>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actividad</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Organización</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha Propuesta</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Decisión</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
-          @for (sol of solicitudes(); track sol.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(sol)">
-              
-              <td class="px-6 py-4">
-                <span class="font-bold text-gray-900 text-sm">{{ sol.actividad }}</span>
-                <p class="text-[10px] text-gray-400">Clic para ver detalles...</p>
-              </td>
+          @for (act of solicitudes(); track act.id) {
+          <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(act)">
 
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                  <span class="w-6 h-6 rounded bg-orange-100 text-orange-600 text-[10px] flex items-center justify-center font-bold">
-                    {{ sol.organizacion.substring(0,2).toUpperCase() }}
-                  </span>
-                  <span class="text-sm text-gray-600">{{ sol.organizacion }}</span>
-                </div>
-              </td>
+            <td class="px-6 py-4">
+              <div>
+                <span class="font-bold text-gray-900 text-sm">{{ act.titulo }}</span>
+                <p class="text-[10px] text-gray-400">{{ act.ubicacion || 'Sin ubicación' }}</p>
+              </div>
+            </td>
 
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 text-xs">{{ sol.estado }}</span>
-                </div>
-              </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-6 h-6 rounded bg-orange-100 text-orange-600 text-[10px] flex items-center justify-center font-bold">
+                  {{ act.organizacion.substring(0,2).toUpperCase() }}
+                </span>
+                <span class="text-sm text-gray-600">{{ act.organizacion }}</span>
+              </div>
+            </td>
 
-              <td class="px-6 py-4">
-                <span class="text-sm text-gray-500">{{ sol.fechaPropuesta }}</span>
-              </td>
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-500">{{ formatearFecha(act.fecha_inicio) }}</span>
+            </td>
 
-              <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-2">
-                  <button (click)="aprobar(sol.id, $event)" 
-                          class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm">
-                    <i class="fa-solid fa-check"></i>
-                  </button>
-                  <button (click)="rechazar(sol.id, $event)" 
-                          class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm">
-                    <i class="fa-solid fa-xmark"></i>
-                  </button>
-                </div>
-              </td>
+            <td class="px-6 py-4">
+              <span
+                class="text-sm text-gray-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 text-xs font-medium">{{
+                act.estado }}</span>
+            </td>
 
-            </tr>
+            <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button (click)="aprobar(act.id, $event)"
+                  class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm"
+                  title="Publicar">
+                  <i class="fa-solid fa-check"></i>
+                </button>
+                <button (click)="rechazar(act.id, $event)"
+                  class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm"
+                  title="Rechazar">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+          }
+
+          @if (solicitudes().length === 0) {
+          <tr>
+            <td colspan="5" class="px-6 py-10 text-center text-gray-400">
+              <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-200"></i>
+              <p>¡Todo al día! No hay actividades pendientes de revisión.</p>
+            </td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
+    }
   </div>
 
   @if (actParaVer()) {
-    <app-modal-detalle-actividad 
-      [act]="actParaVer()!" 
-      (close)="cerrarDetalle()">
-    </app-modal-detalle-actividad>
+  <app-modal-detalle-actividad [act]="actParaVer()!" (close)="cerrarDetalle()">
+  </app-modal-detalle-actividad>
   }
 
 </div>

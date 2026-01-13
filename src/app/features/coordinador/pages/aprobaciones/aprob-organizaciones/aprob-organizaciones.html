@@ -5,24 +5,26 @@
     <p class="text-gray-500 text-sm">Revisa y aprueba estas organizaciones que se quieren unir.</p>
   </div>
 
+  <!-- Tabs -->
   <div class="flex gap-2">
-    <button class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2 cursor-default">
+    <button
+      class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2 cursor-default">
       Organizaciones
       <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
         {{ solicitudes().length }}
       </span>
     </button>
 
-    <a routerLink="/coordinador/aprobaciones/voluntarios" 
-       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+    <a routerLink="/coordinador/aprobaciones/voluntarios"
+      class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Voluntarios
       <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
         {{ countVoluntarios() }}
       </span>
     </a>
 
-    <a routerLink="/coordinador/aprobaciones/actividades" 
-       class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
+    <a routerLink="/coordinador/aprobaciones/actividades"
+      class="px-4 py-2 bg-gray-50 border border-transparent rounded-full text-sm font-medium text-gray-500 hover:bg-white hover:border-gray-200 transition-colors flex items-center gap-2">
       Actividades
       <span class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">
         {{ countActividades() }}
@@ -30,75 +32,82 @@
     </a>
   </div>
 
+  <!-- Tabla -->
   <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    @if (cargando()) {
+    <div class="p-10 text-center text-gray-400">
+      <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+      <p>Cargando solicitudes...</p>
+    </div>
+    } @else {
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
         <thead class="bg-gray-50/50 border-b border-gray-100">
           <tr>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Organización</th>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha Registro</th>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Email</th>
+            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">CIF</th>
             <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
-          @for (sol of solicitudes(); track sol.id) {
-            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(sol)">
-              
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold shadow-sm">
-                    {{ sol.organizacion.substring(0,2).toUpperCase() }}
-                  </div>
-                  <div>
-                    <p class="font-bold text-gray-900 text-sm">{{ sol.organizacion }}</p>
-                    <p class="text-xs text-gray-400">{{ sol.email }}</p>
-                  </div>
+          @for (org of solicitudes(); track org.id) {
+          <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer" (click)="verDetalle(org)">
+
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold shadow-sm">
+                  {{ org.nombre.substring(0,2).toUpperCase() }}
                 </div>
-              </td>
-
-              <td class="px-6 py-4">
-                <span class="text-sm text-gray-600">{{ sol.fechaRegistro }}</span>
-              </td>
-
-              <td class="px-6 py-4">
-                <span class="text-sm text-gray-500">{{ sol.tipo }}</span>
-              </td>
-
-              <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-3">
-                  <button (click)="aprobar(sol.id, $event)" 
-                          class="px-4 py-1.5 bg-[#2563eb] text-white text-xs font-bold rounded-full hover:bg-blue-700 transition-colors shadow-sm">
-                    Aprobar
-                  </button>
-                  <button (click)="rechazar(sol.id, $event)" 
-                          class="px-4 py-1.5 bg-white border border-red-200 text-red-500 text-xs font-bold rounded-full hover:bg-red-50 transition-colors">
-                    Rechazar
-                  </button>
+                <div>
+                  <p class="font-bold text-gray-900 text-sm">{{ org.nombre }}</p>
+                  <p class="text-xs text-gray-400">{{ org.telefono || 'Sin teléfono' }}</p>
                 </div>
-              </td>
+              </div>
+            </td>
 
-            </tr>
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-600">{{ org.email }}</span>
+            </td>
+
+            <td class="px-6 py-4">
+              <span class="text-sm text-gray-500">{{ org.cif || 'No proporcionado' }}</span>
+            </td>
+
+            <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-3">
+                <button (click)="aprobar(org.id, $event)"
+                  class="px-4 py-1.5 bg-[#2563eb] text-white text-xs font-bold rounded-full hover:bg-blue-700 transition-colors shadow-sm">
+                  Aprobar
+                </button>
+                <button (click)="rechazar(org.id, $event)"
+                  class="px-4 py-1.5 bg-white border border-red-200 text-red-500 text-xs font-bold rounded-full hover:bg-red-50 transition-colors">
+                  Rechazar
+                </button>
+              </div>
+            </td>
+
+          </tr>
           }
-          
+
           @if (solicitudes().length === 0) {
-            <tr>
-              <td colspan="4" class="px-6 py-10 text-center text-gray-400">
-                <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-100"></i>
-                <p>¡Todo al día! No hay solicitudes de organizaciones pendientes.</p>
-              </td>
-            </tr>
+          <tr>
+            <td colspan="4" class="px-6 py-10 text-center text-gray-400">
+              <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-200"></i>
+              <p>¡Todo al día! No hay solicitudes de organizaciones pendientes.</p>
+            </td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
+    }
   </div>
 
   @if (orgParaVer()) {
-    <app-modal-detalle-organizacion 
-      [org]="orgParaVer()!" 
-      (close)="cerrarDetalle()">
-    </app-modal-detalle-organizacion>
+  <app-modal-detalle-organizacion [org]="orgParaVer()!" (close)="cerrarDetalle()">
+  </app-modal-detalle-organizacion>
   }
 
 </div>

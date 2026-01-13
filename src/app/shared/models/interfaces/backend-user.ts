@@ -4,7 +4,9 @@ export interface BackendUser {
   correo: string | null;
   rol: string;
   estado: string;
+  estado_cuenta?: string;
   token?: string;
+  fecha_registro?: string;
 
   // Datos del perfil (vienen del backend según el rol)
   nombre?: string | null;

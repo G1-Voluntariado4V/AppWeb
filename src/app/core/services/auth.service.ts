@@ -130,7 +130,7 @@ export class AuthService {
     }
 
     async registerUser(userData: any): Promise<any> {
-        return firstValueFrom(this.http.post(`${environment.apiUrl}/auth/register`, userData));
+        return firstValueFrom(this.http.post(`${environment.apiUrl}/voluntarios`, userData));
     }
 
     getCurrentUser(): User | null {

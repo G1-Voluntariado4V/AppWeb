@@ -1,97 +1,176 @@
+<div class="max-w-4xl mx-auto space-y-6">
 
-	<div class="max-w-6xl mx-auto space-y-6">
+	<!-- Header & avatar -->
+	<div
+		class="bg-white rounded-3xl shadow-sm p-6 flex flex-col md:flex-row md:items-center gap-6 border border-gray-100 relative overflow-hidden">
 
-		<!-- Header & avatar -->
-		<div class="bg-white rounded-3xl shadow-sm p-6 flex flex-col md:flex-row md:items-center gap-6 border border-gray-100">
-			<div class="relative">
-				<div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center text-2xl font-bold shadow-lg overflow-hidden">
-					@if (perfil().foto) {
-						<img [src]="perfil().foto" alt="Foto de perfil" class="w-full h-full object-cover">
-					} @else {
-						<span>{{ inicial() }}</span>
-					}
-				</div>
-			</div>
+		<!-- Decoración de fondo -->
+		<div
+			class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 pointer-events-none">
+		</div>
 
-			<div class="flex-1 space-y-2">
-				<div class="flex items-center flex-wrap gap-2">
-					<h1 class="text-2xl font-bold text-gray-900">{{ perfil().nombre }}</h1>
-					<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">{{ rol() }}</span>
-				</div>
-				<p class="text-gray-600">Coordina y supervisa las actividades, usuarios y aprobaciones.</p>
-
-				<div class="flex flex-wrap gap-3 text-sm text-gray-500">
-					<div class="flex items-center gap-2">
-						<span class="material-symbols-outlined text-base">mail</span>
-						<span>{{ perfil().email }}</span>
-					</div>
-					<div class="flex items-center gap-2">
-						<span class="material-symbols-outlined text-base">call</span>
-						<span>{{ perfil().telefono || 'Sin teléfono' }}</span>
-					</div>
-				</div>
+		<div class="relative z-10">
+			<div
+				class="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center text-3xl font-bold shadow-lg overflow-hidden">
+				@if (perfil().foto) {
+				<img [src]="perfil().foto" alt="Foto de perfil" class="w-full h-full object-cover">
+				} @else {
+				<span>{{ inicial() }}</span>
+				}
 			</div>
 		</div>
 
-		<!-- Content grid -->
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-			<!-- Datos personales -->
-			<section class="bg-white rounded-3xl shadow-sm p-5 border border-gray-100 lg:col-span-2">
-				<div class="flex items-center justify-between mb-4">
-					<div>
-						<p class="text-xs uppercase tracking-widest text-blue-600 font-semibold">Perfil</p>
-						<h2 class="text-lg font-bold text-gray-900">Datos personales</h2>
-					</div>
+		<div class="flex-1 space-y-2 z-10">
+			<div class="flex items-center flex-wrap gap-2">
+				<h1 class="text-2xl font-bold text-gray-900">{{ perfil().nombre }}</h1>
+				<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">{{ rol() }}</span>
+				@if (perfil().estado_cuenta) {
+				<span class="px-3 py-1 rounded-full text-xs font-semibold"
+					[class.bg-green-50]="perfil().estado_cuenta === 'Activa'"
+					[class.text-green-700]="perfil().estado_cuenta === 'Activa'"
+					[class.bg-orange-50]="perfil().estado_cuenta === 'Pendiente'"
+					[class.text-orange-700]="perfil().estado_cuenta === 'Pendiente'">
+					{{ perfil().estado_cuenta }}
+				</span>
+				}
+			</div>
+			<p class="text-gray-600">Coordina y supervisa las actividades, usuarios y aprobaciones.</p>
+
+			<div class="flex flex-wrap gap-3 text-sm text-gray-500">
+				<div class="flex items-center gap-2">
+					<i class="fa-solid fa-envelope text-gray-400"></i>
+					<span>{{ perfil().email }}</span>
 				</div>
-
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-						<p class="text-xs text-gray-500 mb-1">Nombre</p>
-						<p class="text-gray-900 font-semibold">{{ perfil().nombre }}</p>
-					</div>
-
-					<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-						<p class="text-xs text-gray-500 mb-1">Cargo</p>
-						<p class="text-gray-900 font-semibold">{{ rol() }}</p>
-					</div>
-
-					<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-						<p class="text-xs text-gray-500 mb-1">Correo</p>
-						<p class="text-gray-900 font-semibold break-words">{{ perfil().email }}</p>
-					</div>
-
-					<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-						<p class="text-xs text-gray-500 mb-1">Teléfono</p>
-						<p class="text-gray-900 font-semibold">{{ perfil().telefono || 'Sin teléfono' }}</p>
-					</div>
+				<div class="flex items-center gap-2">
+					<i class="fa-solid fa-phone text-gray-400"></i>
+					<span>{{ perfil().telefono || 'Sin teléfono' }}</span>
 				</div>
-			</section>
+			</div>
 
-			<!-- Estado de cuenta -->
-			<section class="bg-white rounded-3xl shadow-sm p-5 border border-gray-100">
-				<div class="flex items-center justify-between mb-4">
-					<div>
-						<p class="text-xs uppercase tracking-widest text-blue-600 font-semibold">Cuenta</p>
-						<h2 class="text-lg font-bold text-gray-900">Seguridad</h2>
-					</div>
-					<span class="material-symbols-outlined text-blue-500">shield_person</span>
-				</div>
-
-				<div class="space-y-3 text-sm text-gray-700">
-					<div class="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
-						<div>
-							<p class="text-xs text-gray-500">Estado</p>
-							<p class="font-semibold text-gray-900">Activa</p>
-						</div>
-						<span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700">Verificada</span>
-					</div>
-
-					<div class="p-3 rounded-2xl bg-gray-50 border border-gray-100">
-						<p class="text-xs text-gray-500 mb-1">Autenticación</p>
-						<p class="font-semibold text-gray-900">Acceso con Google</p>
-						<p class="text-xs text-gray-500 mt-1">La sesión se gestiona desde la cuenta institucional.</p>
-					</div>
-				</div>
-			</section>
+			@if (!modoEdicion()) {
+			<button (click)="activarEdicion()"
+				class="mt-4 flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all shadow-md text-sm font-bold">
+				<i class="fa-solid fa-pen-to-square"></i>
+				Editar Perfil
+			</button>
+			}
 		</div>
 	</div>
+
+	<!-- Content grid -->
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+		<!-- Datos personales -->
+		<section class="bg-white rounded-3xl shadow-sm p-5 border border-gray-100 lg:col-span-2">
+			<div class="flex items-center justify-between mb-4">
+				<div>
+					<p class="text-xs uppercase tracking-widest text-blue-600 font-semibold">Perfil</p>
+					<h2 class="text-lg font-bold text-gray-900">Datos personales</h2>
+				</div>
+				@if (modoEdicion()) {
+				<div class="flex gap-2">
+					<button (click)="cancelarEdicion()"
+						class="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-xl transition-colors font-medium">
+						Cancelar
+					</button>
+					<button (click)="guardarCambios()" [disabled]="guardando()"
+						class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-bold disabled:opacity-50">
+						@if (guardando()) {
+						<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+						}
+						Guardar
+					</button>
+				</div>
+				}
+			</div>
+
+			@if (!modoEdicion()) {
+			<!-- Vista normal -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+					<p class="text-xs text-gray-500 mb-1">Nombre completo</p>
+					<p class="text-gray-900 font-semibold">{{ perfil().nombre }}</p>
+				</div>
+
+				<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+					<p class="text-xs text-gray-500 mb-1">Cargo</p>
+					<p class="text-gray-900 font-semibold">{{ rol() }}</p>
+				</div>
+
+				<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+					<p class="text-xs text-gray-500 mb-1">Correo electrónico</p>
+					<p class="text-gray-900 font-semibold break-words">{{ perfil().email }}</p>
+				</div>
+
+				<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+					<p class="text-xs text-gray-500 mb-1">Teléfono</p>
+					<p class="text-gray-900 font-semibold">{{ perfil().telefono || 'Sin teléfono' }}</p>
+				</div>
+			</div>
+			} @else {
+			<!-- Modo edición -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
+					<label class="text-xs text-gray-500 mb-1 block">Nombre</label>
+					<input type="text" [(ngModel)]="nombreEditable"
+						class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none font-semibold">
+				</div>
+
+				<div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
+					<label class="text-xs text-gray-500 mb-1 block">Apellidos</label>
+					<input type="text" [(ngModel)]="apellidosEditable"
+						class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none font-semibold">
+				</div>
+
+				<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+					<p class="text-xs text-gray-500 mb-1">Correo electrónico</p>
+					<p class="text-gray-900 font-semibold break-words text-sm">{{ perfil().email }}</p>
+					<p class="text-[10px] text-gray-400 mt-1">El correo no se puede modificar</p>
+				</div>
+
+				<div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
+					<label class="text-xs text-gray-500 mb-1 block">Teléfono</label>
+					<input type="tel" [(ngModel)]="telefonoEditable" placeholder="Ej: 600123456"
+						class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none font-semibold">
+				</div>
+			</div>
+			}
+		</section>
+
+		<!-- Estado de cuenta -->
+		<section class="bg-white rounded-3xl shadow-sm p-5 border border-gray-100">
+			<div class="flex items-center justify-between mb-4">
+				<div>
+					<p class="text-xs uppercase tracking-widest text-blue-600 font-semibold">Cuenta</p>
+					<h2 class="text-lg font-bold text-gray-900">Seguridad</h2>
+				</div>
+				<i class="fa-solid fa-shield-halved text-blue-500"></i>
+			</div>
+
+			<div class="space-y-3 text-sm text-gray-700">
+				<div class="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
+					<div>
+						<p class="text-xs text-gray-500">Estado</p>
+						<p class="font-semibold text-gray-900">{{ perfil().estado_cuenta || 'Activa' }}</p>
+					</div>
+					<span
+						class="px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700">Verificada</span>
+				</div>
+
+				<div class="p-3 rounded-2xl bg-gray-50 border border-gray-100">
+					<p class="text-xs text-gray-500 mb-1">Autenticación</p>
+					<div class="flex items-center gap-2">
+						<img src="https://www.google.com/favicon.ico" alt="Google" class="w-4 h-4">
+						<p class="font-semibold text-gray-900">Acceso con Google</p>
+					</div>
+					<p class="text-xs text-gray-500 mt-1">La sesión se gestiona desde la cuenta institucional.</p>
+				</div>
+
+				<div class="p-3 rounded-2xl bg-gray-50 border border-gray-100">
+					<p class="text-xs text-gray-500 mb-1">ID de Usuario</p>
+					<p class="font-mono text-sm text-gray-600">{{ perfil().id_usuario || 'N/A' }}</p>
+				</div>
+			</div>
+		</section>
+	</div>
+</div>

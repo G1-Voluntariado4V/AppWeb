@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-register',
@@ -11,31 +14,72 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './register.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Register {
+export class Register implements OnInit {
   private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
 
   selectedRole: 'volunteer' | 'organizer' | null = null;
   registerForm: FormGroup = this.fb.group({});
+  loading = signal(false);
+  errorMessage = signal<string | null>(null);
 
-  // Mock courses for the dropdown (based on CURSO table)
-  courses = [
-    { id: 1, name: '1º Desarrollo de Aplicaciones Multiplataforma' },
-    { id: 2, name: '2º Desarrollo de Aplicaciones Multiplataforma' },
-    { id: 3, name: '1º Desarrollo de Aplicaciones Web' },
-    { id: 4, name: '2º Desarrollo de Aplicaciones Web' },
-    { id: 5, name: '1º Sistemas Microinformáticos y Redes' },
-    { id: 6, name: '2º Sistemas Microinformáticos y Redes' },
-  ];
+  // Cursos - inicializamos con datos locales para evitar demora
+  courses = signal<{ id: number; name: string }[]>([
+    { id: 1, name: '1º DAM' },
+    { id: 2, name: '2º DAM' },
+    { id: 3, name: '1º DAW' },
+    { id: 4, name: '2º DAW' },
+    { id: 5, name: '1º SMR' },
+    { id: 6, name: '2º SMR' },
+  ]);
+
+  ngOnInit() {
+    // Suscribirse al estado de autenticación para manejar la recarga de página
+    this.authService.user$.subscribe(user => {
+      // Un 'undefined' significa que Firebase aún está inicializando, esperamos.
+      if (user === undefined) return;
+
+      if (user === null) {
+        console.warn('⚠️ No hay sesión de Firebase activa, redirigiendo a login...');
+        window.location.href = '/auth/login';
+      } else {
+        console.log('✅ Sesión recuperada en registro:', user.email);
+        // Usuario autenticado, cargamos los cursos si no se han cargado
+        if (this.courses().length <= 6) { // Si solo tienen los default
+          this.loadCoursesInBackground();
+        }
+      }
+    });
+  }
+
+  loadCoursesInBackground() {
+    this.http.get<any[]>(`${environment.apiUrl}/catalogos/cursos`).subscribe({
+      next: (response) => {
+        if (response && response.length > 0) {
+          this.courses.set(response.map(c => ({ id: c.id, name: c.nombre })));
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {
+        // Si falla, usamos los cursos por defecto ya cargados
+        console.log('Usando cursos por defecto');
+      }
+    });
+  }
 
   selectRole(role: 'volunteer' | 'organizer') {
     this.selectedRole = role;
+    this.errorMessage.set(null);
     this.initForm();
+    this.cdr.markForCheck();
   }
 
   initForm() {
-    // Regex patterns
-    const namePattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/; // Only letters and spaces
-    const phonePattern = /^[0-9+ ]+$/; // Only numbers, spaces, and +
+    const namePattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+    const phonePattern = /^[0-9+ ]+$/;
 
     if (this.selectedRole === 'volunteer') {
       this.registerForm = this.fb.group({
@@ -49,7 +93,7 @@ export class Register {
     } else if (this.selectedRole === 'organizer') {
       this.registerForm = this.fb.group({
         cif: ['', [Validators.required]],
-        nombre: ['', Validators.required], // Organization names might have numbers, so we keep it simple or use a looser pattern if needed. Usually Org names can have anything.
+        nombre: ['', Validators.required],
         descripcion: [''],
         direccion: [''],
         sitio_web: [''],
@@ -64,18 +108,15 @@ export class Register {
 
     const str = value.toString().toUpperCase().trim();
 
-    // Regex to check basic format (DNI or NIE)
     const validFormat = /^([0-9]{8}|[XYZ][0-9]{7})[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(str);
-
     if (!validFormat) {
-      return { pattern: true }; // Return pattern error if format doesn't match
+      return { pattern: true };
     }
 
     const letters = "TRWAGMYFPDXBNJZSQVHLCKE";
     let numberPart = str.slice(0, -1);
     const letterPart = str.slice(-1);
 
-    // Replace NIE prefix with corresponding number
     numberPart = numberPart.replace('X', '0').replace('Y', '1').replace('Z', '2');
 
     const number = parseInt(numberPart, 10);
@@ -83,7 +124,7 @@ export class Register {
     const expectedLetter = letters.charAt(index);
 
     if (expectedLetter !== letterPart) {
-      return { invalidDniChecksum: true }; // Custom error for invalid letter
+      return { invalidDniChecksum: true };
     }
 
     return null;
@@ -94,58 +135,122 @@ export class Register {
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  // ... (previous code)
-
   async onSubmit() {
-    if (this.registerForm.valid) {
-      const formValues = this.registerForm.value;
-      const firebaseUser = this.authService.getCurrentUser();
-
-      if (!firebaseUser) {
-        alert('Error: No se ha detectado autenticación con Google. Vuelve al login.');
-        this.router.navigate(['/auth/login']);
-        return;
-      }
-
-      const googleId = firebaseUser.providerData[0]?.uid || firebaseUser.uid;
-      const email = firebaseUser.email;
-
-      const payload = {
-        ...formValues,
-        role: this.selectedRole,
-        google_id: googleId,
-        email: email
-      };
-
-      try {
-        await this.authService.registerUser(payload);
-        alert('Registro completado exitosamente.');
-
-        // Redirigir según rol
-        if (this.selectedRole === 'volunteer') {
-          this.router.navigate(['/voluntario']);
-        } else {
-          // Organizaciones van a status (Pendiente)
-          this.router.navigate(['/auth/status'], { queryParams: { state: 'Pendiente' } });
-        }
-
-      } catch (error: any) {
-        console.error('Registration error:', error);
-        alert('Error al registrar: ' + (error.error?.mensaje || 'Inténtalo de nuevo.'));
-      }
-
-    } else {
+    if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
+      return;
     }
+
+    const firebaseUser = this.authService.getCurrentUser();
+    if (!firebaseUser) {
+      this.errorMessage.set('Error: No hay sesión de Google activa. Vuelve al login.');
+      window.location.href = '/auth/login';
+      return;
+    }
+
+    this.loading.set(true);
+    this.errorMessage.set(null);
+    this.cdr.markForCheck();
+
+    const googleId = firebaseUser.providerData[0]?.uid || firebaseUser.uid;
+    const email = firebaseUser.email;
+    const formValues = this.registerForm.value;
+
+    try {
+      if (this.selectedRole === 'volunteer') {
+        await this.registerVolunteer(formValues, googleId, email);
+      } else {
+        await this.registerOrganization(formValues, googleId, email);
+      }
+    } catch (error: any) {
+      console.error('❌ Registration error:', error);
+      this.handleRegistrationError(error);
+      this.loading.set(false);
+      this.cdr.markForCheck();
+    }
+  }
+
+  private async registerVolunteer(formValues: any, googleId: string, email: string | null) {
+    const payload = {
+      google_id: googleId,
+      correo: email,
+      nombre: formValues.nombre,
+      apellidos: formValues.apellidos,
+      dni: formValues.dni.toUpperCase(),
+      telefono: formValues.telefono,
+      fecha_nac: formValues.fecha_nac,
+      id_curso_actual: Number(formValues.id_curso_actual),
+      carnet_conducir: false,
+      preferencias_ids: [],
+      idiomas: []
+    };
+
+    console.log('📝 Registrando voluntario:', payload);
+
+    await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/voluntarios`, payload)
+    );
+
+    console.log('✅ Voluntario registrado');
+
+    // Redirigir al dashboard del voluntario
+    alert('¡Registro completado exitosamente!');
+    window.location.href = '/voluntario';
+  }
+
+  private async registerOrganization(formValues: any, googleId: string, email: string | null) {
+    const payload = {
+      google_id: googleId,
+      correo: email,
+      nombre: formValues.nombre,
+      cif: formValues.cif.toUpperCase(),
+      telefono: formValues.telefono,
+      descripcion: formValues.descripcion || '',
+      direccion: formValues.direccion || '',
+      sitio_web: formValues.sitio_web || ''
+    };
+
+    console.log('📝 Registrando organización:', payload);
+
+    await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/organizaciones`, payload)
+    );
+
+    console.log('✅ Organización registrada');
+
+    // Las organizaciones van a estado Pendiente
+    alert('¡Registro completado! Tu solicitud está pendiente de aprobación.');
+    window.location.href = '/auth/status?state=Pendiente';
+  }
+
+  private handleRegistrationError(error: any) {
+    const serverError = error.error;
+    let msg = 'Error al registrar. Inténtalo de nuevo.';
+
+    if (serverError) {
+      if (serverError.violations && Array.isArray(serverError.violations)) {
+        msg = serverError.violations.map((v: any) => `${v.propertyPath}: ${v.message}`).join('\n');
+      } else if (serverError.error) {
+        msg = serverError.error;
+      } else if (serverError.mensaje) {
+        msg = serverError.mensaje;
+      } else if (typeof serverError === 'string') {
+        msg = serverError;
+      }
+    }
+
+    // Casos específicos
+    if (error.status === 409 || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('ya existe')) {
+      msg = 'Este usuario ya está registrado. Intenta iniciar sesión.';
+    }
+
+    this.errorMessage.set(msg);
   }
 
   goBack() {
     this.selectedRole = null;
     this.registerForm.reset();
+    this.errorMessage.set(null);
+    this.cdr.markForCheck();
   }
 }

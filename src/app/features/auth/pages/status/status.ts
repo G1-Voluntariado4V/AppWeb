@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { ChangeDetectionStrategy, Component, signal, inject } from '@angular/core';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 export type AccountStatus = 'Pendiente' | 'Activa' | 'Rechazada' | 'Bloqueada';
 
@@ -12,11 +13,13 @@ export type AccountStatus = 'Pendiente' | 'Activa' | 'Rechazada' | 'Bloqueada';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatusPage {
-    // Mock status for design purposes. 
-    // In a real app, this would come from a service or route resolver.
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    private authService = inject(AuthService);
+
     currentStatus = signal<AccountStatus>('Pendiente');
 
-    constructor(private route: ActivatedRoute) {
+    constructor() {
         this.route.queryParams.subscribe(params => {
             const state = params['state'];
             if (state && ['Pendiente', 'Activa', 'Rechazada', 'Bloqueada'].includes(state)) {
@@ -25,8 +28,28 @@ export class StatusPage {
         });
     }
 
-    // Helper to change status for demo/testing
-    setDemoStatus(status: AccountStatus) {
-        this.currentStatus.set(status);
+    async logout() {
+        await this.authService.logout();
+        this.router.navigate(['/auth/login']);
+    }
+
+    goToDashboard() {
+        const backendUser = this.authService.getBackendUserSnapshot();
+        if (!backendUser) {
+            this.router.navigate(['/auth/login']);
+            return;
+        }
+
+        const rol = (backendUser.rol || '').toLowerCase();
+
+        if (rol.includes('coordin')) {
+            this.router.navigate(['/coordinador']);
+        } else if (rol.includes('voluntar')) {
+            this.router.navigate(['/voluntario']);
+        } else if (rol.includes('organiz')) {
+            this.router.navigate(['/organizacion']);
+        } else {
+            this.router.navigate(['/']);
+        }
     }
 }

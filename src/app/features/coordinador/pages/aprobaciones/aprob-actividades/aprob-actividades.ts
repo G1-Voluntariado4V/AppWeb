@@ -1,28 +1,27 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router'; // Importante para que funcionen los enlaces
-// Importamos ActividadAdmin para el mapeo del modal
-import { CoordinadorService, SolicitudActividad, ActividadAdmin } from '../../../services/coordinador';
-// Importamos el Modal de Detalle
+import { RouterModule } from '@angular/router';
+import { CoordinadorService, ActividadAdmin } from '../../../services/coordinador';
 import { ModalDetalleActividad } from '../../../components/modal-detalle-actividad/modal-detalle-actividad';
 
 @Component({
   selector: 'app-aprob-actividades',
   standalone: true,
-  imports: [CommonModule, RouterModule, ModalDetalleActividad], // Añadido RouterModule
+  imports: [CommonModule, RouterModule, ModalDetalleActividad],
   templateUrl: './aprob-actividades.html',
 })
 export class AprobActividades implements OnInit {
-  
+
   private coordinadorService = inject(CoordinadorService);
 
-  solicitudes = signal<SolicitudActividad[]>([]);
-  
-  // Signals para los contadores de los otros botones
+  solicitudes = signal<ActividadAdmin[]>([]);
+  cargando = signal(true);
+
+  // Contadores
   countOrganizaciones = signal(0);
   countVoluntarios = signal(0);
 
-  // Signal para controlar el modal de detalle
+  // Modal de detalle
   actParaVer = signal<ActividadAdmin | null>(null);
 
   ngOnInit() {
@@ -30,12 +29,20 @@ export class AprobActividades implements OnInit {
   }
 
   cargarDatos() {
-    // 1. Cargar las solicitudes de esta página (Actividades)
-    this.coordinadorService.getSolicitudesActividades().subscribe(data => {
-      this.solicitudes.set(data);
+    this.cargando.set(true);
+
+    // Cargar actividades en revisión
+    this.coordinadorService.getSolicitudesActividades().subscribe({
+      next: (data) => {
+        this.solicitudes.set(data);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.cargando.set(false);
+      }
     });
 
-    // 2. Cargar contadores de las otras secciones para los botones
+    // Cargar contadores de otras secciones
     this.coordinadorService.getSolicitudesOrganizaciones().subscribe(data => {
       this.countOrganizaciones.set(data.length);
     });
@@ -45,40 +52,45 @@ export class AprobActividades implements OnInit {
     });
   }
 
-  // Añadimos 'event' para detener la propagación del click
   aprobar(id: number, event: Event) {
     event.stopPropagation();
-    if(confirm('¿Publicar esta actividad? Será visible para los voluntarios.')) {
-      this.coordinadorService.aprobarActividad(id).subscribe(() => this.cargarDatos());
+    if (confirm('¿Publicar esta actividad? Será visible para los voluntarios.')) {
+      this.coordinadorService.aprobarActividad(id).subscribe({
+        next: () => this.cargarDatos(),
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+      });
     }
   }
 
   rechazar(id: number, event: Event) {
     event.stopPropagation();
-    if(confirm('¿Rechazar propuesta de actividad?')) {
-      this.coordinadorService.rechazarActividad(id).subscribe(() => this.cargarDatos());
+    if (confirm('¿Rechazar propuesta de actividad?')) {
+      this.coordinadorService.rechazarActividad(id).subscribe({
+        next: () => this.cargarDatos(),
+        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+      });
     }
   }
 
-  // --- LÓGICA DE DETALLE ---
-  verDetalle(solicitud: SolicitudActividad) {
-    const actTemp: ActividadAdmin = {
-      id: solicitud.id,
-      nombre: solicitud.actividad,
-      organizador: solicitud.organizacion,
-      fecha: solicitud.fechaPropuesta,
-      tipo: 'Por definir', 
-      estado: 'Pending',
-      descripcion: 'Esta es una propuesta de actividad pendiente de validación.',
-      ubicacion: 'Ubicación por confirmar',
-      duracionHoras: 0,
-      cupoMaximo: 0
-    };
-    
-    this.actParaVer.set(actTemp);
+  verDetalle(act: ActividadAdmin) {
+    this.actParaVer.set(act);
   }
 
   cerrarDetalle() {
     this.actParaVer.set(null);
+  }
+
+  // Helper para formatear fecha
+  formatearFecha(fecha: string): string {
+    if (!fecha) return 'Sin fecha';
+    try {
+      return new Date(fecha).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return fecha;
+    }
   }
 }
