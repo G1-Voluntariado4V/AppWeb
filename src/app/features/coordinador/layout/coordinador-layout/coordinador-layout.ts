@@ -22,11 +22,13 @@ export class CoordinadorLayout {
         { label: 'Organizaciones', route: '/coordinador/usuarios/organizaciones', icon: 'business' },
       ]
     },
-    { label: 'Aprobaciones', route: '/coordinador/aprobaciones', icon: 'check_circle',
+    {
+      label: 'Aprobaciones', route: '/coordinador/aprobaciones', icon: 'check_circle',
       children: [
         { label: 'Voluntarios', route: '/coordinador/aprobaciones/voluntarios', icon: 'school' },
         { label: 'Organizaciones', route: '/coordinador/aprobaciones/organizaciones', icon: 'business' },
         { label: 'Actividades', route: '/coordinador/aprobaciones/actividades', icon: 'event' },
+        { label: 'Inscripciones', route: '/coordinador/aprobaciones/inscripciones', icon: 'person_add' },
       ]
     },
 

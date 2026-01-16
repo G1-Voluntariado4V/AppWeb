@@ -80,6 +80,8 @@ export interface ActividadAdmin {
     fecha_inicio: string;
     duracion_horas?: number;
     cupo_maximo?: number;
+    inscritos_confirmados?: number;
+    inscritos_pendientes?: number;
     ubicacion?: string;
     estado: 'Publicada' | 'En revision' | 'Cancelada' | 'Rechazada' | 'Finalizada';
     ods?: ODS[];
@@ -94,6 +96,18 @@ export interface UsuarioAdmin {
     fecha_registro?: string;
     nombre?: string;
     apellidos?: string;
+}
+
+export interface InscripcionPendiente {
+    id_actividad: number;
+    titulo_actividad: string;
+    organizacion: string;
+    fecha_actividad: string;
+    id_voluntario: number;
+    nombre_voluntario: string;
+    email_voluntario: string;
+    estado_solicitud: string;
+    fecha_solicitud: string;
 }
 
 @Injectable({
@@ -320,6 +334,8 @@ export class CoordinadorService {
                 fecha_inicio: a.fecha_inicio,
                 duracion_horas: a.duracion_horas,
                 cupo_maximo: a.cupo_maximo,
+                inscritos_confirmados: a.inscritos_confirmados || 0,
+                inscritos_pendientes: a.inscritos_pendientes || 0,
                 ubicacion: a.ubicacion,
                 estado: this.normalizarEstado(a.estado_publicacion),
                 ods: a.ods || [],
@@ -427,6 +443,83 @@ export class CoordinadorService {
 
     bloquearUsuario(id: number, rol: 'voluntarios' | 'organizaciones'): Observable<any> {
         return this.cambiarEstadoUsuario(id, rol, 'Bloqueada');
+    }
+
+    // --- INSCRIPCIONES ---
+
+    // Obtiene todas las inscripciones pendientes de todas las actividades
+    getInscripcionesPendientes(): Observable<InscripcionPendiente[]> {
+        return this.getActividades().pipe(
+            tap(actividades => console.log('📋 Actividades para inscripciones:', actividades)),
+            switchMap(actividades => {
+                // Filtramos solo actividades publicadas
+                const actividadesPublicadas = actividades.filter(a => a.estado === 'Publicada');
+                console.log('📋 Actividades publicadas:', actividadesPublicadas.length);
+
+                if (actividadesPublicadas.length === 0) {
+                    return of([]);
+                }
+
+                // Obtenemos inscripciones de cada actividad
+                const requests = actividadesPublicadas.map(act =>
+                    this.http.get<any[]>(
+                        `${this.apiUrl}/actividades/${act.id}/inscripciones`,
+                        { headers: this.getAdminHeaders() }
+                    ).pipe(
+                        tap(inscripciones => console.log(`📝 Inscripciones de actividad ${act.id}:`, inscripciones)),
+                        map(inscripciones => inscripciones.map(ins => ({
+                            id_actividad: act.id,
+                            titulo_actividad: act.titulo,
+                            organizacion: act.organizacion,
+                            fecha_actividad: act.fecha_inicio,
+                            id_voluntario: ins.id_voluntario,
+                            nombre_voluntario: ins.nombre_voluntario || '',
+                            email_voluntario: ins.email_voluntario || '',
+                            estado_solicitud: ins.estado || ins.estado_solicitud, // El DTO usa 'estado'
+                            fecha_solicitud: ins.fecha_solicitud
+                        }))),
+                        catchError(err => {
+                            console.error(`❌ Error obteniendo inscripciones de actividad ${act.id}:`, err);
+                            return of([]);
+                        })
+                    )
+                );
+
+                return forkJoin(requests).pipe(
+                    tap(results => console.log('📋 Todas las inscripciones:', results.flat())),
+                    map(results => results.flat().filter(ins => ins.estado_solicitud === 'Pendiente'))
+                );
+            }),
+            tap(pendientes => console.log('⏳ Inscripciones pendientes:', pendientes))
+        );
+    }
+
+    // Obtiene inscripciones de una actividad específica
+    getInscripcionesActividad(idActividad: number): Observable<any[]> {
+        return this.http.get<any[]>(
+            `${this.apiUrl}/actividades/${idActividad}/inscripciones`,
+            { headers: this.getAdminHeaders() }
+        ).pipe(
+            catchError(() => of([]))
+        );
+    }
+
+    // Aprobar inscripción
+    aprobarInscripcion(idActividad: number, idVoluntario: number): Observable<any> {
+        return this.http.patch(
+            `${this.apiUrl}/actividades/${idActividad}/inscripciones/${idVoluntario}`,
+            { estado: 'Aceptada' },
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    // Rechazar inscripción
+    rechazarInscripcion(idActividad: number, idVoluntario: number): Observable<any> {
+        return this.http.patch(
+            `${this.apiUrl}/actividades/${idActividad}/inscripciones/${idVoluntario}`,
+            { estado: 'Rechazada' },
+            { headers: this.getAdminHeaders() }
+        );
     }
 
     // --- PERFIL ---

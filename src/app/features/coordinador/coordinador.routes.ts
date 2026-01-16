@@ -46,6 +46,10 @@ export const COORDINADOR_ROUTES: Routes = [
       {
         path: 'aprobaciones/actividades',
         loadComponent: () => import('./pages/aprobaciones/aprob-actividades/aprob-actividades').then(m => m.AprobActividades)
+      },
+      {
+        path: 'aprobaciones/inscripciones',
+        loadComponent: () => import('./pages/aprobaciones/aprob-inscripciones/aprob-inscripciones').then(m => m.AprobInscripciones)
       }
     ]
   }
