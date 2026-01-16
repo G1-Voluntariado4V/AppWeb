@@ -1,7 +1,7 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { VoluntarioService } from '../../services/voluntario.service';
+import { VoluntarioService, MiActividad } from '../../services/voluntario.service';
 
 @Component({
   selector: 'app-historial',
@@ -10,16 +10,32 @@ import { VoluntarioService } from '../../services/voluntario.service';
   templateUrl: './historial.html',
 })
 export class Historial implements OnInit {
-  
+
   private route = inject(ActivatedRoute);
   private voluntarioService = inject(VoluntarioService);
 
   menuAbierto = signal(false);
   filtroActual = signal<string>('Todos');
+  modalDesapuntar = signal<MiActividad | null>(null);
+  procesando = signal(false);
+  mensaje = signal<{ tipo: 'success' | 'error'; texto: string } | null>(null);
 
-  actividades = signal<any[]>([]);
+  cargando = computed(() => this.voluntarioService.cargando());
+  actividades = computed(() => this.voluntarioService.misActividades());
 
-  // AQUÍ ESTÁ EL CAMBIO IMPORTANTE:
+  // Estadísticas
+  estadisticas = computed(() => {
+    const acts = this.actividades();
+    return {
+      total: acts.length,
+      aceptadas: acts.filter(a => a.estado_solicitud === 'Aceptada').length,
+      pendientes: acts.filter(a => a.estado_solicitud === 'Pendiente').length,
+      finalizadas: acts.filter(a => a.estado_solicitud === 'Finalizada').length,
+      rechazadas: acts.filter(a => a.estado_solicitud === 'Rechazada').length,
+      canceladas: acts.filter(a => a.estado_solicitud === 'Cancelada').length
+    };
+  });
+
   actividadesVisibles = computed(() => {
     const filtro = this.filtroActual();
     const lista = this.actividades();
@@ -28,24 +44,23 @@ export class Historial implements OnInit {
       return lista;
     }
 
-    // NUEVO: Si el filtro es 'Activas', mostramos Aceptadas Y Pendientes
     if (filtro === 'Activas') {
-      return lista.filter(act => act.estado === 'Aceptada' || act.estado === 'Pendiente');
+      return lista.filter(act => act.estado_solicitud === 'Aceptada' || act.estado_solicitud === 'Pendiente');
     }
 
-    // Para el resto de filtros individuales (Finalizada, Cancelada...)
-    return lista.filter(act => act.estado === filtro);
+    return lista.filter(act => act.estado_solicitud === filtro);
   });
 
   ngOnInit() {
-    const datosAlDia = this.voluntarioService.getActividades();
-    this.actividades.set(datosAlDia);
-
+    // Leer filtro de query params
     this.route.queryParams.subscribe(params => {
       if (params['filtro']) {
         this.seleccionarFiltro(params['filtro']);
       }
     });
+
+    // Siempre recargar datos al entrar para tener info actualizada
+    this.voluntarioService.cargarTodo();
   }
 
   toggleMenu() {
@@ -57,6 +72,44 @@ export class Historial implements OnInit {
     this.menuAbierto.set(false);
   }
 
+  abrirModalDesapuntar(actividad: MiActividad) {
+    this.modalDesapuntar.set(actividad);
+    this.mensaje.set(null);
+  }
+
+  cerrarModal() {
+    this.modalDesapuntar.set(null);
+    this.mensaje.set(null);
+  }
+
+  confirmarDesapuntar() {
+    const actividad = this.modalDesapuntar();
+    if (!actividad) return;
+
+    this.procesando.set(true);
+    this.mensaje.set(null);
+
+    this.voluntarioService.desapuntarse(actividad.id_actividad).subscribe({
+      next: (result) => {
+        if (result.success) {
+          this.mensaje.set({ tipo: 'success', texto: 'Te has desapuntado correctamente.' });
+          setTimeout(() => this.cerrarModal(), 1500);
+        } else {
+          this.mensaje.set({ tipo: 'error', texto: result.mensaje });
+        }
+        this.procesando.set(false);
+      },
+      error: () => {
+        this.mensaje.set({ tipo: 'error', texto: 'Error al desapuntarse. Intenta de nuevo.' });
+        this.procesando.set(false);
+      }
+    });
+  }
+
+  puedeDesapuntarse(actividad: MiActividad): boolean {
+    return actividad.estado_solicitud === 'Pendiente' || actividad.estado_solicitud === 'Aceptada';
+  }
+
   getClassEstado(estado: string): string {
     switch (estado) {
       case 'Aceptada': return 'bg-green-100 text-green-700 border-green-200';
@@ -65,6 +118,31 @@ export class Historial implements OnInit {
       case 'Rechazada': return 'bg-red-50 text-red-600 border-red-100';
       case 'Cancelada': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-50 text-gray-500';
+    }
+  }
+
+  getIconoEstado(estado: string): string {
+    switch (estado) {
+      case 'Aceptada': return 'fa-check-circle';
+      case 'Finalizada': return 'fa-flag-checkered';
+      case 'Pendiente': return 'fa-clock';
+      case 'Rechazada': return 'fa-times-circle';
+      case 'Cancelada': return 'fa-ban';
+      default: return 'fa-question-circle';
+    }
+  }
+
+  formatearFecha(fecha: string): string {
+    if (!fecha) return '-';
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return fecha;
     }
   }
 }
