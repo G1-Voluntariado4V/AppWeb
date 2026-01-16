@@ -26,15 +26,8 @@ export class Register implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
 
-  // Cursos - inicializamos con datos locales para evitar demora
-  courses = signal<{ id: number; name: string }[]>([
-    { id: 1, name: '1º DAM' },
-    { id: 2, name: '2º DAM' },
-    { id: 3, name: '1º DAW' },
-    { id: 4, name: '2º DAW' },
-    { id: 5, name: '1º SMR' },
-    { id: 6, name: '2º SMR' },
-  ]);
+  // Cursos - inicializamos vacío, se cargan desde API
+  courses = signal<{ id: number; name: string; displayName: string }[]>([]);
 
   ngOnInit() {
     // Suscribirse al estado de autenticación para manejar la recarga de página
@@ -47,10 +40,8 @@ export class Register implements OnInit {
         window.location.href = '/auth/login';
       } else {
         console.log('✅ Sesión recuperada en registro:', user.email);
-        // Usuario autenticado, cargamos los cursos si no se han cargado
-        if (this.courses().length <= 6) { // Si solo tienen los default
-          this.loadCoursesInBackground();
-        }
+        // Usuario autenticado, cargamos los cursos
+        this.loadCoursesInBackground();
       }
     });
   }
@@ -59,15 +50,33 @@ export class Register implements OnInit {
     this.http.get<any[]>(`${environment.apiUrl}/catalogos/cursos`).subscribe({
       next: (response) => {
         if (response && response.length > 0) {
-          this.courses.set(response.map(c => ({ id: c.id, name: c.nombre })));
+          // Ordenar por nombre y luego por nivel
+          const sorted = response.sort((a, b) => {
+            const nameA = a.nombre || '';
+            const nameB = b.nombre || '';
+            if (nameA !== nameB) return nameA.localeCompare(nameB);
+            return (a.nivel || 0) - (b.nivel || 0);
+          });
+
+          // Mapear con formato de visualización
+          this.courses.set(sorted.map(c => ({
+            id: c.id,
+            name: c.nombre,
+            displayName: this.formatCourseName(c.nivel, c.nombre)
+          })));
           this.cdr.markForCheck();
         }
       },
       error: () => {
-        // Si falla, usamos los cursos por defecto ya cargados
-        console.log('Usando cursos por defecto');
+        console.log('Error cargando cursos desde API');
       }
     });
+  }
+
+  // Formatea el nombre del curso como "1º Desarrollo de Aplicaciones Multiplataforma"
+  private formatCourseName(nivel: number, nombre: string): string {
+    const ordinal = nivel === 1 ? '1º' : nivel === 2 ? '2º' : `${nivel}º`;
+    return `${ordinal} ${nombre}`;
   }
 
   selectRole(role: 'volunteer' | 'organizer') {
@@ -177,8 +186,8 @@ export class Register implements OnInit {
       nombre: formValues.nombre,
       apellidos: formValues.apellidos,
       dni: formValues.dni.toUpperCase(),
-      telefono: formValues.telefono,
-      fecha_nac: formValues.fecha_nac,
+      telefono: String(formValues.telefono),
+      fecha_nac: formValues.fecha_nac, // formato YYYY-MM-DD
       id_curso_actual: Number(formValues.id_curso_actual),
       carnet_conducir: false,
       preferencias_ids: [],
@@ -193,9 +202,9 @@ export class Register implements OnInit {
 
     console.log('✅ Voluntario registrado');
 
-    // Redirigir al dashboard del voluntario
-    alert('¡Registro completado exitosamente!');
-    window.location.href = '/voluntario';
+    // Los voluntarios van a estado Pendiente (igual que organizaciones)
+    alert('¡Registro completado! Tu solicitud está pendiente de aprobación por el coordinador.');
+    window.location.href = '/auth/status?state=Pendiente';
   }
 
   private async registerOrganization(formValues: any, googleId: string, email: string | null) {
@@ -224,24 +233,66 @@ export class Register implements OnInit {
   }
 
   private handleRegistrationError(error: any) {
+    console.error('🔥 Error details:', {
+      status: error.status,
+      statusText: error.statusText,
+      error: error.error,
+      message: error.message
+    });
+
     const serverError = error.error;
     let msg = 'Error al registrar. Inténtalo de nuevo.';
+    let isDuplicateError = false;
 
+    // Extraer el mensaje de error
+    let errorText = '';
     if (serverError) {
       if (serverError.violations && Array.isArray(serverError.violations)) {
-        msg = serverError.violations.map((v: any) => `${v.propertyPath}: ${v.message}`).join('\n');
+        errorText = serverError.violations.map((v: any) => `${v.propertyPath}: ${v.message}`).join('\n');
       } else if (serverError.error) {
-        msg = serverError.error;
+        errorText = serverError.error;
       } else if (serverError.mensaje) {
-        msg = serverError.mensaje;
+        errorText = serverError.mensaje;
+      } else if (serverError.detail) {
+        errorText = serverError.detail;
       } else if (typeof serverError === 'string') {
-        msg = serverError;
+        errorText = serverError;
       }
     }
 
-    // Casos específicos
-    if (error.status === 409 || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('ya existe')) {
-      msg = 'Este usuario ya está registrado. Intenta iniciar sesión.';
+    const errorLower = errorText.toLowerCase();
+
+    // Detectar errores de duplicados (inglés y español)
+    const duplicatePatterns = [
+      'duplicate',           // Inglés
+      'unique',              // Constraint UNIQUE
+      'ya existe',           // Español
+      'clave duplicada',     // SQL Server español
+      'duplicada',           // General español
+      'índice único',        // SQL Server español
+      'indice unico',        // Sin tildes
+      'uniq_',               // Nombre del índice UNIQUE
+      '23000',               // SQLSTATE para violación de constraint
+      '2601',                // Código SQL Server para duplicados
+    ];
+
+    isDuplicateError = error.status === 409 ||
+      duplicatePatterns.some(pattern => errorLower.includes(pattern));
+
+    if (isDuplicateError) {
+      // Determinar si es por DNI, correo u otro campo
+      if (errorLower.includes('dni') || errorLower.includes('voluntario')) {
+        msg = 'Ya existe un usuario registrado con este DNI. Si ya tienes cuenta, intenta iniciar sesión.';
+      } else if (errorLower.includes('correo') || errorLower.includes('email')) {
+        msg = 'Este correo electrónico ya está registrado. Intenta iniciar sesión.';
+      } else if (errorLower.includes('cif') || errorLower.includes('organizacion')) {
+        msg = 'Ya existe una organización registrada con este CIF. Intenta iniciar sesión.';
+      } else {
+        msg = 'Ya existe un usuario con estos datos. Si ya tienes cuenta, intenta iniciar sesión.';
+      }
+    } else if (errorText) {
+      // Mostrar error original solo si no es de duplicados
+      msg = errorText.length > 200 ? 'Error del servidor. Inténtalo de nuevo más tarde.' : errorText;
     }
 
     this.errorMessage.set(msg);

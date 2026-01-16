@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal, inject, ChangeDetectorRef } from '@angular/core';
-import { JsonPipe, CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from "@angular/router";
 
 import { AuthService } from "../../../../core/services/auth.service";
@@ -8,7 +8,7 @@ import { BackendUser } from '../../../../shared/models/interfaces/backend-user';
 @Component({
   selector: 'auth-login',
   standalone: true,
-  imports: [RouterLink, JsonPipe, CommonModule],
+  imports: [RouterLink, CommonModule],
   templateUrl: './login.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
