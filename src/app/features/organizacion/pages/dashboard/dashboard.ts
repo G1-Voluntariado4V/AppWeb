@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrganizacionService } from '../../services/organizacion.service';
 import { RouterModule } from '@angular/router';
@@ -22,15 +22,39 @@ export class Dashboard {
 
     return {
       ...perfilBase,
-      // PRIORIDAD: Google photo > Backend photo
       foto: googlePhoto || perfilBase.foto
     };
   });
 
-  stats = this.orgService.stats;
+  // Estadísticas desde la API
+  estadisticas = this.orgService.estadisticas;
 
-  // Usamos la señal directa en vez del getter con observable
+  // Actividades recientes
   actividadesRecientes = this.orgService.actividades;
 
-  fechaHoy = signal(new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+  // Fecha formateada
+  fechaHoy = computed(() => {
+    return new Date().toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  });
+
+  // Helper para formatear fechas
+  formatearFecha(fecha: string): string {
+    if (!fecha) return '-';
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return fecha;
+    }
+  }
 }
