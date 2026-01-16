@@ -1,50 +1,172 @@
 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
   <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
-    
+
+    <!-- Header -->
     <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
-      <h2 class="text-2xl font-bold text-gray-900">Nueva Actividad</h2>
-      <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Solicitar Nueva Actividad</h2>
+        <p class="text-sm text-gray-500 mt-1">Completa los datos para enviar tu actividad a revisión</p>
+      </div>
+      <button (click)="close.emit()"
+        class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-colors">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
     </div>
 
+    <!-- Body -->
     <div class="p-8 bg-gray-50/50 overflow-y-auto">
+
+      <!-- Error Message -->
+      @if (error()) {
+      <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        {{ error() }}
+      </div>
+      }
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
+        <!-- Columna Principal -->
         <div class="lg:col-span-2 space-y-6">
+
+          <!-- Título -->
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Título</label>
-            <input type="text" [(ngModel)]="nombre" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Ej: Recogida de alimentos">
+            <label class="block text-sm font-bold text-gray-700 mb-2">
+              Título de la Actividad <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)"
+              class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+              placeholder="Ej: Recogida de alimentos solidaria">
           </div>
+
+          <!-- Descripción -->
           <div>
             <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
-            <textarea [(ngModel)]="descripcion" rows="4" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Detalles..."></textarea>
+            <textarea [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" rows="4"
+              class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
+              placeholder="Describe en qué consiste la actividad, qué tareas realizarán los voluntarios..."></textarea>
           </div>
+
+          <!-- Ubicación -->
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">ODS Relacionados</label>
-            <div class="flex gap-2">
-                @for(ods of odsOptions; track ods.id) {
-                    <div (click)="toggleOds(ods.id)" class="w-10 h-10 rounded-lg cursor-pointer flex items-center justify-center text-white font-bold text-xs transition-transform hover:scale-110"
-                         [class]="ods.color" [class.opacity-50]="!odsSeleccionados().includes(ods.id)">
-                        {{ ods.id }}
-                    </div>
-                }
+            <label class="block text-sm font-bold text-gray-700 mb-2">
+              Ubicación <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)"
+              class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+              placeholder="Ej: Calle Mayor 15, Pamplona">
+          </div>
+
+          <!-- ODS -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-3">ODS Relacionados</label>
+            <div class="flex flex-wrap gap-2">
+              @for (ods of odsList(); track ods.id) {
+              <button type="button" (click)="toggleOds(ods.id)"
+                class="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+                [class.opacity-40]="!odsSeleccionados().includes(ods.id)"
+                [class.ring-2]="odsSeleccionados().includes(ods.id)"
+                [class.ring-offset-2]="odsSeleccionados().includes(ods.id)" [style.background-color]="ods.color"
+                [style.color]="'white'">
+                <span class="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-[10px]">{{ ods.id
+                  }}</span>
+                <span class="hidden sm:inline">{{ ods.nombre }}</span>
+              </button>
+              } @empty {
+              <p class="text-gray-400 text-sm">Cargando ODS...</p>
+              }
+            </div>
+          </div>
+
+          <!-- Tipos de Voluntariado -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-3">Tipo de Voluntariado</label>
+            <div class="flex flex-wrap gap-2">
+              @for (tipo of tiposList(); track tipo.id) {
+              <button type="button" (click)="toggleTipo(tipo.id)"
+                class="px-4 py-2 rounded-xl text-sm font-medium transition-all border-2"
+                [class.bg-blue-600]="tiposSeleccionados().includes(tipo.id)"
+                [class.text-white]="tiposSeleccionados().includes(tipo.id)"
+                [class.border-blue-600]="tiposSeleccionados().includes(tipo.id)"
+                [class.bg-white]="!tiposSeleccionados().includes(tipo.id)"
+                [class.text-gray-700]="!tiposSeleccionados().includes(tipo.id)"
+                [class.border-gray-200]="!tiposSeleccionados().includes(tipo.id)"
+                [class.hover:border-blue-300]="!tiposSeleccionados().includes(tipo.id)">
+                {{ tipo.nombre }}
+              </button>
+              } @empty {
+              <p class="text-gray-400 text-sm">Cargando tipos...</p>
+              }
             </div>
           </div>
         </div>
 
+        <!-- Columna Lateral -->
         <div class="space-y-6">
+
+          <!-- Fecha y Hora -->
           <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <label class="block text-sm font-bold text-gray-700 mb-4">Fecha</label>
-            <input type="date" [(ngModel)]="fecha" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none">
+            <label class="block text-sm font-bold text-gray-700 mb-4">
+              <i class="fa-regular fa-calendar mr-2 text-blue-500"></i>
+              Fecha y Hora <span class="text-red-500">*</span>
+            </label>
+            <div class="space-y-3">
+              <input type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)"
+                class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
+              <input type="time" [ngModel]="horaInicio()" (ngModelChange)="horaInicio.set($event)"
+                class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
+            </div>
           </div>
+
+          <!-- Duración -->
           <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <label class="block text-sm font-bold text-gray-700 mb-4">Modalidad</label>
-            <div class="space-y-2">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="tipo" value="Presencial" [(ngModel)]="tipoVoluntariado" class="text-blue-600"> <span class="text-sm">Presencial</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="tipo" value="Tecnico" [(ngModel)]="tipoVoluntariado" class="text-blue-600"> <span class="text-sm">Técnico</span>
-                </label>
+            <label class="block text-sm font-bold text-gray-700 mb-4">
+              <i class="fa-regular fa-clock mr-2 text-green-500"></i>
+              Duración (horas) <span class="text-red-500">*</span>
+            </label>
+            <div class="flex items-center gap-3">
+              <button type="button" (click)="duracionHoras.set(Math.max(1, duracionHoras() - 1))"
+                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
+                -
+              </button>
+              <input type="number" [ngModel]="duracionHoras()" (ngModelChange)="duracionHoras.set($event)" min="1"
+                class="flex-1 text-center border border-gray-200 rounded-xl px-3 py-2 text-lg font-bold outline-none focus:border-blue-500">
+              <button type="button" (click)="duracionHoras.set(duracionHoras() + 1)"
+                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Cupo Máximo -->
+          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+            <label class="block text-sm font-bold text-gray-700 mb-4">
+              <i class="fa-solid fa-users mr-2 text-purple-500"></i>
+              Cupo Máximo <span class="text-red-500">*</span>
+            </label>
+            <div class="flex items-center gap-3">
+              <button type="button" (click)="cupoMaximo.set(Math.max(1, cupoMaximo() - 1))"
+                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
+                -
+              </button>
+              <input type="number" [ngModel]="cupoMaximo()" (ngModelChange)="cupoMaximo.set($event)" min="1"
+                class="flex-1 text-center border border-gray-200 rounded-xl px-3 py-2 text-lg font-bold outline-none focus:border-blue-500">
+              <button type="button" (click)="cupoMaximo.set(cupoMaximo() + 1)"
+                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
+                +
+              </button>
+            </div>
+            <p class="text-xs text-gray-400 mt-2 text-center">voluntarios</p>
+          </div>
+
+          <!-- Info -->
+          <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+            <div class="flex gap-3">
+              <i class="fa-solid fa-circle-info text-amber-500 mt-0.5"></i>
+              <div class="text-xs text-amber-700">
+                <p class="font-bold mb-1">Estado: En revisión</p>
+                <p>Tu actividad será revisada por un coordinador antes de ser publicada.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -52,9 +174,27 @@
       </div>
     </div>
 
-    <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-end gap-3 shrink-0">
-      <button (click)="close.emit()" class="px-6 py-2 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100">Cancelar</button>
-      <button (click)="guardar()" class="px-8 py-2 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700">Publicar</button>
+    <!-- Footer -->
+    <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-between items-center shrink-0">
+      <p class="text-xs text-gray-400">
+        <span class="text-red-500">*</span> Campos obligatorios
+      </p>
+      <div class="flex gap-3">
+        <button (click)="close.emit()" [disabled]="guardando()"
+          class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50">
+          Cancelar
+        </button>
+        <button (click)="guardar()" [disabled]="guardando()"
+          class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+          @if (guardando()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Enviando...
+          } @else {
+          <i class="fa-solid fa-paper-plane"></i>
+          Enviar Solicitud
+          }
+        </button>
+      </div>
     </div>
 
   </div>
