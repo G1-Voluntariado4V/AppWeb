@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrganizacionService } from '../../services/organizacion.service';
@@ -15,8 +15,8 @@ export class Perfil {
   private orgService = inject(OrganizacionService);
   private authService = inject(AuthService);
 
-  // Leemos los datos actuales del servicio
-  perfilActual = this.orgService.perfil;
+  // Foto de Google (reactiva)
+  fotoGoogle = computed(() => this.authService.userProfile().foto);
 
   // Signals para el formulario local (para no editar el servicio directamente hasta guardar)
   nombre = signal('');
@@ -24,34 +24,30 @@ export class Perfil {
   telefono = signal('');
   descripcion = signal('');
   web = signal('');
+  cif = signal('');
+  direccion = signal('');
 
-  // Foto - Computed para mostrar foto de Google con prioridad
-  fotoPreview = signal<string | null>(null);
-
-  fotoMostrar = computed(() => {
-    const googlePhoto = this.authService.getGooglePhoto();
-    return googlePhoto || this.fotoPreview();
+  // Iniciales para avatar fallback
+  iniciales = computed(() => {
+    const n = this.nombre();
+    if (!n) return 'O';
+    return n.charAt(0).toUpperCase();
   });
 
   constructor() {
-    // Cargar los datos actuales del perfil
-    const datos = this.perfilActual();
-    this.nombre.set(datos.nombre);
-    this.email.set(datos.email);
-    this.telefono.set(datos.telefono);
-    this.descripcion.set(datos.descripcion);
-    this.web.set(datos.web);
-    this.fotoPreview.set(datos.foto);
-  }
-
-  // Selección de foto (solo se usa si no hay foto de Google)
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => this.fotoPreview.set(e.target.result);
-      reader.readAsDataURL(file);
-    }
+    // Cargar los datos cuando el perfil esté disponible
+    effect(() => {
+      const datos = this.orgService.perfil();
+      if (datos.nombre) {
+        this.nombre.set(datos.nombre);
+        this.email.set(datos.email);
+        this.telefono.set(datos.telefono);
+        this.descripcion.set(datos.descripcion);
+        this.web.set(datos.web);
+        this.cif.set(datos.cif || '');
+        this.direccion.set(datos.direccion || '');
+      }
+    });
   }
 
   guardar() {
@@ -62,7 +58,8 @@ export class Perfil {
       telefono: this.telefono(),
       descripcion: this.descripcion(),
       web: this.web(),
-      foto: this.fotoPreview()
+      cif: this.cif(),
+      direccion: this.direccion()
     });
 
     alert('Perfil actualizado correctamente');
