@@ -19,6 +19,7 @@ export class VoluntarioLayout {
 
   menuLinks = signal<SidebarItem[]>([
     { label: 'Inicio', route: '/voluntario/inicio', icon: 'home' },
+    { label: 'Actividades', route: '/voluntario/actividades', icon: 'explore' },
     { label: 'Historial', route: '/voluntario/historial', icon: 'history' },
   ]);
 
