@@ -54,8 +54,10 @@ export class Sidebar implements OnInit {
     return typeof role === 'string' ? role || 'Rol' : role?.nombre_rol || 'Rol';
   }
 
-  displayPhoto() {
-    return this.currentUser()?.foto || this.userPhoto() || '';
+  displayPhoto(): string | null {
+    const photo = this.currentUser()?.foto || this.userPhoto() || null;
+    console.log('🖼️ Sidebar displayPhoto:', photo);
+    return photo;
   }
 
   handleLogout() {
