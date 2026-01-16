@@ -1,13 +1,14 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { VoluntarioService } from '../../services/voluntario.service';
+import { RouterLink } from '@angular/router';
+import { VoluntarioService, PerfilVoluntario } from '../../services/voluntario.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './perfil.html',
 })
 export class Perfil implements OnInit {
@@ -15,66 +16,95 @@ export class Perfil implements OnInit {
   private voluntarioService = inject(VoluntarioService);
   private authService = inject(AuthService);
 
-  // Signal local para edición
-  perfilEditable = signal<any>({
-    nombre: '',
-    apellidos: '',
-    dni: '',
-    telefono: '',
-    curso: '',
-    horasTotales: 0,
-    cochePropio: false,
-    experiencia: '',
-    foto: ''
-  });
+  // Estado
+  cargando = computed(() => this.voluntarioService.cargando());
+  guardando = signal(false);
+  mensaje = signal<{ tipo: 'success' | 'error'; texto: string } | null>(null);
+  editando = signal(false);
 
-  // Computed para mostrar la foto de Google con prioridad
-  perfil = computed(() => {
-    const datos = this.perfilEditable();
+  // Perfil original (del backend)
+  perfilOriginal = computed(() => this.voluntarioService.perfil());
+
+  // Perfil editable (copia local)
+  perfilEditable = signal<Partial<PerfilVoluntario>>({});
+
+  // Foto (siempre de Google si está disponible)
+  foto = computed(() => {
     const googlePhoto = this.authService.getGooglePhoto();
-
-    return {
-      ...datos,
-      // PRIORIDAD: Google photo > foto subida > Backend photo
-      foto: googlePhoto || datos.foto
-    };
+    return googlePhoto || this.perfilOriginal()?.foto || '';
   });
+
+  // Email (de Google)
+  email = computed(() => {
+    const googleEmail = this.authService.getGoogleEmail();
+    return googleEmail || this.perfilOriginal()?.email || '';
+  });
+
+  // Estadísticas
+  estadisticas = computed(() => this.voluntarioService.estadisticas());
 
   ngOnInit() {
-    // Cargar datos del servicio
-    const datos = this.voluntarioService.perfilSignal();
-    this.perfilEditable.set({ ...datos });
+    // Cargar datos si no hay
+    if (!this.perfilOriginal()) {
+      this.voluntarioService.cargarTodo();
+    }
+
+    // Inicializar perfil editable cuando lleguen los datos
+    const perfil = this.perfilOriginal();
+    if (perfil) {
+      this.perfilEditable.set({ ...perfil });
+    }
   }
 
-  // --- FUNCIÓN PARA PROCESAR LA IMAGEN ---
-  // Nota: La foto de Google siempre tendrá prioridad, esta solo se usa si no hay foto de Google
-  onFileSelected(event: any) {
-    const file: File = event.target.files[0];
+  iniciarEdicion() {
+    const perfil = this.perfilOriginal();
+    if (perfil) {
+      this.perfilEditable.set({ ...perfil });
+    }
+    this.editando.set(true);
+    this.mensaje.set(null);
+  }
 
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        alert('Por favor, selecciona un archivo de imagen válido.');
-        return;
-      }
-
-      const reader = new FileReader();
-
-      reader.onload = (e: any) => {
-        const base64Image = e.target.result;
-        this.perfilEditable.update(current => ({
-          ...current,
-          foto: base64Image
-        }));
-      };
-
-      reader.readAsDataURL(file);
+  cancelarEdicion() {
+    this.editando.set(false);
+    this.mensaje.set(null);
+    // Restaurar valores originales
+    const perfil = this.perfilOriginal();
+    if (perfil) {
+      this.perfilEditable.set({ ...perfil });
     }
   }
 
   guardarCambios() {
-    // Al guardar, se enviará todo el objeto perfil
-    this.voluntarioService.updatePerfil(this.perfilEditable()).subscribe(() => {
-      alert('¡Perfil actualizado correctamente!');
+    this.guardando.set(true);
+    this.mensaje.set(null);
+
+    this.voluntarioService.actualizarPerfil(this.perfilEditable()).subscribe({
+      next: (result) => {
+        if (result.success) {
+          this.mensaje.set({ tipo: 'success', texto: '¡Perfil actualizado correctamente!' });
+          this.editando.set(false);
+        } else {
+          this.mensaje.set({ tipo: 'error', texto: result.mensaje });
+        }
+        this.guardando.set(false);
+      },
+      error: () => {
+        this.mensaje.set({ tipo: 'error', texto: 'Error al guardar los cambios.' });
+        this.guardando.set(false);
+      }
     });
+  }
+
+  updateField(field: string, value: any) {
+    this.perfilEditable.update(p => ({ ...p, [field]: value }));
+  }
+
+  getNivelClass(nivel: string): string {
+    switch (nivel) {
+      case 'Experto': return 'bg-purple-100 text-purple-700';
+      case 'Intermedio': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
   }
 }
