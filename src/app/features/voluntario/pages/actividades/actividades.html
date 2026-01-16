@@ -1,0 +1,390 @@
+<div class="space-y-6">
+
+  <!-- Header con Estadísticas -->
+  <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-6 text-white shadow-lg">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold">Actividades Disponibles</h1>
+        <p class="text-emerald-100 mt-1">Explora las oportunidades de voluntariado y apúntate</p>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-center px-4 py-2 bg-white/20 rounded-xl backdrop-blur-sm">
+          <span class="block text-2xl font-bold">{{ estadisticas().total }}</span>
+          <span class="text-xs text-emerald-100">Total</span>
+        </div>
+        <div class="text-center px-4 py-2 bg-white/20 rounded-xl backdrop-blur-sm">
+          <span class="block text-2xl font-bold">{{ estadisticas().disponibles }}</span>
+          <span class="text-xs text-emerald-100">Disponibles</span>
+        </div>
+        <div class="text-center px-4 py-2 bg-white/20 rounded-xl backdrop-blur-sm">
+          <span class="block text-2xl font-bold">{{ estadisticas().inscritas }}</span>
+          <span class="text-xs text-emerald-100">Inscritas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Búsqueda -->
+      <div class="relative">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input 
+          type="text" 
+          [ngModel]="busqueda()"
+          (ngModelChange)="busqueda.set($event)"
+          placeholder="Buscar actividades..."
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+        >
+      </div>
+
+      <!-- Tipo -->
+      <select 
+        [ngModel]="filtroTipo()"
+        (ngModelChange)="filtroTipo.set($event)"
+        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white">
+        @for (tipo of tiposUnicos(); track tipo) {
+          <option [value]="tipo">{{ tipo === 'Todos' ? '📂 Todos los tipos' : tipo }}</option>
+        }
+      </select>
+
+      <!-- Ubicación -->
+      <select 
+        [ngModel]="filtroUbicacion()"
+        (ngModelChange)="filtroUbicacion.set($event)"
+        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white">
+        @for (ubi of ubicacionesUnicas(); track ubi) {
+          <option [value]="ubi">{{ ubi === 'Todas' ? '📍 Todas las ubicaciones' : ubi }}</option>
+        }
+      </select>
+
+      <!-- Solo disponibles -->
+      <div class="flex items-center gap-3">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input 
+            type="checkbox"
+            [checked]="soloDisponibles()"
+            (change)="soloDisponibles.set(!soloDisponibles())"
+            class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+          >
+          <span class="text-sm text-gray-700">Solo con plazas</span>
+        </label>
+        
+        @if (busqueda() || filtroTipo() !== 'Todos' || filtroUbicacion() !== 'Todas') {
+          <button (click)="limpiarFiltros()" 
+                  class="text-sm text-red-500 hover:text-red-700 font-medium">
+            <i class="fa-solid fa-times mr-1"></i> Limpiar
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  @if (cargando()) {
+    <div class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+    </div>
+  }
+
+  <!-- Lista de Actividades -->
+  @if (!cargando()) {
+    @if (actividadesFiltradas().length === 0) {
+      <div class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
+        <i class="fa-solid fa-calendar-xmark text-5xl text-gray-300 mb-4"></i>
+        <h3 class="text-lg font-bold text-gray-700">No se encontraron actividades</h3>
+        <p class="text-gray-500 mt-2">Prueba ajustando los filtros de búsqueda</p>
+        <button (click)="limpiarFiltros()" 
+                class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
+          Ver todas las actividades
+        </button>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (act of actividadesFiltradas(); track act.id_actividad) {
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+            <!-- Header de la tarjeta -->
+            <div class="p-5 border-b border-gray-50">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
+                    {{ act.titulo }}
+                  </h3>
+                  <p class="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                    <i class="fa-solid fa-building text-xs"></i>
+                    {{ act.organizacion }}
+                  </p>
+                </div>
+                
+                @if (act.inscrito) {
+                  <span class="px-2 py-1 text-xs font-bold rounded-full" 
+                        [ngClass]="getEstadoInscripcionClass(act.estadoInscripcion)">
+                    {{ act.estadoInscripcion || 'Inscrito' }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Contenido -->
+            <div class="p-5 space-y-3">
+              <!-- Fecha y ubicación -->
+              <div class="flex flex-wrap gap-3 text-sm">
+                <span class="flex items-center gap-1 text-gray-600">
+                  <i class="fa-regular fa-calendar text-emerald-500"></i>
+                  {{ formatearFecha(act.fecha_inicio) }}
+                </span>
+                @if (act.ubicacion) {
+                  <span class="flex items-center gap-1 text-gray-600">
+                    <i class="fa-solid fa-location-dot text-emerald-500"></i>
+                    {{ act.ubicacion }}
+                  </span>
+                }
+              </div>
+
+              <!-- Duración -->
+              <div class="flex items-center gap-2 text-sm text-gray-600">
+                <i class="fa-regular fa-clock text-emerald-500"></i>
+                <span>{{ act.duracion_horas }} horas</span>
+              </div>
+
+              <!-- Descripción -->
+              <p class="text-sm text-gray-600 line-clamp-2">{{ act.descripcion }}</p>
+
+              <!-- Plazas -->
+              <div class="pt-2">
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                  <span>{{ getPlazasTexto(act) }}</span>
+                  @if (act.cupo_maximo > 0) {
+                    <span>{{ act.voluntarios_inscritos }}/{{ act.cupo_maximo }}</span>
+                  }
+                </div>
+                @if (act.cupo_maximo > 0) {
+                  <div class="w-full bg-gray-100 rounded-full h-1.5">
+                    <div class="h-1.5 rounded-full transition-all duration-500"
+                         [style.width.%]="getPlazasPorcentaje(act)"
+                         [ngClass]="estaLlena(act) ? 'bg-red-500' : 'bg-emerald-500'"></div>
+                  </div>
+                }
+              </div>
+
+              <!-- ODS Tags -->
+              @if (act.ods && act.ods.length > 0) {
+                <div class="flex flex-wrap gap-1 pt-2">
+                  @for (ods of act.ods.slice(0, 3); track ods.id) {
+                    <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-700">
+                      ODS {{ ods.id }}
+                    </span>
+                  }
+                  @if (act.ods.length > 3) {
+                    <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-600">
+                      +{{ act.ods.length - 3 }}
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Footer con acciones -->
+            <div class="px-5 pb-5">
+              <button (click)="abrirModal(act)"
+                      class="w-full py-2.5 rounded-xl font-semibold transition-all duration-200"
+                      [ngClass]="act.inscrito 
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                        : estaLlena(act)
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-md'"
+                      [disabled]="estaLlena(act) && !act.inscrito">
+                @if (act.inscrito) {
+                  <i class="fa-solid fa-eye mr-2"></i> Ver Inscripción
+                } @else if (estaLlena(act)) {
+                  <i class="fa-solid fa-ban mr-2"></i> Sin Plazas
+                } @else {
+                  <i class="fa-solid fa-plus mr-2"></i> Inscribirse
+                }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal de Detalles -->
+@if (modalAbierto() && actividadSeleccionada(); as act) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="cerrarModal()"></div>
+    
+    <!-- Modal Content -->
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+      <!-- Header -->
+      <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+        <h2 class="text-xl font-bold text-gray-900">{{ act.titulo }}</h2>
+        <button (click)="cerrarModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <i class="fa-solid fa-xmark text-gray-500"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 space-y-6">
+        <!-- Mensaje de estado -->
+        @if (mensaje()) {
+          <div class="p-4 rounded-xl flex items-center gap-3"
+               [ngClass]="mensaje()!.tipo === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
+            <i class="fa-solid" 
+               [ngClass]="mensaje()!.tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+            {{ mensaje()!.texto }}
+          </div>
+        }
+
+        <!-- Info principal -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <i class="fa-solid fa-building"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Organización</p>
+              <p class="font-semibold text-gray-900">{{ act.organizacion }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+              <i class="fa-regular fa-calendar"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Fecha</p>
+              <p class="font-semibold text-gray-900">{{ formatearFecha(act.fecha_inicio) }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+              <i class="fa-regular fa-clock"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Duración</p>
+              <p class="font-semibold text-gray-900">{{ act.duracion_horas }} horas</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
+              <i class="fa-solid fa-location-dot"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Ubicación</p>
+              <p class="font-semibold text-gray-900">{{ act.ubicacion || 'No especificada' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div>
+          <h3 class="font-bold text-gray-900 mb-2">Descripción</h3>
+          <p class="text-gray-600 leading-relaxed">{{ act.descripcion || 'Sin descripción disponible.' }}</p>
+        </div>
+
+        <!-- Plazas -->
+        <div class="p-4 bg-gray-50 rounded-xl">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-gray-900">Plazas disponibles</span>
+            <span class="text-sm" [ngClass]="estaLlena(act) ? 'text-red-600' : 'text-emerald-600'">
+              {{ getPlazasTexto(act) }}
+            </span>
+          </div>
+          @if (act.cupo_maximo > 0) {
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="h-2 rounded-full transition-all"
+                   [style.width.%]="getPlazasPorcentaje(act)"
+                   [ngClass]="estaLlena(act) ? 'bg-red-500' : 'bg-emerald-500'"></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+              {{ act.voluntarios_inscritos }} de {{ act.cupo_maximo }} voluntarios inscritos
+            </p>
+          }
+        </div>
+
+        <!-- ODS -->
+        @if (act.ods && act.ods.length > 0) {
+          <div>
+            <h3 class="font-bold text-gray-900 mb-2">Objetivos de Desarrollo Sostenible</h3>
+            <div class="flex flex-wrap gap-2">
+              @for (ods of act.ods; track ods.id) {
+                <span class="px-3 py-1 text-sm font-medium rounded-full bg-emerald-100 text-emerald-700">
+                  ODS {{ ods.id }}: {{ ods.nombre }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Estado de inscripción actual -->
+        @if (act.inscrito) {
+          <div class="p-4 rounded-xl border-2" 
+               [ngClass]="{
+                 'border-green-200 bg-green-50': act.estadoInscripcion === 'Aceptada',
+                 'border-orange-200 bg-orange-50': act.estadoInscripcion === 'Pendiente',
+                 'border-red-200 bg-red-50': act.estadoInscripcion === 'Rechazada'
+               }">
+            <div class="flex items-center gap-3">
+              <i class="fa-solid text-xl"
+                 [ngClass]="{
+                   'fa-check-circle text-green-600': act.estadoInscripcion === 'Aceptada',
+                   'fa-clock text-orange-600': act.estadoInscripcion === 'Pendiente',
+                   'fa-times-circle text-red-600': act.estadoInscripcion === 'Rechazada'
+                 }"></i>
+              <div>
+                <p class="font-bold"
+                   [ngClass]="{
+                     'text-green-800': act.estadoInscripcion === 'Aceptada',
+                     'text-orange-800': act.estadoInscripcion === 'Pendiente',
+                     'text-red-800': act.estadoInscripcion === 'Rechazada'
+                   }">
+                  @if (act.estadoInscripcion === 'Aceptada') { ¡Tu inscripción ha sido aceptada! }
+                  @else if (act.estadoInscripcion === 'Pendiente') { Tu inscripción está pendiente de aprobación }
+                  @else if (act.estadoInscripcion === 'Rechazada') { Tu inscripción fue rechazada }
+                </p>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer con acciones -->
+      <div class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 rounded-b-3xl">
+        <button (click)="cerrarModal()" 
+                class="flex-1 py-3 px-4 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors">
+          Cerrar
+        </button>
+
+        @if (act.inscrito) {
+          @if (act.estadoInscripcion === 'Pendiente' || act.estadoInscripcion === 'Aceptada') {
+            <button (click)="desapuntarse(act)"
+                    [disabled]="procesando()"
+                    class="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (procesando()) {
+                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Procesando...
+              } @else {
+                <i class="fa-solid fa-xmark mr-2"></i> Desapuntarse
+              }
+            </button>
+          }
+        } @else if (!estaLlena(act)) {
+          <button (click)="inscribirse(act)"
+                  [disabled]="procesando()"
+                  class="flex-1 py-3 px-4 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (procesando()) {
+              <i class="fa-solid fa-spinner fa-spin mr-2"></i> Procesando...
+            } @else {
+              <i class="fa-solid fa-hand-holding-heart mr-2"></i> Inscribirme
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
