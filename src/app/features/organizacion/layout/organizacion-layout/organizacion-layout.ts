@@ -37,16 +37,20 @@ export class OrganizacionLayout {
     icon: 'account_circle',
   };
 
-  // Conectamos con el perfil del servicio + foto de Google
+  // Conectamos con el perfil del servicio + foto de Google (reactivo)
   usuario = computed(() => {
     const perfil = this.orgService.perfil();
-    const googlePhoto = this.authService.getGooglePhoto();
+    const userProfile = this.authService.userProfile(); // Este es reactivo
+
+    // Debug
+    console.log('🔍 Layout: userProfile.foto =', userProfile.foto);
+    console.log('🔍 Layout: perfil.foto =', perfil.foto);
 
     return {
-      nombre: perfil.nombre || 'Organización',
+      nombre: perfil.nombre || userProfile.nombre || 'Organización',
       rol: 'Organización',
-      // PRIORIDAD: Google photo > Backend photo
-      foto: googlePhoto || perfil.foto || null
+      // PRIORIDAD: userProfile.foto (que ya prioriza Google) > perfil.foto
+      foto: userProfile.foto || perfil.foto || null
     };
   });
 
