@@ -1,0 +1,78 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    (click)="close.emit()">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+        (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">Voluntarios Inscritos</h3>
+                <p class="text-sm text-gray-500">{{ actividadTitulo() }}</p>
+            </div>
+            <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 max-h-[60vh] overflow-y-auto">
+
+            @if (cargando()) {
+            <div class="flex justify-center py-8">
+                <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-600"></i>
+            </div>
+            } @else if (voluntarios().length === 0) {
+            <div class="text-center py-8 text-gray-500">
+                <i class="fa-solid fa-users-slash text-4xl mb-3 text-gray-300"></i>
+                <p>No hay voluntarios inscritos aún</p>
+            </div>
+            } @else {
+            <div class="space-y-3">
+                @for (vol of voluntarios(); track vol.id_voluntario) {
+                <div (click)="seleccionado.set(vol)"
+                    class="flex items-center justify-between p-4 bg-white border rounded-xl hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            {{ vol.nombre.charAt(0) }}{{ vol.apellidos.charAt(0) }}
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900 group-hover:text-blue-600">{{ vol.nombre }} {{
+                                vol.apellidos }}</h4>
+                            <p class="text-sm text-gray-500">{{ vol.email }}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium"
+                            [class.bg-green-100]="vol.estado_solicitud === 'Confirmada' || vol.estado_solicitud === 'Aceptada'"
+                            [class.text-green-700]="vol.estado_solicitud === 'Confirmada' || vol.estado_solicitud === 'Aceptada'"
+                            [class.bg-yellow-100]="vol.estado_solicitud === 'Pendiente'"
+                            [class.text-yellow-700]="vol.estado_solicitud === 'Pendiente'"
+                            [class.bg-red-100]="vol.estado_solicitud === 'Rechazada'"
+                            [class.text-red-700]="vol.estado_solicitud === 'Rechazada'">
+                            {{ vol.estado_solicitud }}
+                        </span>
+                        <span class="text-xs text-gray-400">
+                            {{ formatearFecha(vol.fecha_solicitud) }}
+                        </span>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-gray-50 border-t text-right">
+            <button (click)="close.emit()"
+                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium transition-colors">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (seleccionado()) {
+<app-modal-detalle-voluntario [vol]="seleccionado()!" [actividadId]="actividadId()" (close)="seleccionado.set(null)"
+    (cursoCambiado)="cargarVoluntarios()" />
+}
