@@ -18,52 +18,46 @@ export const authGuard: CanActivateFn = (route, state) => {
             // 1. Si no hay usuario de Firebase, redirigir a login
             if (!user) {
                 authService.clearBackendUser();
-                console.log('🔒 Guard: No hay usuario de Firebase, redirigiendo a login');
                 return router.createUrlTree(['/auth/login']);
             }
 
             if (!user.email) {
-                console.log('🔒 Guard: Usuario sin email');
                 return router.createUrlTree(['/auth/login']);
             }
 
             const googleId = user.providerData[0]?.uid || user.uid;
             let resolvedBackendUser = backendUser;
 
-            // 2. Verificar usuario en backend
-            try {
-                resolvedBackendUser = await authService.verifyUser(googleId, user.email);
-                console.log('✅ Guard: Usuario verificado:', resolvedBackendUser);
-            } catch (error: any) {
-                console.log('❌ Guard: Error verificando usuario:', error);
-                return handleBackendError(error, router);
+            // 2. Solo verificar en backend si NO hay usuario cacheado
+            // Esto evita llamadas API innecesarias en cada navegación
+            if (!backendUser) {
+                try {
+                    resolvedBackendUser = await authService.verifyUser(googleId, user.email);
+                } catch (error: any) {
+                    return handleBackendError(error, router);
+                }
             }
 
             // 3. Verificar estado de cuenta
             const estadoCuenta = resolvedBackendUser?.estado_cuenta || resolvedBackendUser?.estado;
 
             if (estadoCuenta === 'Pendiente') {
-                console.log('⏳ Guard: Usuario pendiente de aprobación');
                 return router.createUrlTree(['/auth/status'], { queryParams: { state: 'Pendiente' } });
             }
 
             if (estadoCuenta === 'Bloqueada') {
-                console.log('🚫 Guard: Usuario bloqueado');
                 return router.createUrlTree(['/auth/status'], { queryParams: { state: 'Bloqueada' } });
             }
 
             if (estadoCuenta === 'Rechazada') {
-                console.log('❌ Guard: Usuario rechazado');
                 return router.createUrlTree(['/auth/status'], { queryParams: { state: 'Rechazada' } });
             }
 
             // 4. Verificar rol si se requiere
             if (requiredRoles.length > 0 && !roleMatches(requiredRoles, resolvedBackendUser?.rol)) {
-                console.log('🚫 Guard: Rol no autorizado');
                 return router.createUrlTree(['/auth/access-denied']);
             }
 
-            console.log('✅ Guard: Acceso permitido');
             return true;
         })
     );
