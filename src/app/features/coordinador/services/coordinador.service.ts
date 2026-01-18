@@ -1,4 +1,5 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, catchError, map, tap, forkJoin, BehaviorSubject, delay, filter, take, switchMap } from 'rxjs';
 
@@ -117,6 +118,7 @@ export class CoordinadorService {
 
     private http = inject(HttpClient);
     private authService = inject(AuthService);
+    private destroyRef = inject(DestroyRef);
 
     private apiUrl = environment.apiUrl;
 
@@ -148,7 +150,10 @@ export class CoordinadorService {
         this.googlePhoto = this.authService.getGooglePhoto();
         this.googleEmail = this.authService.getGoogleEmail();
 
-        this.authService.backendUser$.subscribe((backendUser) => {
+        // Suscripción con cleanup automático para evitar memory leaks
+        this.authService.backendUser$.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe((backendUser) => {
             this.backendUserCache = backendUser;
             if (backendUser?.id_usuario) {
                 this.cargarPerfilDesdeBackend(backendUser);
@@ -158,7 +163,10 @@ export class CoordinadorService {
             }
         });
 
-        this.authService.user$.subscribe((firebaseUser) => {
+        // Suscripción con cleanup automático para evitar memory leaks
+        this.authService.user$.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe((firebaseUser) => {
             if (!firebaseUser) return;
             if (firebaseUser.photoURL) this.googlePhoto = firebaseUser.photoURL;
             if (firebaseUser.email) this.googleEmail = firebaseUser.email;
@@ -324,12 +332,11 @@ export class CoordinadorService {
                 });
                 return this.http.get<any[]>(`${this.apiUrl}/coord/actividades`, { headers });
             }),
-            tap(data => console.log('📦 Actividades ADMIN backend:', data)),
             map(data => data.map(a => ({
                 id: a.id_actividad,
                 titulo: a.titulo || '',
                 descripcion: a.descripcion,
-                organizacion: a.nombre_organizacion || 'Sin organización', // Ajustado a la query SQL corregida
+                organizacion: a.nombre_organizacion || 'Sin organización',
                 organizacionId: a.id_organizacion,
                 fecha_inicio: a.fecha_inicio,
                 duracion_horas: a.duracion_horas,
@@ -397,6 +404,15 @@ export class CoordinadorService {
         );
     }
 
+    // --- EDITAR ACTIVIDAD ---
+    editarActividad(id: number, datos: any): Observable<any> {
+        return this.http.put(
+            `${this.apiUrl}/actividades/${id}`,
+            datos,
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
     // --- SOLICITUDES PENDIENTES ---
     getSolicitudesVoluntarios(): Observable<VoluntarioAdmin[]> {
         return this.getVoluntarios().pipe(
@@ -450,11 +466,9 @@ export class CoordinadorService {
     // Obtiene todas las inscripciones pendientes de todas las actividades
     getInscripcionesPendientes(): Observable<InscripcionPendiente[]> {
         return this.getActividades().pipe(
-            tap(actividades => console.log('📋 Actividades para inscripciones:', actividades)),
             switchMap(actividades => {
                 // Filtramos solo actividades publicadas
                 const actividadesPublicadas = actividades.filter(a => a.estado === 'Publicada');
-                console.log('📋 Actividades publicadas:', actividadesPublicadas.length);
 
                 if (actividadesPublicadas.length === 0) {
                     return of([]);
@@ -466,7 +480,6 @@ export class CoordinadorService {
                         `${this.apiUrl}/actividades/${act.id}/inscripciones`,
                         { headers: this.getAdminHeaders() }
                     ).pipe(
-                        tap(inscripciones => console.log(`📝 Inscripciones de actividad ${act.id}:`, inscripciones)),
                         map(inscripciones => inscripciones.map(ins => ({
                             id_actividad: act.id,
                             titulo_actividad: act.titulo,
@@ -475,22 +488,17 @@ export class CoordinadorService {
                             id_voluntario: ins.id_voluntario,
                             nombre_voluntario: ins.nombre_voluntario || '',
                             email_voluntario: ins.email_voluntario || '',
-                            estado_solicitud: ins.estado || ins.estado_solicitud, // El DTO usa 'estado'
+                            estado_solicitud: ins.estado || ins.estado_solicitud,
                             fecha_solicitud: ins.fecha_solicitud
                         }))),
-                        catchError(err => {
-                            console.error(`❌ Error obteniendo inscripciones de actividad ${act.id}:`, err);
-                            return of([]);
-                        })
+                        catchError(() => of([]))
                     )
                 );
 
                 return forkJoin(requests).pipe(
-                    tap(results => console.log('📋 Todas las inscripciones:', results.flat())),
                     map(results => results.flat().filter(ins => ins.estado_solicitud === 'Pendiente'))
                 );
-            }),
-            tap(pendientes => console.log('⏳ Inscripciones pendientes:', pendientes))
+            })
         );
     }
 

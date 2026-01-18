@@ -1,6 +1,7 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, catchError, map, tap, forkJoin, filter, take, switchMap } from 'rxjs';
+import { Observable, of, catchError, map, tap, forkJoin, filter, take, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { BackendUser } from '../../../shared/models/interfaces/backend-user';
 import { environment } from '../../../../environments/environment';
@@ -65,7 +66,7 @@ export interface VoluntarioInscrito {
   bio?: string;
   fecha_nac?: string;
   fecha_solicitud: string;
-  estado_solicitud: 'Pendiente' | 'Confirmada' | 'Rechazada' | 'Aceptada';
+  estado_solicitud: 'Pendiente' | 'Aceptada' | 'Rechazada';
 }
 
 // Interface para respuesta del backend
@@ -94,6 +95,7 @@ export class OrganizacionService {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
   private apiUrl = environment.apiUrl;
 
   private googlePhoto: string | null = null;
@@ -143,8 +145,10 @@ export class OrganizacionService {
     this.googlePhoto = this.authService.getGooglePhoto();
     this.googleEmail = this.authService.getGoogleEmail();
 
-    // Escuchar cambios en el backend user
-    this.authService.backendUser$.subscribe((backendUser) => {
+    // Escuchar cambios en el backend user - con cleanup automático
+    this.authService.backendUser$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((backendUser) => {
       if (backendUser?.id_usuario && backendUser.rol?.toLowerCase().includes('organiz')) {
         this.cargarPerfilDesdeBackend(backendUser);
         this.cargarActividadesDesdeBackend(backendUser.id_usuario);
@@ -153,8 +157,10 @@ export class OrganizacionService {
       }
     });
 
-    // Escuchar cambios en Firebase para la foto y correo
-    this.authService.user$.subscribe((firebaseUser) => {
+    // Escuchar cambios en Firebase para la foto y correo - con cleanup automático
+    this.authService.user$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((firebaseUser) => {
       if (firebaseUser?.photoURL) {
         this.googlePhoto = firebaseUser.photoURL;
       }
@@ -273,7 +279,6 @@ export class OrganizacionService {
     this.http.get<any[]>(`${this.apiUrl}/catalogos/ods`)
       .pipe(catchError(() => of([])))
       .subscribe(data => {
-        console.log('ODS recibidos:', data);
         this._odsList.set(data.map(o => ({
           id: o.id || o.id_ods,
           nombre: o.nombre,
@@ -285,7 +290,6 @@ export class OrganizacionService {
     this.http.get<any[]>(`${this.apiUrl}/catalogos/tipos-voluntariado`)
       .pipe(catchError(() => of([])))
       .subscribe(data => {
-        console.log('Tipos de voluntariado recibidos:', data);
         this._tiposList.set(data.map(t => ({
           id: t.id || t.id_tipo,
           nombre: t.nombreTipo || t.nombre_tipo || t.nombre || 'Sin nombre'
@@ -385,7 +389,32 @@ export class OrganizacionService {
     }
   }
 
-  actualizarPerfil(datos: Partial<PerfilOrganizacion>) {
-    this.perfil.update(actual => ({ ...actual, ...datos }));
+  // Actualizar perfil en el backend - CORREGIDO: Ahora persiste los cambios
+  actualizarPerfil(datos: Partial<PerfilOrganizacion>): Observable<{ success: boolean; mensaje: string }> {
+    const orgId = this.perfil().id;
+    if (!orgId) {
+      return of({ success: false, mensaje: 'ID de organización no encontrado' });
+    }
+
+    // IMPORTANTE: El backend DTO espera camelCase, no snake_case
+    const payload = {
+      nombre: datos.nombre || '',
+      descripcion: datos.descripcion || '', // Requerido por el backend
+      sitioWeb: datos.web || null, // camelCase, no sitio_web
+      direccion: datos.direccion || null,
+      telefono: datos.telefono || null
+    };
+
+    return this.http.put(`${this.apiUrl}/organizaciones/${orgId}`, payload).pipe(
+      tap(() => {
+        // Actualizar estado local después de éxito en backend
+        this.perfil.update(actual => ({ ...actual, ...datos }));
+      }),
+      map(() => ({ success: true, mensaje: 'Perfil actualizado correctamente' })),
+      catchError(err => {
+        const mensaje = err.error?.error || err.error?.mensaje || 'Error al guardar los cambios';
+        return of({ success: false, mensaje });
+      })
+    );
   }
 }

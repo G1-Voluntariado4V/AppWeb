@@ -1,4 +1,5 @@
-import { Injectable, signal, inject, computed } from '@angular/core';
+import { Injectable, signal, inject, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, catchError, map, tap, forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
@@ -80,6 +81,7 @@ export class VoluntarioService {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
 
   // Signals para estado reactivo
   perfil = signal<PerfilVoluntario | null>(null);
@@ -122,8 +124,10 @@ export class VoluntarioService {
   }
 
   constructor() {
-    // Cargar datos cuando cambie el usuario
-    this.authService.backendUser$.subscribe((backendUser) => {
+    // Cargar datos cuando cambie el usuario - con cleanup automático
+    this.authService.backendUser$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((backendUser) => {
       if (backendUser?.id_usuario && this.isVoluntario(backendUser)) {
         this.cargarTodo();
       }
@@ -254,17 +258,11 @@ export class VoluntarioService {
       `${environment.apiUrl}/voluntarios/${userId}/historial`,
       { headers: this.getHeaders() }
     ).pipe(
-      tap(response => console.log('📜 Historial RAW del backend:', response)),
       map(response => {
-        const mapped = {
+        return {
           resumen: response.resumen || { total_participaciones: 0, horas_acumuladas: 0, nivel_experiencia: 'Principiante' },
-          actividades: (response.actividades || []).map(act => {
-            console.log('📝 Actividad RAW:', act);
-            return this.mapearMiActividad(act);
-          })
+          actividades: (response.actividades || []).map(act => this.mapearMiActividad(act))
         };
-        console.log('📜 Historial MAPEADO:', mapped);
-        return mapped;
       }),
       catchError(err => {
         console.error('Error cargando historial:', err);
@@ -295,21 +293,16 @@ export class VoluntarioService {
 
   inscribirse(idActividad: number): Observable<{ success: boolean; mensaje: string }> {
     const userId = this.userId;
-    console.log('📝 Inscribirse - userId:', userId, 'actividadId:', idActividad);
 
     if (!userId) {
-      console.error('❌ No se ha identificado el usuario');
       return of({ success: false, mensaje: 'No se ha identificado el usuario' });
     }
 
     const url = `${environment.apiUrl}/voluntarios/${userId}/actividades/${idActividad}`;
     const headers = this.getHeaders();
-    console.log('📤 POST a:', url);
-    console.log('📤 Headers:', { 'X-User-Id': userId.toString() });
 
     return this.http.post<any>(url, {}, { headers }).pipe(
-      tap((response) => {
-        console.log('✅ Inscripción exitosa:', response);
+      tap(() => {
         // Actualizar estado local
         this.actividadesDisponibles.update(acts =>
           acts.map(act =>
@@ -328,9 +321,6 @@ export class VoluntarioService {
       }),
       map(response => ({ success: true, mensaje: response.mensaje || 'Inscripción realizada' })),
       catchError(err => {
-        console.error('❌ Error en inscripción:', err);
-        console.error('❌ Status:', err.status);
-        console.error('❌ Error body:', err.error);
         const mensaje = err.error?.error || err.error?.mensaje || `Error al inscribirse (${err.status || 'desconocido'})`;
         return of({ success: false, mensaje });
       })
