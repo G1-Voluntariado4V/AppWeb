@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoordinadorService, PerfilCoordinadorUI } from '../../services/coordinador';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-perfil',
@@ -14,6 +15,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class Perfil implements OnInit {
   private coordinadorService = inject(CoordinadorService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   // Estado de edición
   modoEdicion = signal(false);
@@ -73,7 +75,7 @@ export class Perfil implements OnInit {
   guardarCambios() {
     const id = this.perfil().id_usuario;
     if (!id) {
-      alert('No se pudo identificar el usuario');
+      this.toastService.error('No se pudo identificar el usuario');
       return;
     }
 
@@ -87,12 +89,13 @@ export class Perfil implements OnInit {
       next: () => {
         this.modoEdicion.set(false);
         this.guardando.set(false);
-        alert('Perfil actualizado correctamente');
+        this.toastService.success('Perfil actualizado correctamente');
       },
-      error: (err) => {
+      error: (err: any) => {
         this.guardando.set(false);
-        alert('Error al actualizar: ' + (err.error?.error || 'Error desconocido'));
+        this.toastService.error('Error al actualizar: ' + (err.error?.error || 'Error desconocido'));
       }
     });
   }
 }
+

@@ -112,13 +112,13 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
 					<label class="text-xs text-gray-500 mb-1 block">Nombre</label>
-					<input type="text" [(ngModel)]="nombreEditable"
+					<input type="text" [ngModel]="nombreEditable()" (ngModelChange)="nombreEditable.set($event)"
 						class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none font-semibold">
 				</div>
 
 				<div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
 					<label class="text-xs text-gray-500 mb-1 block">Apellidos</label>
-					<input type="text" [(ngModel)]="apellidosEditable"
+					<input type="text" [ngModel]="apellidosEditable()" (ngModelChange)="apellidosEditable.set($event)"
 						class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none font-semibold">
 				</div>
 
@@ -130,7 +130,8 @@
 
 				<div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
 					<label class="text-xs text-gray-500 mb-1 block">Teléfono</label>
-					<input type="tel" [(ngModel)]="telefonoEditable" placeholder="Ej: 600123456"
+					<input type="tel" [ngModel]="telefonoEditable()" (ngModelChange)="telefonoEditable.set($event)"
+						placeholder="Ej: 600123456"
 						class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none font-semibold">
 				</div>
 			</div>

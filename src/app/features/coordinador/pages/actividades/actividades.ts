@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CoordinadorService, ActividadAdmin, ODS, TipoVoluntariado } from '../../services/coordinador';
 import { ModalCrearActividad } from '../../components/modal-crear-actividad/modal-crear-actividad';
 import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/modal-detalle-actividad';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-actividades',
@@ -14,6 +15,7 @@ import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/
 export class Actividades implements OnInit {
 
   private coordinadorService = inject(CoordinadorService);
+  private toastService = inject(ToastService);
 
   actividades = signal<ActividadAdmin[]>([]);
   busqueda = signal('');
@@ -26,8 +28,9 @@ export class Actividades implements OnInit {
   // Modales
   modalCrearVisible = signal(false);
   actividadSeleccionada = signal<ActividadAdmin | null>(null);
+  actividadParaEditar = signal<ActividadAdmin | null>(null);
 
-  // Estados disponibles para filtro (Agregado 'Finalizada')
+  // Estados disponibles para filtro
   estadosDisponibles = ['Todos', 'Publicada', 'En revision', 'Cancelada', 'Rechazada', 'Finalizada'];
 
   // Computed para filtrar
@@ -56,6 +59,7 @@ export class Actividades implements OnInit {
       },
       error: () => {
         this.cargando.set(false);
+        this.toastService.error('Error al cargar las actividades');
       }
     });
   }
@@ -71,29 +75,57 @@ export class Actividades implements OnInit {
   }
 
   // Modal Crear
-  abrirModalCrear() { this.modalCrearVisible.set(true); }
-  cerrarModalCrear() { this.modalCrearVisible.set(false); }
+  abrirModalCrear() {
+    this.actividadParaEditar.set(null); // Asegurar que es creación, no edición
+    this.modalCrearVisible.set(true);
+  }
+  cerrarModalCrear() {
+    this.modalCrearVisible.set(false);
+    this.actividadParaEditar.set(null);
+  }
 
   guardarNuevaActividad(datos: any) {
-    this.coordinadorService.crearActividad(datos).subscribe({
-      next: () => {
-        this.cargarDatos();
-        alert('Actividad creada correctamente.');
-      },
-      error: (err) => {
-        alert('Error al crear la actividad: ' + (err.error?.error || 'Error desconocido'));
-      }
-    });
+    const actividadEdit = this.actividadParaEditar();
+
+    if (actividadEdit) {
+      // Modo edición
+      this.coordinadorService.editarActividad(actividadEdit.id, datos).subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Actividad actualizada correctamente');
+          this.cerrarModalCrear();
+        },
+        error: (err) => {
+          this.toastService.error('Error al actualizar: ' + (err.error?.error || 'Error desconocido'));
+        }
+      });
+    } else {
+      // Modo creación
+      this.coordinadorService.crearActividad(datos).subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Actividad creada correctamente');
+          this.cerrarModalCrear();
+        },
+        error: (err) => {
+          this.toastService.error('Error al crear: ' + (err.error?.error || 'Error desconocido'));
+        }
+      });
+    }
   }
 
   // Modal Detalle
   verDetalle(act: ActividadAdmin) { this.actividadSeleccionada.set(act); }
   cerrarDetalle() { this.actividadSeleccionada.set(null); }
 
-  // Editar
+  // Editar - IMPLEMENTADO (FIX BUG-017)
   editar(id: number, event: Event) {
     event.stopPropagation();
-    console.log('Editar actividad', id);
+    const actividad = this.actividades().find(a => a.id === id);
+    if (actividad) {
+      this.actividadParaEditar.set(actividad);
+      this.modalCrearVisible.set(true);
+    }
   }
 
   // Aprobar / Rechazar
@@ -101,8 +133,11 @@ export class Actividades implements OnInit {
     event.stopPropagation();
     if (confirm('¿Publicar esta actividad?')) {
       this.coordinadorService.aprobarActividad(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Actividad publicada');
+        },
+        error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -111,8 +146,11 @@ export class Actividades implements OnInit {
     event.stopPropagation();
     if (confirm('¿Rechazar esta actividad?')) {
       this.coordinadorService.rechazarActividad(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Actividad rechazada');
+        },
+        error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -121,8 +159,11 @@ export class Actividades implements OnInit {
     event.stopPropagation();
     if (confirm('¿Eliminar esta actividad? Esta acción no se puede deshacer.')) {
       this.coordinadorService.eliminarActividad(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Actividad eliminada');
+        },
+        error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -141,7 +182,7 @@ export class Actividades implements OnInit {
     }
   }
 
-  // Helper para clases de estado (Agregado 'Finalizada')
+  // Helper para clases de estado
   getEstadoClase(estado: string): string {
     const clases: Record<string, string> = {
       'Publicada': 'bg-green-50 text-green-600',
