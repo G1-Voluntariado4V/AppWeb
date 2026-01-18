@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CoordinadorService, VoluntarioAdmin } from '../../../services/coordinador';
 import { ModalDetalleVoluntario } from '../../../components/modal-detalle-voluntario/modal-detalle-voluntario';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-aprob-voluntarios',
@@ -13,6 +14,7 @@ import { ModalDetalleVoluntario } from '../../../components/modal-detalle-volunt
 export class AprobVoluntarios implements OnInit {
 
   private coordinadorService = inject(CoordinadorService);
+  private toastService = inject(ToastService);
 
   solicitudes = signal<VoluntarioAdmin[]>([]);
   cargando = signal(true);
@@ -58,8 +60,11 @@ export class AprobVoluntarios implements OnInit {
     event.stopPropagation();
     if (confirm('¿Aprobar este voluntario?')) {
       this.coordinadorService.aprobarVoluntario(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Voluntario aprobado');
+        },
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -68,8 +73,11 @@ export class AprobVoluntarios implements OnInit {
     event.stopPropagation();
     if (confirm('¿Rechazar esta solicitud?')) {
       this.coordinadorService.rechazarVoluntario(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Solicitud rechazada');
+        },
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }

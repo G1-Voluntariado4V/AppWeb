@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CoordinadorService, ActividadAdmin } from '../../../services/coordinador';
 import { ModalDetalleActividad } from '../../../components/modal-detalle-actividad/modal-detalle-actividad';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-aprob-actividades',
@@ -13,6 +14,7 @@ import { ModalDetalleActividad } from '../../../components/modal-detalle-activid
 export class AprobActividades implements OnInit {
 
   private coordinadorService = inject(CoordinadorService);
+  private toastService = inject(ToastService);
 
   solicitudes = signal<ActividadAdmin[]>([]);
   cargando = signal(true);
@@ -56,8 +58,11 @@ export class AprobActividades implements OnInit {
     event.stopPropagation();
     if (confirm('¿Publicar esta actividad? Será visible para los voluntarios.')) {
       this.coordinadorService.aprobarActividad(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Actividad publicada');
+        },
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -66,8 +71,11 @@ export class AprobActividades implements OnInit {
     event.stopPropagation();
     if (confirm('¿Rechazar propuesta de actividad?')) {
       this.coordinadorService.rechazarActividad(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Actividad rechazada');
+        },
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }

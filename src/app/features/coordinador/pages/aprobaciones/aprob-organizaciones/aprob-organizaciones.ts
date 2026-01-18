@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CoordinadorService, OrganizacionAdmin } from '../../../services/coordinador';
 import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-organizacion/modal-detalle-organizacion';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-aprob-organizaciones',
@@ -13,6 +14,7 @@ import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-orga
 export class AprobOrganizaciones implements OnInit {
 
   private coordinadorService = inject(CoordinadorService);
+  private toastService = inject(ToastService);
 
   solicitudes = signal<OrganizacionAdmin[]>([]);
   cargando = signal(true);
@@ -56,8 +58,11 @@ export class AprobOrganizaciones implements OnInit {
     event.stopPropagation();
     if (confirm('¿Aprobar esta organización? Pasará a ser un usuario activo.')) {
       this.coordinadorService.aprobarOrganizacion(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Organización aprobada');
+        },
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -66,8 +71,11 @@ export class AprobOrganizaciones implements OnInit {
     event.stopPropagation();
     if (confirm('¿Rechazar solicitud?')) {
       this.coordinadorService.rechazarOrganizacion(id).subscribe({
-        next: () => this.cargarDatos(),
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        next: () => {
+          this.cargarDatos();
+          this.toastService.success('Solicitud rechazada');
+        },
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
