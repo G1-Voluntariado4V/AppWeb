@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -20,6 +21,7 @@ export class Register implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private toastService = inject(ToastService);
 
   selectedRole: 'volunteer' | 'organizer' | null = null;
   registerForm: FormGroup = this.fb.group({});
@@ -36,8 +38,7 @@ export class Register implements OnInit {
       if (user === undefined) return;
 
       if (user === null) {
-        console.warn('⚠️ No hay sesión de Firebase activa, redirigiendo a login...');
-        window.location.href = '/auth/login';
+        this.router.navigate(['/auth/login']);
       } else {
         console.log('✅ Sesión recuperada en registro:', user.email);
         // Usuario autenticado, cargamos los cursos
@@ -153,7 +154,7 @@ export class Register implements OnInit {
     const firebaseUser = this.authService.getCurrentUser();
     if (!firebaseUser) {
       this.errorMessage.set('Error: No hay sesión de Google activa. Vuelve al login.');
-      window.location.href = '/auth/login';
+      this.router.navigate(['/auth/login']);
       return;
     }
 
@@ -194,17 +195,13 @@ export class Register implements OnInit {
       idiomas: []
     };
 
-    console.log('📝 Registrando voluntario:', payload);
-
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/voluntarios`, payload)
     );
 
-    console.log('✅ Voluntario registrado');
-
     // Los voluntarios van a estado Pendiente (igual que organizaciones)
-    alert('¡Registro completado! Tu solicitud está pendiente de aprobación por el coordinador.');
-    window.location.href = '/auth/status?state=Pendiente';
+    this.toastService.success('¡Registro completado! Tu solicitud está pendiente de aprobación.');
+    this.router.navigate(['/auth/status'], { queryParams: { state: 'Pendiente' } });
   }
 
   private async registerOrganization(formValues: any, googleId: string, email: string | null) {
@@ -219,17 +216,13 @@ export class Register implements OnInit {
       sitio_web: formValues.sitio_web || ''
     };
 
-    console.log('📝 Registrando organización:', payload);
-
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/organizaciones`, payload)
     );
 
-    console.log('✅ Organización registrada');
-
     // Las organizaciones van a estado Pendiente
-    alert('¡Registro completado! Tu solicitud está pendiente de aprobación.');
-    window.location.href = '/auth/status?state=Pendiente';
+    this.toastService.success('¡Registro completado! Tu solicitud está pendiente de aprobación.');
+    this.router.navigate(['/auth/status'], { queryParams: { state: 'Pendiente' } });
   }
 
   private handleRegistrationError(error: any) {

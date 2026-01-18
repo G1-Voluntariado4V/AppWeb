@@ -31,7 +31,6 @@ export class Login {
       // 1. Login con Google (Firebase)
       const firebaseUser = await this.authService.loginWithGoogle();
       this.user.set(firebaseUser);
-      console.log('✅ Firebase User:', firebaseUser);
 
       if (!firebaseUser.email) {
         this.errorMessage.set('No se pudo obtener el correo de Google. Intenta con otra cuenta.');
@@ -45,31 +44,26 @@ export class Login {
       try {
         // 2. Verificar usuario en el backend
         const backendUser = await this.authService.verifyUser(googleId, firebaseUser.email);
-        console.log('✅ Backend User:', backendUser);
 
         // 3. Verificar estado de cuenta
         const estado = backendUser.estado_cuenta || backendUser.estado;
-        console.log('📋 Estado de cuenta:', estado);
 
         if (estado === 'Pendiente') {
-          console.log('⏳ Usuario pendiente de aprobación');
-          window.location.href = '/auth/status?state=Pendiente';
+          this.router.navigate(['/auth/status'], { queryParams: { state: 'Pendiente' } });
           return;
         }
 
         if (estado === 'Bloqueada') {
-          console.log('🚫 Usuario bloqueado');
-          window.location.href = '/auth/status?state=Bloqueada';
+          this.router.navigate(['/auth/status'], { queryParams: { state: 'Bloqueada' } });
           return;
         }
 
         if (estado === 'Rechazada') {
-          console.log('❌ Usuario rechazado');
-          window.location.href = '/auth/status?state=Rechazada';
+          this.router.navigate(['/auth/status'], { queryParams: { state: 'Rechazada' } });
           return;
         }
 
-        // 4. Redirigir según rol - usar window.location.href directamente
+        // 4. Redirigir según rol
         this.redirectByRole(backendUser);
 
       } catch (backendError: any) {
@@ -91,16 +85,8 @@ export class Login {
     }
   }
 
-  logout() {
-    this.authService.logout().then(() => {
-      this.user.set(null);
-      this.cdr.markForCheck();
-    });
-  }
-
   private redirectByRole(backendUser: BackendUser) {
     const role = this.normalizeRole(backendUser?.rol);
-    console.log('🔀 Rol normalizado:', role);
 
     let targetRoute = '/';
 
@@ -112,37 +98,31 @@ export class Login {
       targetRoute = '/organizacion';
     }
 
-    console.log('➡️ Redirigiendo a:', targetRoute);
-
-    // Usar window.location.href para una redirección garantizada
-    window.location.href = targetRoute;
+    this.router.navigate([targetRoute]);
   }
 
   private handleBackendError(error: any) {
     const status = error?.status;
     const mensaje = error?.error?.mensaje || '';
 
-    console.log('🔍 Error status:', status, 'Mensaje:', mensaje);
-
     // Usuario no registrado -> Ir a registro
     if (status === 404) {
-      console.log('📝 Usuario no encontrado, redirigiendo a registro...');
-      window.location.href = '/auth/register';
+      this.router.navigate(['/auth/register']);
       return;
     }
 
     // Usuario bloqueado o pendiente
     if (status === 403) {
       if (mensaje.includes('Pendiente') || mensaje.includes('revisión')) {
-        window.location.href = '/auth/status?state=Pendiente';
+        this.router.navigate(['/auth/status'], { queryParams: { state: 'Pendiente' } });
       } else if (mensaje.includes('Bloqueada') || mensaje.includes('bloqueada')) {
-        window.location.href = '/auth/status?state=Bloqueada';
+        this.router.navigate(['/auth/status'], { queryParams: { state: 'Bloqueada' } });
       } else if (mensaje.includes('Rechazada') || mensaje.includes('rechazada')) {
-        window.location.href = '/auth/status?state=Rechazada';
+        this.router.navigate(['/auth/status'], { queryParams: { state: 'Rechazada' } });
       } else if (mensaje.includes('eliminada')) {
         this.errorMessage.set('Esta cuenta ha sido eliminada.');
       } else {
-        window.location.href = '/auth/status?state=Bloqueada';
+        this.router.navigate(['/auth/status'], { queryParams: { state: 'Bloqueada' } });
       }
       return;
     }
@@ -155,3 +135,4 @@ export class Login {
     return (role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
 }
+
