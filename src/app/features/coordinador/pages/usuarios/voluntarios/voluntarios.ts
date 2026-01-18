@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoordinadorService, VoluntarioAdmin } from '../../../services/coordinador';
 import { ModalDetalleVoluntario } from '../../../components/modal-detalle-voluntario/modal-detalle-voluntario';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-voluntarios',
@@ -13,6 +14,7 @@ import { ModalDetalleVoluntario } from '../../../components/modal-detalle-volunt
 export class Voluntarios implements OnInit {
 
   private coordinadorService = inject(CoordinadorService);
+  private toastService = inject(ToastService);
 
   voluntarios = signal<VoluntarioAdmin[]>([]);
   busqueda = signal('');
@@ -91,7 +93,7 @@ export class Voluntarios implements OnInit {
           this.cargarDatos();
           this.cerrarMenuAcciones();
         },
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -104,7 +106,7 @@ export class Voluntarios implements OnInit {
           this.cargarDatos();
           this.cerrarMenuAcciones();
         },
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -117,7 +119,7 @@ export class Voluntarios implements OnInit {
           this.cargarDatos();
           this.cerrarMenuAcciones();
         },
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
@@ -130,7 +132,7 @@ export class Voluntarios implements OnInit {
           this.cargarDatos();
           this.cerrarMenuAcciones();
         },
-        error: (err) => alert('Error: ' + (err.error?.error || 'Error desconocido'))
+        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
   }
