@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrganizacionService } from '../../services/organizacion.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-perfil-org',
@@ -14,6 +15,10 @@ export class Perfil {
 
   private orgService = inject(OrganizacionService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
+
+  // Estado de guardando
+  guardando = signal(false);
 
   // Foto de Google (reactiva)
   fotoGoogle = computed(() => this.authService.userProfile().foto);
@@ -51,7 +56,9 @@ export class Perfil {
   }
 
   guardar() {
-    // Actualizamos el servicio
+    this.guardando.set(true);
+
+    // Actualizamos el servicio - ahora retorna Observable y persiste en backend
     this.orgService.actualizarPerfil({
       nombre: this.nombre(),
       email: this.email(),
@@ -60,8 +67,20 @@ export class Perfil {
       web: this.web(),
       cif: this.cif(),
       direccion: this.direccion()
+    }).subscribe({
+      next: (result) => {
+        this.guardando.set(false);
+        if (result.success) {
+          this.toastService.success(result.mensaje);
+        } else {
+          this.toastService.error(result.mensaje);
+        }
+      },
+      error: () => {
+        this.guardando.set(false);
+        this.toastService.error('Error al guardar los cambios');
+      }
     });
-
-    alert('Perfil actualizado correctamente');
   }
 }
+
