@@ -1,28 +1,81 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
     selector: 'app-callback',
     standalone: true,
-    imports: [CommonModule],
+    imports: [],
     templateUrl: './callback.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CallbackPage implements OnInit {
     private router = inject(Router);
+    private authService = inject(AuthService);
 
-    ngOnInit() {
-        // Simulate processing delay (e.g., verifying token, fetching user data)
-        // In a real app, you would capture the query params here and call your AuthService.
-        setTimeout(() => {
-            // Example logic:
-            // If user is new -> router.navigate(['/auth/register']);
-            // If user is active -> router.navigate(['/dashboard']);
-            // If user is pending -> router.navigate(['/auth/status']);
+    async ngOnInit() {
+        try {
+            // Esperar a que Firebase Auth se inicialice
+            const user = this.authService.getCurrentUser();
 
-            // For demo, let's just go to status
-            this.router.navigate(['/auth/status']);
-        }, 2000);
+            if (!user) {
+                // No hay sesión, redirigir a login
+                this.router.navigate(['/auth/login']);
+                return;
+            }
+
+            const googleId = user.providerData[0]?.uid || user.uid;
+            const email = user.email;
+
+            if (!email) {
+                this.router.navigate(['/auth/login']);
+                return;
+            }
+
+            // Verificar usuario en backend
+            try {
+                const backendUser = await this.authService.verifyUser(googleId, email);
+                const estado = backendUser.estado_cuenta || backendUser.estado;
+
+                // Verificar estado de cuenta
+                if (estado === 'Pendiente') {
+                    this.router.navigate(['/auth/status'], { queryParams: { state: 'Pendiente' } });
+                    return;
+                }
+
+                if (estado === 'Bloqueada') {
+                    this.router.navigate(['/auth/status'], { queryParams: { state: 'Bloqueada' } });
+                    return;
+                }
+
+                if (estado === 'Rechazada') {
+                    this.router.navigate(['/auth/status'], { queryParams: { state: 'Rechazada' } });
+                    return;
+                }
+
+                // Redirigir según rol
+                const role = (backendUser.rol || '').toLowerCase();
+                if (role.includes('voluntar')) {
+                    this.router.navigate(['/voluntario']);
+                } else if (role.includes('coordin')) {
+                    this.router.navigate(['/coordinador']);
+                } else if (role.includes('organiz')) {
+                    this.router.navigate(['/organizacion']);
+                } else {
+                    this.router.navigate(['/']);
+                }
+
+            } catch (error: any) {
+                // Usuario no encontrado -> registro
+                if (error?.status === 404) {
+                    this.router.navigate(['/auth/register']);
+                } else {
+                    this.router.navigate(['/auth/login']);
+                }
+            }
+        } catch {
+            this.router.navigate(['/auth/login']);
+        }
     }
 }
+
