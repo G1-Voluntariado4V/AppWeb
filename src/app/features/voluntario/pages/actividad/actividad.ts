@@ -17,19 +17,23 @@ export class Actividad implements OnInit {
   private voluntarioService = inject(VoluntarioService);
   private toastService = inject(ToastService);
 
+  // Convertido a signal para reactividad (FIX BUG-005)
+  currentId = signal(0);
+
   // Computed para buscar la actividad en los datos cargados
   actividad = computed(() => {
-    if (this.currentId === 0) return null;
+    const id = this.currentId();
+    if (id === 0) return null;
 
     // 1. Buscar en mis actividades (historial)
     const mis = this.voluntarioService.misActividades();
-    const encontrada = mis.find(a => a.id_actividad === this.currentId);
+    const encontrada = mis.find(a => a.id_actividad === id);
 
     if (encontrada) return encontrada;
 
     // 2. Si no, buscar en las disponibles
     const disponibles = this.voluntarioService.actividadesDisponibles();
-    const disponible = disponibles.find(a => a.id_actividad === this.currentId);
+    const disponible = disponibles.find(a => a.id_actividad === id);
 
     if (disponible) {
       // Mapear ActividadDisponible a MiActividad para visualización unificada
@@ -41,7 +45,7 @@ export class Actividad implements OnInit {
         ubicacion: disponible.ubicacion,
         fecha_inicio: disponible.fecha_inicio,
         duracion_horas: disponible.duracion_horas,
-        estado_solicitud: disponible.inscrito ? (disponible.estadoInscripcion || 'Pendiente') : null, // null si no está inscrito
+        estado_solicitud: disponible.inscrito ? (disponible.estadoInscripcion || 'Pendiente') : null,
         fecha_solicitud: '',
         tipos: disponible.tipos,
         ods: disponible.ods?.map(o => ({ id: o.id, nombre: o.nombre }))
@@ -54,12 +58,10 @@ export class Actividad implements OnInit {
   cargando = computed(() => this.voluntarioService.cargando());
   procesando = signal(false);
 
-  currentId = 0;
-
   ngOnInit() {
     const idUrl = this.route.snapshot.paramMap.get('id');
     if (idUrl) {
-      this.currentId = parseInt(idUrl, 10);
+      this.currentId.set(parseInt(idUrl, 10));
 
       // Si no tenemos datos cargados, forzar carga
       if (this.voluntarioService.actividadesDisponibles().length === 0) {
@@ -79,7 +81,7 @@ export class Actividad implements OnInit {
 
     this.procesando.set(true);
 
-    this.voluntarioService.desapuntarse(this.currentId).subscribe({
+    this.voluntarioService.desapuntarse(this.currentId()).subscribe({
       next: (result) => {
         if (result.success) {
           this.toastService.success('Te has desapuntado correctamente.');
@@ -98,7 +100,7 @@ export class Actividad implements OnInit {
   inscribirse() {
     this.procesando.set(true);
 
-    this.voluntarioService.inscribirse(this.currentId).subscribe({
+    this.voluntarioService.inscribirse(this.currentId()).subscribe({
       next: (result) => {
         if (result.success) {
           this.toastService.success('¡Te has inscrito correctamente!');

@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit, computed } from '@angular/core';
+import { Component, signal, inject, OnInit, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -43,16 +43,21 @@ export class Perfil implements OnInit {
   // Estadísticas
   estadisticas = computed(() => this.voluntarioService.estadisticas());
 
+  constructor() {
+    // Usar effect() para reaccionar a cambios en perfilOriginal
+    // Esto corrige el bug donde perfilEditable quedaba vacío si los datos llegaban después de ngOnInit
+    effect(() => {
+      const perfil = this.perfilOriginal();
+      if (perfil && Object.keys(this.perfilEditable()).length === 0) {
+        this.perfilEditable.set({ ...perfil });
+      }
+    });
+  }
+
   ngOnInit() {
     // Cargar datos si no hay
     if (!this.perfilOriginal()) {
       this.voluntarioService.cargarTodo();
-    }
-
-    // Inicializar perfil editable cuando lleguen los datos
-    const perfil = this.perfilOriginal();
-    if (perfil) {
-      this.perfilEditable.set({ ...perfil });
     }
   }
 
@@ -108,3 +113,4 @@ export class Perfil implements OnInit {
     }
   }
 }
+
