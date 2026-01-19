@@ -1,21 +1,37 @@
 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity"
-     (click)="cerrar()">
+  (click)="cerrar()">
 
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden h-[80vh] flex flex-col md:flex-row animate-in zoom-in-95 duration-200"
-       (click)="$event.stopPropagation()">
+  <div
+    class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden h-[80vh] flex flex-col md:flex-row animate-in zoom-in-95 duration-200"
+    (click)="$event.stopPropagation()">
 
     <div class="w-full md:w-72 bg-gray-50 p-8 border-r border-gray-100 flex flex-col items-center text-center">
-      <div class="w-28 h-28 rounded-full bg-[#8d6e63] text-4xl flex items-center justify-center text-white font-light mb-4 relative shadow-lg ring-4 ring-white">
+      <div
+        class="w-28 h-28 rounded-full bg-[#8d6e63] text-4xl flex items-center justify-center text-white font-light mb-4 relative shadow-lg ring-4 ring-white">
         {{ vol().nombre.substring(0,2).toUpperCase() }}
-        <div class="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-white rounded-full"></div>
+        <div class="absolute bottom-1 right-1 w-5 h-5 border-4 border-white rounded-full"
+          [ngClass]="vol().estado === 'Activa' ? 'bg-green-500' : vol().estado === 'Pendiente' ? 'bg-orange-500' : 'bg-red-500'">
+        </div>
       </div>
 
       <h2 class="text-lg font-bold text-gray-900 leading-tight mb-1">{{ vol().nombre }}</h2>
-      <p class="text-sm text-gray-500 mb-8 font-medium">{{ vol().curso }}</p>
+      <p class="text-sm text-gray-500 mb-2 font-medium">{{ vol().curso || 'Sin curso asignado' }}</p>
+      <span class="px-3 py-1 rounded-full text-xs font-bold mb-6" [ngClass]="{
+              'bg-green-100 text-green-700': vol().estado === 'Activa',
+              'bg-orange-100 text-orange-700': vol().estado === 'Pendiente',
+              'bg-red-100 text-red-700': vol().estado === 'Bloqueada' || vol().estado === 'Rechazada'
+            }">
+        {{ vol().estado }}
+      </span>
 
       <div class="bg-white rounded-2xl p-5 w-full shadow-sm border border-gray-100 mb-4">
-        <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">TOTAL HOURS</p>
-        <p class="text-3xl font-bold text-[#2563eb]">24h</p>
+        <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Actividades</p>
+        <p class="text-3xl font-bold text-[#2563eb]">{{ actividadesCount() }}</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 w-full shadow-sm border border-gray-100 mb-4">
+        <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Horas Totales</p>
+        <p class="text-3xl font-bold text-violet-600">{{ horasTotales() }}h</p>
       </div>
     </div>
 
@@ -24,58 +40,143 @@
       <div class="flex justify-between items-start mb-8 pb-4 border-b border-gray-100">
         <div>
           <h3 class="text-xl font-bold text-gray-900">Información personal</h3>
-          <p class="text-gray-500 text-xs mt-1">Detalles importantes del estudiante.</p>
+          <p class="text-gray-500 text-xs mt-1">Detalles del voluntario.</p>
         </div>
         <div class="flex gap-2">
-            <button class="px-4 py-2 border border-gray-200 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors">Editar detalles</button>
-            <button (click)="cerrar()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+          @if (!editando()) {
+          <button (click)="iniciarEdicion()"
+            class="px-4 py-2 border border-gray-200 rounded-xl text-xs font-bold hover:bg-violet-50 hover:border-violet-200 hover:text-violet-600 transition-colors">
+            <i class="fa-solid fa-pen mr-1"></i> Editar
+          </button>
+          }
+          <button (click)="cerrar()"
+            class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
       </div>
 
+      <!-- Vista de solo lectura -->
+      @if (!editando()) {
       <div class="grid grid-cols-2 gap-y-6 gap-x-12 mb-10">
         <div>
-          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Full Name</p>
-          <p class="font-bold text-gray-900 text-sm">{{ vol().nombre }}</p>
+          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Nombre completo</p>
+          <p class="font-bold text-gray-900 text-sm">{{ vol().nombre }} {{ vol().apellidos }}</p>
         </div>
         <div>
           <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Email</p>
           <p class="font-bold text-gray-900 text-sm break-all">{{ vol().email }}</p>
         </div>
         <div>
-          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Phone</p>
-          <p class="font-bold text-gray-900 text-sm">600 123 456</p>
+          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">DNI/NIE</p>
+          <p class="font-bold text-gray-900 text-sm">{{ vol().dni || 'No registrado' }}</p>
         </div>
         <div>
-          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">¿Tiene coche?</p>
-          <p class="font-bold text-gray-900 text-sm">Si</p>
+          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Teléfono</p>
+          <p class="font-bold text-gray-900 text-sm">{{ vol().telefono || 'No registrado' }}</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Curso</p>
+          <p class="font-bold text-gray-900 text-sm">{{ vol().curso || 'No asignado' }}</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Fecha nacimiento</p>
+          <p class="font-bold text-gray-900 text-sm">{{ vol().fecha_nac || 'No registrada' }}</p>
+        </div>
+      </div>
+      }
+
+      <!-- Vista de edición -->
+      @if (editando()) {
+      <div class="grid grid-cols-2 gap-y-4 gap-x-8 mb-6">
+        <div>
+          <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider block">Nombre</label>
+          <input type="text" [(ngModel)]="nombreEditable"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider block">Apellidos</label>
+          <input type="text" [(ngModel)]="apellidosEditable"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider block">Teléfono</label>
+          <input type="tel" [(ngModel)]="telefonoEditable"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider block">Email</label>
+          <p class="text-gray-500 text-sm py-3">{{ vol().email }} <span class="text-xs text-gray-400">(no
+              editable)</span></p>
         </div>
       </div>
 
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Activity</h3>
+      <div class="mb-6">
+        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider block">Descripción /
+          Notas</label>
+        <textarea [(ngModel)]="descripcionEditable" rows="3"
+          placeholder="Añade notas o información adicional sobre este voluntario..."
+          class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500 resize-none"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+        <button (click)="cancelarEdicion()"
+          class="px-6 py-2.5 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+          Cancelar
+        </button>
+        <button (click)="guardarCambios()" [disabled]="guardando()"
+          class="px-6 py-2.5 bg-violet-600 text-white font-bold rounded-xl shadow-sm hover:bg-violet-700 transition-all disabled:opacity-50">
+          @if (guardando()) {
+          <i class="fa-solid fa-spinner fa-spin mr-2"></i> Guardando...
+          } @else {
+          <i class="fa-solid fa-check mr-2"></i> Guardar cambios
+          }
+        </button>
+      </div>
+      }
+
+      <!-- Historial (solo en vista lectura) -->
+      @if (!editando()) {
+      <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        Actividad reciente
+        @if (cargandoHistorial()) {
+        <i class="fa-solid fa-spinner fa-spin text-sm text-gray-400"></i>
+        }
+      </h3>
       <div class="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
         <table class="w-full text-left">
           <thead class="bg-gray-50 text-[10px] text-gray-400 uppercase font-bold tracking-wider">
             <tr>
-              <th class="px-4 py-3 border-b border-gray-100">Activity</th>
-              <th class="px-4 py-3 border-b border-gray-100">Date</th>
-              <th class="px-4 py-3 text-right border-b border-gray-100">Status</th>
+              <th class="px-4 py-3 border-b border-gray-100">Actividad</th>
+              <th class="px-4 py-3 border-b border-gray-100">Fecha</th>
+              <th class="px-4 py-3 text-right border-b border-gray-100">Estado</th>
             </tr>
           </thead>
           <tbody class="text-xs font-medium">
-            @for (h of historial; track h.actividad) {
-              <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50/30">
-                <td class="px-4 py-3 text-gray-900">{{ h.actividad }}</td>
-                <td class="px-4 py-3 text-gray-500">{{ h.fecha }}</td>
-                <td class="px-4 py-3 text-right">
-                  <span class="px-2 py-1 rounded-md" [class]="h.class">{{ h.status }}</span>
-                </td>
-              </tr>
+            @for (h of historial(); track h.id_inscripcion) {
+            <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50/30">
+              <td class="px-4 py-3 text-gray-900">
+                <div class="font-bold">{{ h.titulo_actividad || h.actividad }}</div>
+                <div class="text-[10px] text-gray-400">{{ h.organizacion }}</div>
+              </td>
+              <td class="px-4 py-3 text-gray-500">{{ h.fecha_actividad | date:'d MMM yyyy' }}</td>
+              <td class="px-4 py-3 text-right">
+                <span class="px-2 py-1 rounded-md" [class]="getEstadoClase(h.estado_solicitud || h.status)">{{
+                  h.estado_solicitud || h.status }}</span>
+              </td>
+            </tr>
+            }
+            @if (!cargandoHistorial() && historial().length === 0) {
+            <tr>
+              <td colspan="3" class="px-4 py-6 text-center text-gray-400 italic">
+                No ha participado en actividades aún.
+              </td>
+            </tr>
             }
           </tbody>
         </table>
       </div>
+      }
     </div>
   </div>
 </div>
