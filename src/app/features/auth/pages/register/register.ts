@@ -28,8 +28,11 @@ export class Register implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
 
-  // Cursos - inicializamos vacío, se cargan desde API
-  courses = signal<{ id: number; name: string; displayName: string }[]>([]);
+  // Cursos - sistema de dos selectores (curso 1º/2º → ciclo)
+  allCourses = signal<{ id: number; name: string; grado: string; cursoLevel: number; siglas: string }[]>([]);
+  uniqueCursoLevels = signal<number[]>([]); // [1, 2]
+  filteredCourses = signal<{ id: number; name: string; grado: string; cursoLevel: number; siglas: string }[]>([]);
+  selectedCursoLevel = signal<number | null>(null);
 
   ngOnInit() {
     // Suscribirse al estado de autenticación para manejar la recarga de página
@@ -51,20 +54,30 @@ export class Register implements OnInit {
     this.http.get<any[]>(`${environment.apiUrl}/catalogos/cursos`).subscribe({
       next: (response) => {
         if (response && response.length > 0) {
-          // Ordenar por nombre y luego por nivel
-          const sorted = response.sort((a, b) => {
-            const nameA = a.nombre || '';
-            const nameB = b.nombre || '';
-            if (nameA !== nameB) return nameA.localeCompare(nameB);
-            return (a.nivel || 0) - (b.nivel || 0);
+          // Mapear cursos extrayendo cursoLevel y siglas de la abreviación
+          // Ej: "1DAM" → cursoLevel: 1, siglas: "DAM"
+          const courses = response.map(c => {
+            const abrev = c.abreviacion || '';
+            // Extraer el curso (1 o 2) del primer dígito
+            const cursoLevel = abrev.match(/^(\d)/) ? parseInt(abrev.match(/^(\d)/)[1], 10) : 1;
+            // Extraer las siglas quitando el número
+            const siglas = abrev.replace(/^\d+/, '');
+
+            return {
+              id: c.id,
+              name: c.nombre,
+              grado: c.grado || 'Otro',
+              cursoLevel,
+              siglas
+            };
           });
 
-          // Mapear con formato de visualización
-          this.courses.set(sorted.map(c => ({
-            id: c.id,
-            name: c.nombre,
-            displayName: this.formatCourseName(c.nivel, c.nombre)
-          })));
+          this.allCourses.set(courses);
+
+          // Extraer niveles de curso únicos (1, 2)
+          const levels = [...new Set(courses.map(c => c.cursoLevel))].sort((a, b) => a - b);
+          this.uniqueCursoLevels.set(levels);
+
           this.cdr.markForCheck();
         }
       },
@@ -74,10 +87,22 @@ export class Register implements OnInit {
     });
   }
 
-  // Formatea el nombre del curso como "1º Desarrollo de Aplicaciones Multiplataforma"
-  private formatCourseName(nivel: number, nombre: string): string {
-    const ordinal = nivel === 1 ? '1º' : nivel === 2 ? '2º' : `${nivel}º`;
-    return `${ordinal} ${nombre}`;
+  // Cuando el usuario selecciona un nivel de curso (1º o 2º)
+  onCursoLevelChange(level: number) {
+    this.selectedCursoLevel.set(level);
+    const filtered = this.allCourses().filter(c => c.cursoLevel === level)
+      .sort((a, b) => a.siglas.localeCompare(b.siglas));
+    this.filteredCourses.set(filtered);
+    // NO se resetea id_curso_actual para mantener la selección si existe
+    this.cdr.markForCheck();
+    this.cdr.markForCheck();
+  }
+
+  // Formatea: "DAM - Desarrollo de Aplicaciones Multiplataforma"
+  formatCourseDisplay(course: { siglas: string; name: string }): string {
+    // Quitar el prefijo "1º " o "2º " del nombre si existe
+    let cleanName = course.name.replace(/^\d+º?\s*/, '');
+    return `${course.siglas} - ${cleanName}`;
   }
 
   selectRole(role: 'volunteer' | 'organizer') {
@@ -89,17 +114,23 @@ export class Register implements OnInit {
 
   initForm() {
     const namePattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
-    const phonePattern = /^[0-9+ ]+$/;
+    // Teléfono: opcional prefijo (+XX) seguido de 9 dígitos. Permite espacios.
+    const phonePattern = /^(\+\d{1,3}\s?)?\d{9}$/;
 
     if (this.selectedRole === 'volunteer') {
       this.registerForm = this.fb.group({
         dni: ['', [Validators.required, this.dniValidator]],
-        nombre: ['', [Validators.required, Validators.pattern(namePattern)]],
-        apellidos: ['', [Validators.required, Validators.pattern(namePattern)]],
+        nombre: ['', [Validators.required, Validators.minLength(2), Validators.pattern(namePattern)]],
+        apellidos: ['', [Validators.required, Validators.minLength(2), Validators.pattern(namePattern)]],
         telefono: ['', [Validators.required, Validators.pattern(phonePattern)]],
-        fecha_nac: ['', Validators.required],
+        fecha_nac: ['', [Validators.required, this.fechaNacValidator]],
+        cursoLevel: ['', Validators.required],
         id_curso_actual: ['', Validators.required],
       });
+
+      // Resetear filtros
+      this.selectedCursoLevel.set(null);
+      this.filteredCourses.set([]);
     } else if (this.selectedRole === 'organizer') {
       this.registerForm = this.fb.group({
         cif: ['', [Validators.required]],
@@ -135,6 +166,34 @@ export class Register implements OnInit {
 
     if (expectedLetter !== letterPart) {
       return { invalidDniChecksum: true };
+    }
+
+    return null;
+  }
+
+  // Validador de fecha de nacimiento (entre 14 y 100 años)
+  fechaNacValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+
+    const birthDate = new Date(value);
+    const today = new Date();
+
+    // Calcular edad
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    if (age < 14) {
+      return { tooYoung: true };
+    }
+    if (age > 100) {
+      return { tooOld: true };
+    }
+    if (birthDate > today) {
+      return { futureDate: true };
     }
 
     return null;
