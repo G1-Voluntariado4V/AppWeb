@@ -100,6 +100,80 @@
             </div>
             }
 
+            <!-- Participantes -->
+            <div class="mt-8 border-t border-gray-100 pt-6">
+                <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    Voluntarios Inscritos
+                    @if (cargandoInscritos()) {
+                    <i class="fa-solid fa-spinner fa-spin text-sm text-gray-400"></i>
+                    }
+                </h3>
+
+                @if (inscritos().length > 0) {
+                <div class="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-[10px] text-gray-400 uppercase font-bold tracking-wider">
+                            <tr>
+                                <th class="px-4 py-3 border-b border-gray-100">Voluntario</th>
+                                <th class="px-4 py-3 border-b border-gray-100">Contacto</th>
+                                <th class="px-4 py-3 text-center border-b border-gray-100">Estado</th>
+                                <th class="px-4 py-3 text-right border-b border-gray-100">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50 text-xs font-medium">
+                            @for (p of inscritos(); track p.id_inscripcion) {
+                            <tr class="hover:bg-gray-50/50 transition-colors group">
+                                <td class="px-4 py-3">
+                                    <p class="font-bold text-gray-900">{{ p.nombre }} {{ p.apellidos }}</p>
+                                    <p class="text-[10px] text-gray-400">{{ p.email }}</p>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600">{{ p.telefono || 'Sin teléfono' }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 rounded-md inline-block min-w-[80px]"
+                                        [class]="getEstadoSolicitudClase(p.estado_solicitud)">
+                                        {{ p.estado_solicitud }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div
+                                        class="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                        @if (p.estado_solicitud === 'Pendiente') {
+                                        <button (click)="cambiarEstado(p.id_voluntario, 'Aceptada')"
+                                            class="w-7 h-7 flex items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                                            title="Aceptar">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                        <button (click)="cambiarEstado(p.id_voluntario, 'Rechazada')"
+                                            class="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
+                                            title="Rechazar">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        }
+                                        @if (p.estado_solicitud === 'Aceptada') {
+                                        <button (click)="cambiarEstado(p.id_voluntario, 'Rechazada')"
+                                            class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                            title="Cancelar">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </button>
+                                        }
+
+                                        <button (click)="eliminarInscripcion(p.id_voluntario)"
+                                            class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors ml-1"
+                                            title="Eliminar de la lista">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                } @else if (!cargandoInscritos()) {
+                <p class="text-sm text-gray-500 italic">No hay voluntarios inscritos en esta actividad.</p>
+                }
+            </div>
+
         </div>
     </div>
 </div>

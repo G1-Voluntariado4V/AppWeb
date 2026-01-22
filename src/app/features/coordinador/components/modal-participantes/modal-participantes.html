@@ -1,0 +1,76 @@
+<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity"
+    (click)="cerrar()">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">Participantes</h2>
+                <p class="text-xs text-gray-500 mt-1">{{ nombreActividad() }}</p>
+            </div>
+            <button (click)="cerrar()"
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-0 max-h-[60vh] overflow-y-auto">
+            @if(cargando()) {
+            <div class="p-10 text-center text-gray-400">
+                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Cargando participantes...</p>
+            </div>
+            } @else {
+            <table class="w-full text-left border-collapse">
+                <thead
+                    class="bg-gray-50 text-[10px] text-gray-400 uppercase font-bold tracking-wider sticky top-0 border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-3">Voluntario</th>
+                        <th class="px-6 py-3">Contacto</th>
+                        <th class="px-6 py-3 text-right">Estado Solicitud</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @for (p of participantes(); track p.id_inscripcion) {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold overflow-hidden">
+                                    @if (p.foto) {
+                                    <img [src]="p.foto" alt="Avatar" class="w-full h-full object-cover">
+                                    } @else {
+                                    {{ p.nombre.charAt(0) }}{{ p.apellidos ? p.apellidos.charAt(0) : '' }}
+                                    }
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900 text-sm">{{ p.nombre }} {{ p.apellidos }}</p>
+                                    <p class="text-xs text-gray-400">{{ p.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">
+                            {{ p.telefono || 'Sin teléfono' }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold border"
+                                [class]="getEstadoClase(p.estado_solicitud)">
+                                {{ p.estado_solicitud }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                    @if (participantes().length === 0) {
+                    <tr>
+                        <td colspan="3" class="px-6 py-10 text-center text-gray-400 italic">
+                            No hay participantes inscritos en esta actividad.
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+            }
+        </div>
+    </div>
+</div>

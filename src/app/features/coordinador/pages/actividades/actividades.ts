@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { CoordinadorService, ActividadAdmin, ODS, TipoVoluntariado } from '../../services/coordinador';
 import { ModalCrearActividad } from '../../components/modal-crear-actividad/modal-crear-actividad';
 import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/modal-detalle-actividad';
+import { ModalParticipantes } from '../../components/modal-participantes/modal-participantes';
 import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-actividades',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalCrearActividad, ModalDetalleActividad],
+  imports: [CommonModule, FormsModule, ModalCrearActividad, ModalDetalleActividad, ModalParticipantes],
   templateUrl: './actividades.html',
 })
 export class Actividades implements OnInit {
@@ -29,6 +30,7 @@ export class Actividades implements OnInit {
   modalCrearVisible = signal(false);
   actividadSeleccionada = signal<ActividadAdmin | null>(null);
   actividadParaEditar = signal<ActividadAdmin | null>(null);
+  actividadParaVerParticipantes = signal<ActividadAdmin | null>(null);
 
   // Estados disponibles para filtro
   estadosDisponibles = ['Todos', 'Publicada', 'En revision', 'Cancelada', 'Rechazada', 'Finalizada'];
@@ -166,6 +168,15 @@ export class Actividades implements OnInit {
         error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
       });
     }
+  }
+
+  verParticipantes(act: ActividadAdmin, event: Event) {
+    event.stopPropagation();
+    this.actividadParaVerParticipantes.set(act);
+  }
+
+  cerrarParticipantes() {
+    this.actividadParaVerParticipantes.set(null);
   }
 
   // Helper para formatear fecha

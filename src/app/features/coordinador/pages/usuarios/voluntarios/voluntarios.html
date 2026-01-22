@@ -75,7 +75,7 @@
                   @if (vol.foto) {
                   <img [src]="vol.foto" (error)="vol.foto = null" alt="Foto" class="w-full h-full object-cover">
                   } @else {
-                  <i class="fa-solid fa-user"></i>
+                  <span class="text-sm font-bold text-gray-500">{{ vol.nombre.substring(0,2).toUpperCase() }}</span>
                   }
                 </div>
                 <div>
@@ -172,7 +172,8 @@
   </div>
 
   @if (voluntarioSeleccionado()) {
-  <app-modal-detalle-voluntario [vol]="voluntarioSeleccionado()!" (close)="cerrarDetalle()">
+  <app-modal-detalle-voluntario [vol]="voluntarioSeleccionado()!" (close)="cerrarDetalle()"
+    (updated)="onVoluntarioActualizado()">
   </app-modal-detalle-voluntario>
   }
 

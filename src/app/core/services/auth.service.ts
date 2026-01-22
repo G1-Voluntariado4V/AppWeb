@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
-import { signInWithPopup, User, signOut, onAuthStateChanged } from 'firebase/auth';
+import { signInWithPopup, User, signOut, onAuthStateChanged, GoogleAuthProvider } from 'firebase/auth';
 
 import { auth, googleProvider } from '../config/firebase.config';
 import { environment } from '../../../environments/environment';
@@ -54,8 +54,8 @@ export class AuthService {
             if (user) {
                 this.userSubject.next(user);
 
-                // Guardar foto de Google
-                if (user.photoURL) {
+                // Guardar foto de Google (standard) solo si no tenemos ya una mejor
+                if (user.photoURL && !this.loadGooglePhotoFromStorage()) {
                     this.persistGooglePhoto(user.photoURL);
                 }
 
@@ -99,11 +99,46 @@ export class AuthService {
 
     async loginWithGoogle(): Promise<User> {
         try {
+            // Necesario para poder usar Google People API
+            googleProvider.addScope("https://www.googleapis.com/auth/userinfo.profile");
+
             const result = await signInWithPopup(auth, googleProvider);
+
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const accessToken = credential?.accessToken;
+
+            if (accessToken) {
+                const photoUrl = await this.getGooglePhotoFromApi(accessToken);
+                console.log("Foto actualizada (People API):", photoUrl);
+
+                if (photoUrl) {
+                    this.persistGooglePhoto(photoUrl);
+                }
+            }
+
             return result.user;
         } catch (error) {
             console.error('Error logging in with Google', error);
             throw error;
+        }
+    }
+
+    private async getGooglePhotoFromApi(accessToken: string): Promise<string | null> {
+        try {
+            const res = await fetch(
+                "https://people.googleapis.com/v1/people/me?personFields=photos",
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                }
+            );
+
+            const data = await res.json();
+            return data?.photos?.[0]?.url || null;
+        } catch (error) {
+            console.error('Error fetching Google Photo from API', error);
+            return null;
         }
     }
 
@@ -118,10 +153,14 @@ export class AuthService {
     }
 
     async verifyUser(googleId: string, email: string): Promise<BackendUser> {
+        // Recuperar la foto actual (ya sea la de People API o la de cache)
+        const photoUrl = this.getGooglePhoto();
+
         const backendUser = await firstValueFrom(
             this.http.post<BackendUser>(`${environment.apiUrl}/auth/login`, {
                 google_id: googleId,
-                email
+                email,
+                foto_url: photoUrl
             })
         );
 

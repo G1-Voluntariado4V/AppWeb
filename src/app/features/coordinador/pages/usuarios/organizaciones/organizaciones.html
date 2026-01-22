@@ -165,7 +165,8 @@
   </div>
 
   @if (orgSeleccionada()) {
-  <app-modal-detalle-organizacion [org]="orgSeleccionada()!" (close)="cerrarDetalle()">
+  <app-modal-detalle-organizacion [org]="orgSeleccionada()!" (close)="cerrarDetalle()"
+    (updated)="onOrganizacionActualizada()">
   </app-modal-detalle-organizacion>
   }
 

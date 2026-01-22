@@ -7,9 +7,13 @@
 
     <div class="w-full md:w-72 bg-gray-50 p-8 border-r border-gray-100 flex flex-col items-center text-center">
       <div
-        class="w-28 h-28 rounded-full bg-[#8d6e63] text-4xl flex items-center justify-center text-white font-light mb-4 relative shadow-lg ring-4 ring-white">
-        {{ vol().nombre.substring(0,2).toUpperCase() }}
-        <div class="absolute bottom-1 right-1 w-5 h-5 border-4 border-white rounded-full"
+        class="w-28 h-28 rounded-full bg-[#8d6e63] flex items-center justify-center mb-4 relative shadow-lg ring-4 ring-white overflow-hidden">
+        @if (vol().foto) {
+        <img [src]="vol().foto" alt="Avatar" class="w-full h-full object-cover">
+        } @else {
+        <span class="text-4xl text-white font-light">{{ vol().nombre.substring(0,2).toUpperCase() }}</span>
+        }
+        <div class="absolute bottom-1 right-1 w-5 h-5 border-4 border-white rounded-full z-10"
           [ngClass]="vol().estado === 'Activa' ? 'bg-green-500' : vol().estado === 'Pendiente' ? 'bg-orange-500' : 'bg-red-500'">
         </div>
       </div>

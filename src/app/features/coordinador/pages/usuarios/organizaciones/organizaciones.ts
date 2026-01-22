@@ -146,6 +146,11 @@ export class Organizaciones implements OnInit {
     this.orgSeleccionada.set(null);
   }
 
+  onOrganizacionActualizada() {
+    this.cargarDatos();
+    this.cerrarDetalle();
+  }
+
   // Helpers
   getEstadoClase(estado: string): string {
     const clases: Record<string, string> = {

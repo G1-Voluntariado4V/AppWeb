@@ -56,17 +56,31 @@ export class Perfil {
   }
 
   guardar() {
+    // Validación del frontend antes de enviar
+    const nombreActual = this.nombre().trim();
+    const descripcionActual = this.descripcion().trim();
+
+    if (!nombreActual) {
+      this.toastService.error('El nombre de la organización es obligatorio');
+      return;
+    }
+
+    if (!descripcionActual) {
+      this.toastService.error('La descripción de la organización es obligatoria');
+      return;
+    }
+
     this.guardando.set(true);
 
     // Actualizamos el servicio - ahora retorna Observable y persiste en backend
     this.orgService.actualizarPerfil({
-      nombre: this.nombre(),
+      nombre: nombreActual,
       email: this.email(),
-      telefono: this.telefono(),
-      descripcion: this.descripcion(),
-      web: this.web(),
+      telefono: this.telefono().trim(),
+      descripcion: descripcionActual,
+      web: this.web().trim(),
       cif: this.cif(),
-      direccion: this.direccion()
+      direccion: this.direccion().trim()
     }).subscribe({
       next: (result) => {
         this.guardando.set(false);

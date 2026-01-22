@@ -67,6 +67,7 @@ export interface VoluntarioInscrito {
   fecha_nac?: string;
   fecha_solicitud: string;
   estado_solicitud: 'Pendiente' | 'Aceptada' | 'Rechazada';
+  foto?: string | null;
 }
 
 // Interface para respuesta del backend
@@ -412,7 +413,9 @@ export class OrganizacionService {
       }),
       map(() => ({ success: true, mensaje: 'Perfil actualizado correctamente' })),
       catchError(err => {
-        const mensaje = err.error?.error || err.error?.mensaje || 'Error al guardar los cambios';
+        // Symfony envía errores de validación en 'detail'
+        const mensaje = err.error?.detail || err.error?.error || err.error?.mensaje || 'Error al guardar los cambios';
+        console.error('Error actualizando perfil organización:', err.error);
         return of({ success: false, mensaje });
       })
     );

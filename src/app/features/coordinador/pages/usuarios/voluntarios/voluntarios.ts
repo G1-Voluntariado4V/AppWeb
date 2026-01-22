@@ -146,6 +146,11 @@ export class Voluntarios implements OnInit {
     this.voluntarioSeleccionado.set(null);
   }
 
+  onVoluntarioActualizado() {
+    this.cargarDatos();
+    this.cerrarDetalle();
+  }
+
   // Helpers
   getEstadoClase(estado: string): string {
     const clases: Record<string, string> = {

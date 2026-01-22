@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoordinadorService, PerfilCoordinadorUI } from '../../services/coordinador';
@@ -26,6 +26,9 @@ export class Perfil implements OnInit {
   apellidosEditable = signal('');
   telefonoEditable = signal('');
 
+  // Flag para saber si ya se cargaron los datos iniciales
+  private datosInicializados = false;
+
   // Computed que garantiza foto de Google con prioridad
   perfil = computed(() => {
     const perfilBase = this.coordinadorService.perfilUsuario();
@@ -40,13 +43,26 @@ export class Perfil implements OnInit {
   inicial = computed(() => (this.perfil().nombre || 'U').charAt(0).toUpperCase());
   rol = computed(() => this.perfil().cargo || 'Coordinador');
 
-  ngOnInit() {
-    this.coordinadorService.sincronizarPerfil();
-    this.cargarDatosEditables();
+  constructor() {
+    // Effect para actualizar los campos editables cuando el perfil cambia del backend
+    // Esto es clave: espera a que llegue la respuesta del backend antes de inicializar los campos
+    effect(() => {
+      const p = this.perfil();
+
+      // Solo actualizar si hay datos del perfil y no estamos en modo edición
+      // Esto evita sobrescribir los campos mientras el usuario está editando
+      if (p.id_usuario && !this.modoEdicion()) {
+        this.actualizarCamposEditables(p);
+      }
+    }, { allowSignalWrites: true });
   }
 
-  cargarDatosEditables() {
-    const p = this.perfil();
+  ngOnInit() {
+    // Forzar sincronización con el backend al entrar a la página
+    this.coordinadorService.sincronizarPerfil();
+  }
+
+  private actualizarCamposEditables(p: PerfilCoordinadorUI & { foto: string | null }) {
     // Extraer nombre y apellidos del nombre completo si están juntos
     const partes = (p.nombre || '').split(' ');
     if (p.apellidos) {
@@ -63,12 +79,13 @@ export class Perfil implements OnInit {
   }
 
   activarEdicion() {
-    this.cargarDatosEditables();
+    // Cargar datos actuales antes de editar
+    this.actualizarCamposEditables(this.perfil());
     this.modoEdicion.set(true);
   }
 
   cancelarEdicion() {
-    this.cargarDatosEditables();
+    this.actualizarCamposEditables(this.perfil());
     this.modoEdicion.set(false);
   }
 
@@ -98,4 +115,3 @@ export class Perfil implements OnInit {
     });
   }
 }
-

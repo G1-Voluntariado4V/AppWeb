@@ -14,6 +14,7 @@ export interface PerfilVoluntario {
   dni: string;
   telefono: string;
   curso: string;
+  id_curso_actual?: number;
   fecha_nac: string;
   horasTotales: number;
   carnetConducir: boolean;
@@ -22,6 +23,24 @@ export interface PerfilVoluntario {
   foto?: string;
   email?: string;
   preferencias?: { id: number; nombre: string }[];
+  idiomas?: IdiomaVoluntario[];
+}
+
+export interface IdiomaVoluntario {
+  id_idioma: number;
+  idioma: string;
+  nivel: string;
+}
+
+export interface Idioma {
+  id: number;
+  nombre: string;
+  codigo_iso?: string;
+}
+
+export interface Curso {
+  id: number;
+  nombre: string;
 }
 
 export interface ActividadDisponible {
@@ -98,6 +117,10 @@ export class VoluntarioService {
   cargando = signal(false);
   error = signal<string | null>(null);
 
+  // Catálogos
+  idiomasCatalogo = signal<Idioma[]>([]);
+  cursosCatalogo = signal<Curso[]>([]);
+
   // Computed para datos derivados
   proximaActividad = computed(() => {
     const actividades = this.misActividades();
@@ -124,6 +147,9 @@ export class VoluntarioService {
   }
 
   constructor() {
+    // Cargar catálogos al iniciar
+    this.cargarCatalogos();
+
     // Cargar datos cuando cambie el usuario - con cleanup automático
     this.authService.backendUser$.pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -376,6 +402,8 @@ export class VoluntarioService {
       telefono: datos.telefono,
       fechaNac: datos.fecha_nac,
       descripcion: datos.descripcion,
+      carnet_conducir: datos.carnetConducir,
+      id_curso_actual: datos.id_curso_actual,
       preferencias_ids: datos.preferencias?.map(p => p.id) || []
     };
 
@@ -385,8 +413,9 @@ export class VoluntarioService {
       { headers: this.getHeaders() }
     ).pipe(
       tap(response => {
-        // Actualizar perfil local
-        this.perfil.update(current => current ? { ...current, ...datos } : null);
+        // Actualizar perfil local con la respuesta del backend para tener datos frescos (ej: nombre del curso)
+        const perfilActualizado = this.mapearPerfil(response);
+        this.perfil.set(perfilActualizado);
       }),
       map(() => ({ success: true, mensaje: 'Perfil actualizado correctamente' })),
       catchError(err => {
@@ -417,6 +446,107 @@ export class VoluntarioService {
   }
 
   // ==========================================
+  // CATÁLOGOS
+  // ==========================================
+
+  cargarCatalogos(): void {
+    // Cargar idiomas
+    this.http.get<any[]>(`${environment.apiUrl}/catalogos/idiomas`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      this.idiomasCatalogo.set(data.map(i => ({
+        id: i.id || i.id_idioma,
+        nombre: i.nombre,
+        codigo_iso: i.codigo_iso
+      })));
+    });
+
+    // Cargar cursos
+    this.http.get<any[]>(`${environment.apiUrl}/catalogos/cursos`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      this.cursosCatalogo.set(data.map(c => ({
+        id: c.id || c.id_curso,
+        nombre: c.nombre
+      })));
+    });
+  }
+
+  // ==========================================
+  // GESTIÓN DE IDIOMAS
+  // ==========================================
+
+  agregarIdioma(idIdioma: number, nivel: string): Observable<{ success: boolean; mensaje: string }> {
+    const userId = this.userId;
+    if (!userId) return of({ success: false, mensaje: 'Usuario no identificado' });
+
+    return this.http.post<any>(
+      `${environment.apiUrl}/voluntarios/${userId}/idiomas`,
+      { id_idioma: idIdioma, nivel },
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        // Actualizar perfil local añadiendo el idioma
+        const idiomaNombre = this.idiomasCatalogo().find(i => i.id === idIdioma)?.nombre || '';
+        this.perfil.update(p => p ? {
+          ...p,
+          idiomas: [...(p.idiomas || []), { id_idioma: idIdioma, idioma: idiomaNombre, nivel }]
+        } : null);
+      }),
+      map(res => ({ success: true, mensaje: res.mensaje || 'Idioma añadido' })),
+      catchError(err => {
+        const mensaje = err.error?.error || 'Error al añadir el idioma';
+        return of({ success: false, mensaje });
+      })
+    );
+  }
+
+  actualizarNivelIdioma(idIdioma: number, nivel: string): Observable<{ success: boolean; mensaje: string }> {
+    const userId = this.userId;
+    if (!userId) return of({ success: false, mensaje: 'Usuario no identificado' });
+
+    return this.http.put<any>(
+      `${environment.apiUrl}/voluntarios/${userId}/idiomas/${idIdioma}`,
+      { nivel },
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        this.perfil.update(p => p ? {
+          ...p,
+          idiomas: p.idiomas?.map(i => i.id_idioma === idIdioma ? { ...i, nivel } : i)
+        } : null);
+      }),
+      map(res => ({ success: true, mensaje: res.mensaje || 'Nivel actualizado' })),
+      catchError(err => {
+        const mensaje = err.error?.error || 'Error al actualizar el nivel';
+        return of({ success: false, mensaje });
+      })
+    );
+  }
+
+  eliminarIdioma(idIdioma: number): Observable<{ success: boolean; mensaje: string }> {
+    const userId = this.userId;
+    if (!userId) return of({ success: false, mensaje: 'Usuario no identificado' });
+
+    return this.http.delete<any>(
+      `${environment.apiUrl}/voluntarios/${userId}/idiomas/${idIdioma}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(() => {
+        this.perfil.update(p => p ? {
+          ...p,
+          idiomas: p.idiomas?.filter(i => i.id_idioma !== idIdioma)
+        } : null);
+      }),
+      map(res => ({ success: true, mensaje: res.mensaje || 'Idioma eliminado' })),
+      catchError(err => {
+        const mensaje = err.error?.error || 'Error al eliminar el idioma';
+        return of({ success: false, mensaje });
+      })
+    );
+  }
+
+  // ==========================================
   // MAPPERS
   // ==========================================
 
@@ -431,6 +561,7 @@ export class VoluntarioService {
       dni: response.dni || '',
       telefono: response.telefono || '',
       curso: response.curso_actual?.nombre || response.curso || '',
+      id_curso_actual: response.curso_actual?.id || response.id_curso_actual || response.id_curso,
       fecha_nac: response.fecha_nac || '',
       horasTotales: 0,
       carnetConducir: response.carnet_conducir || false,
@@ -438,7 +569,8 @@ export class VoluntarioService {
       experiencia: '',
       foto: googlePhoto || response.img_perfil || '',
       email: googleEmail || response.usuario?.correo || response.correo || '',
-      preferencias: response.preferencias || []
+      preferencias: response.preferencias || [],
+      idiomas: response.idiomas || []
     };
   }
 

@@ -43,6 +43,21 @@ export class Perfil implements OnInit {
   // Estadísticas
   estadisticas = computed(() => this.voluntarioService.estadisticas());
 
+  // Catálogos
+  cursosCatalogo = computed(() => this.voluntarioService.cursosCatalogo());
+  idiomasCatalogo = computed(() => this.voluntarioService.idiomasCatalogo());
+
+  // Estado para agregar idiomas
+  mostrarAgregarIdioma = signal(false);
+  nuevoIdiomaId = 0;
+  nuevoIdiomaNivel = '';
+
+  // Idiomas disponibles (que el usuario aún no tiene)
+  idiomasDisponibles = computed(() => {
+    const yaTiene = this.perfilOriginal()?.idiomas?.map(i => Number(i.id_idioma)) || [];
+    return this.idiomasCatalogo().filter(i => !yaTiene.includes(Number(i.id)));
+  });
+
   constructor() {
     // Usar effect() para reaccionar a cambios en perfilOriginal
     // Esto corrige el bug donde perfilEditable quedaba vacío si los datos llegaban después de ngOnInit
@@ -73,6 +88,7 @@ export class Perfil implements OnInit {
   cancelarEdicion() {
     this.editando.set(false);
     this.mensaje.set(null);
+    this.mostrarAgregarIdioma.set(false);
     // Restaurar valores originales
     const perfil = this.perfilOriginal();
     if (perfil) {
@@ -89,6 +105,7 @@ export class Perfil implements OnInit {
         if (result.success) {
           this.mensaje.set({ tipo: 'success', texto: '¡Perfil actualizado correctamente!' });
           this.editando.set(false);
+          this.mostrarAgregarIdioma.set(false);
         } else {
           this.mensaje.set({ tipo: 'error', texto: result.mensaje });
         }
@@ -111,6 +128,39 @@ export class Perfil implements OnInit {
       case 'Intermedio': return 'bg-blue-100 text-blue-700';
       default: return 'bg-gray-100 text-gray-700';
     }
+  }
+
+  // ==========================================
+  // GESTIÓN DE IDIOMAS
+  // ==========================================
+
+  agregarIdioma() {
+    if (!this.nuevoIdiomaId || !this.nuevoIdiomaNivel) return;
+
+    this.voluntarioService.agregarIdioma(this.nuevoIdiomaId, this.nuevoIdiomaNivel).subscribe({
+      next: (result) => {
+        if (result.success) {
+          this.mensaje.set({ tipo: 'success', texto: result.mensaje });
+          this.nuevoIdiomaId = 0;
+          this.nuevoIdiomaNivel = '';
+          this.mostrarAgregarIdioma.set(false);
+        } else {
+          this.mensaje.set({ tipo: 'error', texto: result.mensaje });
+        }
+      }
+    });
+  }
+
+  eliminarIdioma(idIdioma: number) {
+    this.voluntarioService.eliminarIdioma(idIdioma).subscribe({
+      next: (result) => {
+        if (result.success) {
+          this.mensaje.set({ tipo: 'success', texto: result.mensaje });
+        } else {
+          this.mensaje.set({ tipo: 'error', texto: result.mensaje });
+        }
+      }
+    });
   }
 }
 

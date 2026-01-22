@@ -292,7 +292,7 @@ export class CoordinadorService {
                 fecha_nac: v.fecha_nac,
                 estado: v.estado_cuenta || 'Pendiente',
                 actividadesCount: v.total_inscripciones || 0,
-                foto: v.img_perfil
+                foto: v.foto_perfil || v.img_perfil
             }))),
             catchError(() => of([]))
         );
@@ -461,6 +461,55 @@ export class CoordinadorService {
         return this.cambiarEstadoUsuario(id, rol, 'Bloqueada');
     }
 
+    // --- EDITAR VOLUNTARIO (Como coordinador) ---
+    editarVoluntario(id: number, datos: { nombre: string; apellidos: string; telefono?: string; descripcion?: string }): Observable<any> {
+        return this.http.put(
+            `${this.apiUrl}/voluntarios/${id}`,
+            datos,
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    // --- EDITAR ORGANIZACIÓN (Como coordinador) ---
+    editarOrganizacion(id: number, datos: { nombre: string; descripcion?: string; telefono?: string; direccion?: string }): Observable<any> {
+        return this.http.put(
+            `${this.apiUrl}/organizaciones/${id}`,
+            datos,
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    // --- HISTORIAL VOLUNTARIO ---
+    getHistorialVoluntario(id: number): Observable<any> {
+        return this.http.get(
+            `${this.apiUrl}/voluntarios/${id}/historial`,
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    // --- PARTICIPANTES ACTIVIDAD ---
+    getParticipantesActividad(idActividad: number): Observable<any[]> {
+        return this.http.get<any[]>(
+            `${this.apiUrl}/actividades/${idActividad}/participantes-detalle`,
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    gestionarEstadoInscripcion(idActividad: number, idVoluntario: number, nuevoEstado: string): Observable<any> {
+        return this.http.patch(
+            `${this.apiUrl}/actividades/${idActividad}/inscripciones/${idVoluntario}`,
+            { estado: nuevoEstado },
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    eliminarInscripcion(idActividad: number, idVoluntario: number): Observable<any> {
+        return this.http.delete(
+            `${this.apiUrl}/actividades/${idActividad}/inscripciones/${idVoluntario}`,
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
     // --- INSCRIPCIONES ---
 
     // Obtiene todas las inscripciones pendientes de todas las actividades
@@ -541,7 +590,8 @@ export class CoordinadorService {
     sincronizarPerfil() {
         const backendUser = this.backendUserCache ?? this.authService.getBackendUserSnapshot();
         if (backendUser?.id_usuario) {
-            this.cargarPerfilDesdeBackend(backendUser);
+            // Forzar recarga del backend para obtener datos actualizados
+            this.cargarPerfilDesdeBackend(backendUser, true);
         }
     }
 
@@ -561,9 +611,10 @@ export class CoordinadorService {
         );
     }
 
-    private cargarPerfilDesdeBackend(backendUser: BackendUser) {
+    private cargarPerfilDesdeBackend(backendUser: BackendUser, forzarRecarga = false) {
         if (!backendUser.id_usuario) return;
-        if (this.perfilCargadoPara === backendUser.id_usuario) return;
+        // Solo saltar si ya está cargado Y no estamos forzando recarga
+        if (!forzarRecarga && this.perfilCargadoPara === backendUser.id_usuario) return;
 
         this.perfilCargadoPara = backendUser.id_usuario;
 
