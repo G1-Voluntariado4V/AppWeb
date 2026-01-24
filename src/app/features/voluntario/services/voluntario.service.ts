@@ -71,6 +71,7 @@ export interface ActividadDisponible {
   // Estado de inscripción del voluntario actual
   inscrito?: boolean;
   estadoInscripcion?: 'Pendiente' | 'Aceptada' | 'Rechazada' | 'Finalizada' | 'Cancelada' | null;
+  imagen?: string;
 }
 
 export interface MiActividad {
@@ -85,6 +86,7 @@ export interface MiActividad {
   fecha_solicitud: string;
   tipos?: string[];
   ods?: { id: number; nombre: string }[];
+  imagen?: string;
 }
 
 export interface HistorialResponse {
@@ -772,7 +774,8 @@ export class VoluntarioService {
       tipos: tiposArray,
       ods: odsArray,
       inscrito: false,
-      estadoInscripcion: null
+      estadoInscripcion: null,
+      imagen: act.imagen_actividad || act.img_actividad || act.imgActividad || act.imagen || null
     };
 
     return result;
@@ -791,7 +794,8 @@ export class VoluntarioService {
       estado_solicitud: act.estado || act.estado_solicitud || 'Pendiente',
       fecha_solicitud: act.fecha_solicitud || '',
       tipos: act.tipos || [],
-      ods: act.ods || []
+      ods: act.ods || [],
+      imagen: act.imagen_actividad || act.img_actividad || act.imgActividad || act.imagen || null
     };
   }
 

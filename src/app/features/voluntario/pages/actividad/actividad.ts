@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { VoluntarioService, MiActividad } from '../../services/voluntario.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-actividad',
@@ -57,6 +58,8 @@ export class Actividad implements OnInit {
 
   cargando = computed(() => this.voluntarioService.cargando());
   procesando = signal(false);
+
+  baseUrl = `${environment.apiUrl}/uploads/actividades/`;
 
   ngOnInit() {
     const idUrl = this.route.snapshot.paramMap.get('id');

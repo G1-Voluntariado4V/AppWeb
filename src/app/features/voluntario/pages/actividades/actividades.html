@@ -35,238 +35,235 @@
           <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Búsqueda</label>
           <div class="relative">
             <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input
-              type="text"
-              [ngModel]="busqueda()"
-              (ngModelChange)="busqueda.set($event)"
+            <input type="text" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
               placeholder="Nombre, descripción..."
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-            >
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all">
           </div>
         </div>
 
         <!-- Tipo -->
         <div>
-           <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Tipo de Actividad</label>
-           <div class="relative">
-             <i class="fa-solid fa-layer-group absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-             <select
-               [ngModel]="filtroTipo()"
-               (ngModelChange)="filtroTipo.set($event)"
-               class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
-               @for (tipo of tiposDisponibles(); track tipo) {
-                 <option [value]="tipo">{{ tipo === 'Todos' ? 'Todos los tipos' : tipo }}</option>
-               }
-             </select>
-             <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-           </div>
+          <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Tipo de Actividad</label>
+          <div class="relative">
+            <i class="fa-solid fa-layer-group absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <select [ngModel]="filtroTipo()" (ngModelChange)="filtroTipo.set($event)"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
+              @for (tipo of tiposDisponibles(); track tipo) {
+              <option [value]="tipo">{{ tipo === 'Todos' ? 'Todos los tipos' : tipo }}</option>
+              }
+            </select>
+            <i
+              class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+          </div>
         </div>
 
         <!-- Organización -->
-         <div>
-            <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Organización</label>
-            <div class="relative">
-              <i class="fa-solid fa-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-              <select
-                [ngModel]="filtroOrg()"
-                (ngModelChange)="filtroOrg.set($event)"
-                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
-                @for (org of orgsUnicas(); track org) {
-                  <option [value]="org">{{ org === 'Todas' ? 'Todas las organizaciones' : org }}</option>
-                }
-              </select>
-              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-            </div>
-         </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Organización</label>
+          <div class="relative">
+            <i class="fa-solid fa-building absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <select [ngModel]="filtroOrg()" (ngModelChange)="filtroOrg.set($event)"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
+              @for (org of orgsUnicas(); track org) {
+              <option [value]="org">{{ org === 'Todas' ? 'Todas las organizaciones' : org }}</option>
+              }
+            </select>
+            <i
+              class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+          </div>
+        </div>
 
         <!-- ODS -->
         <div>
-           <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Objetivos ODS</label>
-           <div class="relative">
-             <i class="fa-solid fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-             <select
-               [ngModel]="filtroOds()"
-               (ngModelChange)="filtroOds.set($event)"
-               class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
-               @for (ods of odsDisponibles(); track ods) {
-                 <option [value]="ods">{{ ods === 'Todos' ? 'Todos los ODS' : ods }}</option>
-               }
-             </select>
-             <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-           </div>
+          <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Objetivos ODS</label>
+          <div class="relative">
+            <i class="fa-solid fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <select [ngModel]="filtroOds()" (ngModelChange)="filtroOds.set($event)"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
+              @for (ods of odsDisponibles(); track ods) {
+              <option [value]="ods">{{ ods === 'Todos' ? 'Todos los ODS' : ods }}</option>
+              }
+            </select>
+            <i
+              class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+          </div>
         </div>
       </div>
 
       <!-- Fila 2: Filtros secundarios -->
-       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-         <!-- Fecha -->
-         <div>
-             <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Fecha de Inicio</label>
-             <div class="relative">
-                 <input
-                   type="date"
-                   [ngModel]="filtroFecha()"
-                   (ngModelChange)="filtroFecha.set($event)"
-                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-600"
-                 >
-             </div>
-         </div>
-
-         <!-- Ubicación -->
-          <div>
-              <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Ubicación</label>
-              <div class="relative">
-                <i class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <select
-                  [ngModel]="filtroUbicacion()"
-                  (ngModelChange)="filtroUbicacion.set($event)"
-                  class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
-                  @for (ubi of ubicacionesUnicas(); track ubi) {
-                    <option [value]="ubi">{{ ubi === 'Todas' ? 'Todas las ubicaciones' : ubi }}</option>
-                  }
-                </select>
-                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
-              </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <!-- Fecha -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Fecha de Inicio</label>
+          <div class="relative">
+            <input type="date" [ngModel]="filtroFecha()" (ngModelChange)="filtroFecha.set($event)"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-600">
           </div>
+        </div>
+
+        <!-- Ubicación -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 mb-1 block ml-1">Ubicación</label>
+          <div class="relative">
+            <i class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <select [ngModel]="filtroUbicacion()" (ngModelChange)="filtroUbicacion.set($event)"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white appearance-none">
+              @for (ubi of ubicacionesUnicas(); track ubi) {
+              <option [value]="ubi">{{ ubi === 'Todas' ? 'Todas las ubicaciones' : ubi }}</option>
+              }
+            </select>
+            <i
+              class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+          </div>
+        </div>
 
         <!-- Solo disponibles -->
         <div class="flex items-center h-[46px]">
-            <label class="flex items-center gap-2 cursor-pointer select-none p-2 rounded-lg hover:bg-gray-50 transition-colors w-full border border-transparent hover:border-gray-200">
-              <div class="relative flex items-center">
-                  <input
-                    type="checkbox"
-                    [checked]="soloDisponibles()"
-                    (change)="soloDisponibles.set(!soloDisponibles())"
-                    class="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 shadow-sm checked:bg-emerald-600 checked:border-emerald-600 focus:ring-2 focus:ring-emerald-500/30 transition-all"
-                  >
-                  <i class="fa-solid fa-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-xs opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
-              </div>
-              <span class="text-sm font-medium text-gray-700">Solo con plazas disponibles</span>
-            </label>
+          <label
+            class="flex items-center gap-2 cursor-pointer select-none p-2 rounded-lg hover:bg-gray-50 transition-colors w-full border border-transparent hover:border-gray-200">
+            <div class="relative flex items-center">
+              <input type="checkbox" [checked]="soloDisponibles()" (change)="soloDisponibles.set(!soloDisponibles())"
+                class="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 shadow-sm checked:bg-emerald-600 checked:border-emerald-600 focus:ring-2 focus:ring-emerald-500/30 transition-all">
+              <i
+                class="fa-solid fa-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-xs opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Solo con plazas disponibles</span>
+          </label>
         </div>
 
         <!-- Botón Limpiar -->
         <div class="flex items-center h-[46px]">
-            @if (busqueda() || filtroTipo() !== 'Todos' || filtroUbicacion() !== 'Todas' || filtroOds() !== 'Todos' || filtroOrg() !== 'Todas' || filtroFecha() || soloDisponibles()) {
-              <button (click)="limpiarFiltros()"
-                      class="w-full px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
-                <i class="fa-solid fa-trash-can"></i> Limpiar Filtros
-              </button>
-            }
+          @if (busqueda() || filtroTipo() !== 'Todos' || filtroUbicacion() !== 'Todas' || filtroOds() !== 'Todos' ||
+          filtroOrg() !== 'Todas' || filtroFecha() || soloDisponibles()) {
+          <button (click)="limpiarFiltros()"
+            class="w-full px-4 py-2.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-trash-can"></i> Limpiar Filtros
+          </button>
+          }
         </div>
-       </div>
+      </div>
     </div>
   </div>
 
   <!-- Estado de carga -->
   @if (cargando() || cargandoFiltros()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-      @if (cargandoFiltros()) {
-        <p class="text-gray-500 text-sm font-medium">Aplicando filtros...</p>
-      }
-    </div>
+  <div class="flex flex-col items-center justify-center py-12 gap-3">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+    @if (cargandoFiltros()) {
+    <p class="text-gray-500 text-sm font-medium">Aplicando filtros...</p>
+    }
+  </div>
   }
 
   <!-- Lista de Actividades -->
   @if (!cargando() && !cargandoFiltros()) {
-    @if (actividadesFiltradas().length === 0) {
-      <div class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-        <i class="fa-solid fa-filter-circle-xmark text-6xl text-gray-200 mb-6"></i>
-        <h3 class="text-xl font-bold text-gray-700">No se encontraron actividades</h3>
-        <p class="text-gray-500 mt-2 max-w-md mx-auto">Parece que no hay actividades que coincidan con tus filtros actuales. Intenta ajustar los criterios de búsqueda.</p>
-        <button (click)="limpiarFiltros()"
-                class="mt-6 px-6 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
-          <i class="fa-solid fa-arrows-rotate mr-2"></i> Restablecer filtros
-        </button>
-      </div>
-    } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @for (act of actividadesFiltradas(); track act.id_actividad) {
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+  @if (actividadesFiltradas().length === 0) {
+  <div class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
+    <i class="fa-solid fa-filter-circle-xmark text-6xl text-gray-200 mb-6"></i>
+    <h3 class="text-xl font-bold text-gray-700">No se encontraron actividades</h3>
+    <p class="text-gray-500 mt-2 max-w-md mx-auto">Parece que no hay actividades que coincidan con tus filtros actuales.
+      Intenta ajustar los criterios de búsqueda.</p>
+    <button (click)="limpiarFiltros()"
+      class="mt-6 px-6 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+      <i class="fa-solid fa-arrows-rotate mr-2"></i> Restablecer filtros
+    </button>
+  </div>
+  } @else {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @for (act of actividadesFiltradas(); track act.id_actividad) {
+    <div
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
 
-            <!-- Foto/Cover de la Actividad -->
-            <div class="relative h-40 bg-gray-200 overflow-hidden cursor-pointer" (click)="abrirModal(act)">
-               <!-- Placeholder dinámico basado en ID para color -->
-               <div class="absolute inset-0 bg-gradient-to-br"
-                    [ngClass]="{
-                        'from-blue-400 to-indigo-600': act.id_actividad % 5 === 0,
-                        'from-emerald-400 to-teal-600': act.id_actividad % 5 === 1,
-                        'from-orange-400 to-red-500': act.id_actividad % 5 === 2,
-                        'from-purple-400 to-fuchsia-600': act.id_actividad % 5 === 3,
-                        'from-pink-400 to-rose-600': act.id_actividad % 5 === 4,
-                    }"></div>
+      <!-- Foto/Cover de la Actividad -->
+      <div class="relative h-40 bg-gray-200 overflow-hidden cursor-pointer" (click)="abrirModal(act)">
 
-                <!-- Icono grande decorativo -->
-                <i class="fa-solid absolute -bottom-6 -right-6 text-9xl text-white opacity-20 transform rotate-12"
-                   [ngClass]="{
-                       'fa-hand-holding-heart': act.id_actividad % 3 === 0,
-                       'fa-seedling': act.id_actividad % 3 === 1,
-                       'fa-people-carry-box': act.id_actividad % 3 === 2
-                   }"></i>
+        @if (act.imagen) {
+        <img [src]="'http://localhost:8000/uploads/actividades/' + act.imagen"
+          class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          alt="Portada">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-70"></div>
+        } @else {
+        <!-- Placeholder dinámico basado en ID para color -->
+        <div class="absolute inset-0 bg-gradient-to-br" [ngClass]="{
+                            'from-blue-400 to-indigo-600': act.id_actividad % 5 === 0,
+                            'from-emerald-400 to-teal-600': act.id_actividad % 5 === 1,
+                            'from-orange-400 to-red-500': act.id_actividad % 5 === 2,
+                            'from-purple-400 to-fuchsia-600': act.id_actividad % 5 === 3,
+                            'from-pink-400 to-rose-600': act.id_actividad % 5 === 4,
+                        }"></div>
 
-                <div class="absolute top-3 right-3 flex flex-col gap-2">
-                    @if (act.inscrito) {
-                      <span class="px-3 py-1 text-xs font-bold rounded-full shadow-sm bg-white"
-                            [ngClass]="{
+        <!-- Icono grande decorativo -->
+        <i class="fa-solid absolute -bottom-6 -right-6 text-9xl text-white opacity-20 transform rotate-12" [ngClass]="{
+                        'fa-hand-holding-heart': act.id_actividad % 3 === 0,
+                        'fa-seedling': act.id_actividad % 3 === 1,
+                        'fa-people-carry-box': act.id_actividad % 3 === 2
+                    }"></i>
+        }
+
+        <div class="absolute top-3 right-3 flex flex-col gap-2">
+          @if (act.inscrito) {
+          <span class="px-3 py-1 text-xs font-bold rounded-full shadow-sm bg-white" [ngClass]="{
                                 'text-green-600': act.estadoInscripcion === 'Aceptada',
                                 'text-orange-600': act.estadoInscripcion === 'Pendiente',
                                 'text-red-600': act.estadoInscripcion === 'Rechazada'
                             }">
-                        {{ act.estadoInscripcion || 'Inscrito' }}
-                      </span>
-                    }
-                    @if (estaLlena(act) && !act.inscrito) {
-                        <span class="px-3 py-1 text-xs font-bold rounded-full shadow-sm bg-red-100 text-red-600 border border-red-200">
-                             Agotado
-                        </span>
-                    }
-                </div>
-            </div>
+            {{ act.estadoInscripcion || 'Inscrito' }}
+          </span>
+          }
+          @if (estaLlena(act) && !act.inscrito) {
+          <span
+            class="px-3 py-1 text-xs font-bold rounded-full shadow-sm bg-red-100 text-red-600 border border-red-200">
+            Agotado
+          </span>
+          }
+        </div>
+      </div>
 
-            <!-- Contenido -->
-            <div class="p-5 flex-1 flex flex-col">
-              <!-- Categorías/Tipos -->
-              @if (act.tipos && act.tipos.length > 0) {
-                  <div class="flex flex-wrap gap-1 mb-2">
-                      @for (tipo of act.tipos.slice(0, 2); track tipo) {
-                          <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                              {{ tipo }}
-                          </span>
-                      }
-                  </div>
-              }
+      <!-- Contenido -->
+      <div class="p-5 flex-1 flex flex-col">
+        <!-- Categorías/Tipos -->
+        @if (act.tipos && act.tipos.length > 0) {
+        <div class="flex flex-wrap gap-1 mb-2">
+          @for (tipo of act.tipos.slice(0, 2); track tipo) {
+          <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+            {{ tipo }}
+          </span>
+          }
+        </div>
+        }
 
-              <!-- Título y Org -->
-              <div class="mb-4">
-                  <h3 class="font-bold text-gray-900 text-lg leading-tight mb-1 cursor-pointer hover:text-emerald-600 transition-colors line-clamp-2"
-                      (click)="abrirModal(act)" title="Ver detalles de {{ act.titulo }}">
-                    {{ act.titulo }}
-                  </h3>
-                  <p class="text-sm text-gray-500 font-medium flex items-center gap-1.5 hover:text-emerald-600 cursor-pointer w-fit transition-colors" (click)="abrirModal(act)">
-                    <i class="fa-solid fa-building text-xs opacity-70"></i>
-                    {{ act.organizacion }}
-                  </p>
-              </div>
+        <!-- Título y Org -->
+        <div class="mb-4">
+          <h3
+            class="font-bold text-gray-900 text-lg leading-tight mb-1 cursor-pointer hover:text-emerald-600 transition-colors line-clamp-2"
+            (click)="abrirModal(act)" title="Ver detalles de {{ act.titulo }}">
+            {{ act.titulo }}
+          </h3>
+          <p class="text-sm text-gray-500 font-medium flex items-center gap-1.5 hover:text-emerald-600 cursor-pointer w-fit transition-colors"
+            (click)="abrirModal(act)">
+            <i class="fa-solid fa-building text-xs opacity-70"></i>
+            {{ act.organizacion }}
+          </p>
+        </div>
 
-              <!-- Detalles rápidos -->
-              <div class="space-y-2 mb-4 text-sm text-gray-600">
-                  <div class="flex items-center gap-2">
-                      <i class="fa-regular fa-calendar w-4 text-emerald-500 text-center"></i>
-                      <span>{{ formatearFecha(act.fecha_inicio) }}</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                      <i class="fa-solid fa-location-dot w-4 text-emerald-500 text-center"></i>
-                      <span class="truncate">{{ act.ubicacion || 'Ubicación remota o TBD' }}</span>
-                  </div>
-                  @if (act.ods && act.ods.length > 0) {
-                      <div class="flex items-center gap-2 mt-2 pt-2 border-t border-gray-50">
-                          <i class="fa-solid fa-globe w-4 text-blue-500 text-center" title="Objetivos de Desarrollo Sostenible"></i>
-                          <div class="flex -space-x-1.5 overflow-hidden">
-                             @for (ods of act.ods.slice(0, 4); track ods.id) {
-                                 <div class="w-6 h-6 rounded-full border border-white flex items-center justify-center text-[9px] font-bold text-white shadow-sm"
-                                      [title]="'ODS ' + ods.id + ': ' + ods.nombre"
-                                      [ngClass]="{
+        <!-- Detalles rápidos -->
+        <div class="space-y-2 mb-4 text-sm text-gray-600">
+          <div class="flex items-center gap-2">
+            <i class="fa-regular fa-calendar w-4 text-emerald-500 text-center"></i>
+            <span>{{ formatearFecha(act.fecha_inicio) }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-location-dot w-4 text-emerald-500 text-center"></i>
+            <span class="truncate">{{ act.ubicacion || 'Ubicación remota o TBD' }}</span>
+          </div>
+          @if (act.ods && act.ods.length > 0) {
+          <div class="flex items-center gap-2 mt-2 pt-2 border-t border-gray-50">
+            <i class="fa-solid fa-globe w-4 text-blue-500 text-center" title="Objetivos de Desarrollo Sostenible"></i>
+            <div class="flex -space-x-1.5 overflow-hidden">
+              @for (ods of act.ods.slice(0, 4); track ods.id) {
+              <div
+                class="w-6 h-6 rounded-full border border-white flex items-center justify-center text-[9px] font-bold text-white shadow-sm"
+                [title]="'ODS ' + ods.id + ': ' + ods.nombre" [ngClass]="{
                                         'bg-red-500': ods.id === 1 || ods.id === 4 || ods.id === 10,
                                         'bg-yellow-500': ods.id === 2 || ods.id === 7 || ods.id === 11 || ods.id === 12,
                                         'bg-green-500': ods.id === 3 || ods.id === 13 || ods.id === 15,
@@ -275,324 +272,340 @@
                                         'bg-blue-800': ods.id === 16 || ods.id === 17,
                                         'bg-red-700': ods.id === 8
                                       }">
-                                     {{ ods.id }}
-                                 </div>
-                             }
-                             @if (act.ods.length > 4) {
-                                  <div class="w-6 h-6 rounded-full bg-gray-100 border border-white flex items-center justify-center text-[9px] font-bold text-gray-600">
-                                      +
-                                  </div>
-                             }
-                          </div>
-                      </div>
-                  }
+                {{ ods.id }}
               </div>
-
-              <!-- Plazas (Bottom) -->
-               <div class="mt-auto pt-3 border-t border-gray-50">
-                  <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-                    <span class="font-medium">{{ getPlazasTexto(act) }}</span>
-                  </div>
-                  @if (act.cupo_maximo > 0) {
-                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-500"
-                           [style.width.%]="getPlazasPorcentaje(act)"
-                           [ngClass]="estaLlena(act) ? 'bg-red-500' : 'bg-emerald-500'"></div>
-                    </div>
-                  }
-               </div>
-
+              }
+              @if (act.ods.length > 4) {
+              <div
+                class="w-6 h-6 rounded-full bg-gray-100 border border-white flex items-center justify-center text-[9px] font-bold text-gray-600">
+                +
+              </div>
+              }
             </div>
+          </div>
+          }
+        </div>
 
-            <!-- Footer con acciones -->
-            <div class="p-4 bg-gray-50 border-t border-gray-100">
-              <button (click)="abrirModal(act)"
-                      class="w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-200 border"
-                      [ngClass]="act.inscrito
+        <!-- Plazas (Bottom) -->
+        <div class="mt-auto pt-3 border-t border-gray-50">
+          <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span class="font-medium">{{ getPlazasTexto(act) }}</span>
+          </div>
+          @if (act.cupo_maximo > 0) {
+          <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" [style.width.%]="getPlazasPorcentaje(act)"
+              [ngClass]="estaLlena(act) ? 'bg-red-500' : 'bg-emerald-500'"></div>
+          </div>
+          }
+        </div>
+
+      </div>
+
+      <!-- Footer con acciones -->
+      <div class="p-4 bg-gray-50 border-t border-gray-100">
+        <button (click)="abrirModal(act)"
+          class="w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-200 border"
+          [ngClass]="act.inscrito
                         ? 'bg-white border-gray-200 text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50'
                         : estaLlena(act)
                           ? 'bg-gray-100 border-transparent text-gray-400 cursor-not-allowed'
-                          : 'bg-emerald-600 border-transparent text-white hover:bg-emerald-700 shadow-sm hover:shadow-emerald-200'"
-                      [disabled]="estaLlena(act) && !act.inscrito">
-                @if (act.inscrito) {
-                  Ver Inscripción
-                } @else if (estaLlena(act)) {
-                  Sin Plazas Disponibles
-                } @else {
-                  Ver Detalles e Inscribirse
-                }
-              </button>
-            </div>
-          </div>
-        }
+                          : 'bg-emerald-600 border-transparent text-white hover:bg-emerald-700 shadow-sm hover:shadow-emerald-200'" [disabled]="estaLlena(act) && !act.inscrito">
+          @if (act.inscrito) {
+          Ver Inscripción
+          } @else if (estaLlena(act)) {
+          Sin Plazas Disponibles
+          } @else {
+          Ver Detalles e Inscribirse
+          }
+        </button>
       </div>
+    </div>
     }
+  </div>
+  }
   }
 </div>
 
 
 <!-- Modal de Organización -->
 @if (modalOrgAbierto()) {
-  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-    <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200" (click)="cerrarModalOrg()"></div>
-
-    <!-- Modal Content -->
-    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border-2 border-white/20">
-
-        <!-- Botón cerrar -->
-        <button (click)="cerrarModalOrg()" class="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10 group">
-             <i class="fa-solid fa-xmark text-gray-500 group-hover:text-gray-800"></i>
-        </button>
-
-        @if (cargandoOrg()) {
-             <div class="p-12 flex flex-col items-center justify-center text-gray-500">
-                 <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mb-4"></div>
-                 <p>Cargando información...</p>
-             </div>
-        } @else if (orgSeleccionada(); as org) {
-             <!-- Header con gradiente -->
-             <div class="bg-gradient-to-br from-emerald-600 to-teal-800 p-8 text-white text-center relative overflow-hidden">
-                 <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-                 <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-
-                 <div class="w-20 h-20 bg-white text-emerald-700 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-lg mb-4 relative z-10">
-                     {{ org.nombre.charAt(0) }}
-                 </div>
-                 <h2 class="text-2xl font-bold relative z-10">{{ org.nombre }}</h2>
-                 <p class="text-emerald-100 text-sm mt-1 relative z-10">Organización Verificada</p>
-             </div>
-
-             <!-- Body -->
-             <div class="p-6 space-y-6">
-                 <!-- Descripción -->
-                 @if (org.descripcion) {
-                    <div class="text-gray-600 text-center leading-relaxed italic border-b border-gray-100 pb-4">
-                        "{{ org.descripcion }}"
-                    </div>
-                 }
-
-                 <!-- Datos de contacto -->
-                 <div class="space-y-4">
-                     @if (org.direccion) {
-                         <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                             <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                                 <i class="fa-solid fa-map-location-dot"></i>
-                             </div>
-                             <div>
-                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Dirección</p>
-                                 <p class="text-gray-800 font-medium">{{ org.direccion }}</p>
-                             </div>
-                         </div>
-                     }
-
-                     @if (org.telefono) {
-                         <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                             <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                 <i class="fa-solid fa-phone"></i>
-                             </div>
-                             <div>
-                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Teléfono</p>
-                                 <a [href]="'tel:' + org.telefono" class="text-gray-800 font-medium hover:text-blue-600 transition-colors">
-                                     {{ org.telefono }}
-                                 </a>
-                             </div>
-                         </div>
-                     }
-
-                     @if (org.sitio_web) {
-                         <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                             <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-                                 <i class="fa-solid fa-globe"></i>
-                             </div>
-                             <div>
-                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Sitio Web</p>
-                                 <a [href]="org.sitio_web" target="_blank" class="text-blue-600 font-medium hover:underline flex items-center gap-1">
-                                     {{ org.sitio_web }} <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                                 </a>
-                             </div>
-                         </div>
-                     }
-
-                     @if (org.email || org.correo) {
-                         <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                             <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-                                 <i class="fa-regular fa-envelope"></i>
-                             </div>
-                             <div>
-                                 <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Correo Electrónico</p>
-                                 <a [href]="'mailto:' + (org.email || org.correo)" class="text-gray-800 font-medium hover:text-orange-600 transition-colors">
-                                     {{ org.email || org.correo }}
-                                 </a>
-                             </div>
-                         </div>
-                     }
-                 </div>
-             </div>
-
-             <!-- Footer -->
-             <div class="bg-gray-50 p-4 text-center border-t border-gray-100">
-                 <button (click)="cerrarModalOrg()" class="text-gray-500 hover:text-gray-700 font-medium text-sm">
-                     Cerrar
-                 </button>
-             </div>
-        }
-    </div>
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200" (click)="cerrarModalOrg()">
   </div>
+
+  <!-- Modal Content -->
+  <div
+    class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border-2 border-white/20">
+
+    <!-- Botón cerrar -->
+    <button (click)="cerrarModalOrg()"
+      class="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10 group">
+      <i class="fa-solid fa-xmark text-gray-500 group-hover:text-gray-800"></i>
+    </button>
+
+    @if (cargandoOrg()) {
+    <div class="p-12 flex flex-col items-center justify-center text-gray-500">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mb-4"></div>
+      <p>Cargando información...</p>
+    </div>
+    } @else if (orgSeleccionada(); as org) {
+    <!-- Header con gradiente -->
+    <div class="bg-gradient-to-br from-emerald-600 to-teal-800 p-8 text-white text-center relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+
+      <div
+        class="w-20 h-20 bg-white text-emerald-700 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-lg mb-4 relative z-10">
+        {{ org.nombre.charAt(0) }}
+      </div>
+      <h2 class="text-2xl font-bold relative z-10">{{ org.nombre }}</h2>
+      <p class="text-emerald-100 text-sm mt-1 relative z-10">Organización Verificada</p>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-6">
+      <!-- Descripción -->
+      @if (org.descripcion) {
+      <div class="text-gray-600 text-center leading-relaxed italic border-b border-gray-100 pb-4">
+        "{{ org.descripcion }}"
+      </div>
+      }
+
+      <!-- Datos de contacto -->
+      <div class="space-y-4">
+        @if (org.direccion) {
+        <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-map-location-dot"></i>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Dirección</p>
+            <p class="text-gray-800 font-medium">{{ org.direccion }}</p>
+          </div>
+        </div>
+        }
+
+        @if (org.telefono) {
+        <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-phone"></i>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Teléfono</p>
+            <a [href]="'tel:' + org.telefono" class="text-gray-800 font-medium hover:text-blue-600 transition-colors">
+              {{ org.telefono }}
+            </a>
+          </div>
+        </div>
+        }
+
+        @if (org.sitio_web) {
+        <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Sitio Web</p>
+            <a [href]="org.sitio_web" target="_blank"
+              class="text-blue-600 font-medium hover:underline flex items-center gap-1">
+              {{ org.sitio_web }} <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
+          </div>
+        </div>
+        }
+
+        @if (org.email || org.correo) {
+        <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+            <i class="fa-regular fa-envelope"></i>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Correo Electrónico</p>
+            <a [href]="'mailto:' + (org.email || org.correo)"
+              class="text-gray-800 font-medium hover:text-orange-600 transition-colors">
+              {{ org.email || org.correo }}
+            </a>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="bg-gray-50 p-4 text-center border-t border-gray-100">
+      <button (click)="cerrarModalOrg()" class="text-gray-500 hover:text-gray-700 font-medium text-sm">
+        Cerrar
+      </button>
+    </div>
+    }
+  </div>
+</div>
 }
 
 @if (modalAbierto() && actividadSeleccionada(); as act) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" (click)="cerrarModal()"></div>
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" (click)="cerrarModal()"></div>
 
-    <!-- Modal Content -->
-    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+  <!-- Modal Content -->
+  <div
+    class="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
 
-        <!-- Cover del Modal -->
-        <div class="h-32 md:h-48 relative flex-shrink-0 bg-gradient-to-r overflow-hidden"
-             [ngClass]="{
+    <!-- Cover del Modal -->
+    <div class="h-32 md:h-48 relative flex-shrink-0 bg-gradient-to-r overflow-hidden" [ngClass]="!act.imagen ? {
                  'from-blue-600 to-indigo-800': act.id_actividad % 5 === 0,
                  'from-emerald-600 to-teal-800': act.id_actividad % 5 === 1,
                  'from-orange-500 to-red-700': act.id_actividad % 5 === 2,
                  'from-purple-600 to-fuchsia-800': act.id_actividad % 5 === 3,
                  'from-pink-500 to-rose-700': act.id_actividad % 5 === 4,
-             }">
+             } : 'bg-gray-900'">
 
-            <i class="fa-solid absolute -bottom-10 -right-10 text-[10rem] text-white opacity-10 transform rotate-12"
-               [ngClass]="{
-                   'fa-hand-holding-heart': act.id_actividad % 3 === 0,
-                   'fa-seedling': act.id_actividad % 3 === 1,
-                   'fa-people-carry-box': act.id_actividad % 3 === 2
-               }"></i>
+      @if (act.imagen) {
+      <img [src]="'http://localhost:8000/uploads/actividades/' + act.imagen"
+        class="absolute inset-0 w-full h-full object-cover opacity-60" alt="Portada actividad">
+      }
 
-            <!-- Boton cerrar -->
-            <button (click)="cerrarModal()" class="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors z-10">
-                <i class="fa-solid fa-xmark text-xl w-6 h-6 flex items-center justify-center"></i>
-            </button>
+      @if (!act.imagen) {
+      <i class="fa-solid absolute -bottom-10 -right-10 text-[10rem] text-white opacity-10 transform rotate-12"
+        [ngClass]="{
+                       'fa-hand-holding-heart': act.id_actividad % 3 === 0,
+                       'fa-seedling': act.id_actividad % 3 === 1,
+                       'fa-people-carry-box': act.id_actividad % 3 === 2
+                   }"></i>
+      }
 
-            <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/70 to-transparent">
-                <h2 class="text-2xl md:text-3xl font-bold text-white shadow-sm leading-tight">{{ act.titulo }}</h2>
-                <div class="flex items-center gap-2 mt-2 text-white/90 font-medium">
-                     <i class="fa-solid fa-building text-sm"></i>
-                     <span>{{ act.organizacion }}</span>
-                </div>
-            </div>
+      <!-- Boton cerrar -->
+      <button (click)="cerrarModal()"
+        class="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors z-10">
+        <i class="fa-solid fa-xmark text-xl w-6 h-6 flex items-center justify-center"></i>
+      </button>
+
+      <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+        <h2 class="text-2xl md:text-3xl font-bold text-white shadow-sm leading-tight">{{ act.titulo }}</h2>
+        <div class="flex items-center gap-2 mt-2 text-white/90 font-medium">
+          <i class="fa-solid fa-building text-sm"></i>
+          <span>{{ act.organizacion }}</span>
         </div>
+      </div>
+    </div>
 
-      <!-- Body Scrollable -->
-      <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
+    <!-- Body Scrollable -->
+    <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
 
-        <!-- Mensaje de estado -->
-        @if (mensaje()) {
-          <div class="p-4 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 border"
-               [ngClass]="mensaje()!.tipo === 'success' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-red-50 border-red-100 text-red-800'">
-            <i class="fa-solid mt-0.5"
-               [ngClass]="mensaje()!.tipo === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
-            <span class="font-medium">{{ mensaje()!.texto }}</span>
-          </div>
-        }
+      <!-- Mensaje de estado -->
+      @if (mensaje()) {
+      <div class="p-4 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 border"
+        [ngClass]="mensaje()!.tipo === 'success' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-red-50 border-red-100 text-red-800'">
+        <i class="fa-solid mt-0.5"
+          [ngClass]="mensaje()!.tipo === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
+        <span class="font-medium">{{ mensaje()!.texto }}</span>
+      </div>
+      }
 
-        <!-- Estado de inscripción actual -->
-        @if (act.inscrito) {
-          <div class="p-5 rounded-2xl border-l-4 shadow-sm"
-               [ngClass]="{
+      <!-- Estado de inscripción actual -->
+      @if (act.inscrito) {
+      <div class="p-5 rounded-2xl border-l-4 shadow-sm" [ngClass]="{
                  'border-green-500 bg-green-50/50': act.estadoInscripcion === 'Aceptada',
                  'border-orange-500 bg-orange-50/50': act.estadoInscripcion === 'Pendiente',
                  'border-red-500 bg-red-50/50': act.estadoInscripcion === 'Rechazada'
                }">
-            <div class="flex items-start gap-4">
-              <div class="p-3 rounded-full bg-white shadow-sm shrink-0">
-                  <i class="fa-solid text-xl"
-                     [ngClass]="{
+        <div class="flex items-start gap-4">
+          <div class="p-3 rounded-full bg-white shadow-sm shrink-0">
+            <i class="fa-solid text-xl" [ngClass]="{
                        'fa-check text-green-600': act.estadoInscripcion === 'Aceptada',
                        'fa-hourglass-half text-orange-600': act.estadoInscripcion === 'Pendiente',
                        'fa-xmark text-red-600': act.estadoInscripcion === 'Rechazada'
                      }"></i>
-              </div>
-              <div>
-                <h4 class="font-bold text-lg mb-1"
-                   [ngClass]="{
+          </div>
+          <div>
+            <h4 class="font-bold text-lg mb-1" [ngClass]="{
                      'text-green-800': act.estadoInscripcion === 'Aceptada',
                      'text-orange-800': act.estadoInscripcion === 'Pendiente',
                      'text-red-800': act.estadoInscripcion === 'Rechazada'
                    }">
-                  @if (act.estadoInscripcion === 'Aceptada') { Inscripción Aceptada }
-                  @else if (act.estadoInscripcion === 'Pendiente') { Solicitud Pendiente }
-                  @else if (act.estadoInscripcion === 'Rechazada') { Solicitud Rechazada }
-                </h4>
-                <p class="text-gray-600 text-sm">
-                  @if (act.estadoInscripcion === 'Aceptada') { ¡Enhorabuena! Has sido aceptado para participar en esta actividad. Revisa tu correo para más detalles. }
-                  @else if (act.estadoInscripcion === 'Pendiente') { Tu solicitud ha sido enviada a la organización. Te notificaremos cuando haya una respuesta. }
-                  @else if (act.estadoInscripcion === 'Rechazada') { Lo sentimos, tu solicitud no ha podido ser aceptada en esta ocasión. }
-                </p>
-              </div>
-            </div>
+              @if (act.estadoInscripcion === 'Aceptada') { Inscripción Aceptada }
+              @else if (act.estadoInscripcion === 'Pendiente') { Solicitud Pendiente }
+              @else if (act.estadoInscripcion === 'Rechazada') { Solicitud Rechazada }
+            </h4>
+            <p class="text-gray-600 text-sm">
+              @if (act.estadoInscripcion === 'Aceptada') { ¡Enhorabuena! Has sido aceptado para participar en esta
+              actividad. Revisa tu correo para más detalles. }
+              @else if (act.estadoInscripcion === 'Pendiente') { Tu solicitud ha sido enviada a la organización. Te
+              notificaremos cuando haya una respuesta. }
+              @else if (act.estadoInscripcion === 'Rechazada') { Lo sentimos, tu solicitud no ha podido ser aceptada en
+              esta ocasión. }
+            </p>
           </div>
-        }
+        </div>
+      </div>
+      }
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Columna Principal -->
-            <div class="md:col-span-2 space-y-8">
-                <!-- Descripción -->
-                <section>
-                    <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">
-                        <i class="fa-solid fa-align-left text-emerald-600"></i> Descripción
-                    </h3>
-                    <div class="prose prose-emerald text-gray-600 leading-relaxed text-justify">
-                        {{ act.descripcion || 'Sin descripción disponible para esta actividad.' }}
-                    </div>
-                </section>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Columna Principal -->
+        <div class="md:col-span-2 space-y-8">
+          <!-- Descripción -->
+          <section>
+            <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100">
+              <i class="fa-solid fa-align-left text-emerald-600"></i> Descripción
+            </h3>
+            <div class="prose prose-emerald text-gray-600 leading-relaxed text-justify">
+              {{ act.descripcion || 'Sin descripción disponible para esta actividad.' }}
+            </div>
+          </section>
 
-                <!-- Tipos de Voluntariado -->
-                @if (cargandoDetalle()) {
-                  <section class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
-                    <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
-                        <i class="fa-solid fa-tags text-emerald-600"></i> Tipos de Voluntariado
-                    </h3>
-                    <div class="flex items-center gap-2 text-gray-500">
-                      <i class="fa-solid fa-spinner fa-spin"></i>
-                      <span class="text-sm">Cargando información...</span>
-                    </div>
-                  </section>
-                } @else if (act.tipos && act.tipos.length > 0) {
-                  <section class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
-                    <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
-                        <i class="fa-solid fa-tags text-emerald-600"></i> Tipos de Voluntariado
-                    </h3>
-                    <div class="flex flex-wrap gap-3">
-                      @for (tipo of act.tipos; track tipo) {
-                        <span class="bg-white border border-emerald-200 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-700 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2">
-                            <i class="fa-solid fa-circle text-emerald-400 text-[6px]"></i>
-                            {{ tipo }}
-                        </span>
-                      }
-                    </div>
-                  </section>
-                }
+          <!-- Tipos de Voluntariado -->
+          @if (cargandoDetalle()) {
+          <section class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
+            <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
+              <i class="fa-solid fa-tags text-emerald-600"></i> Tipos de Voluntariado
+            </h3>
+            <div class="flex items-center gap-2 text-gray-500">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <span class="text-sm">Cargando información...</span>
+            </div>
+          </section>
+          } @else if (act.tipos && act.tipos.length > 0) {
+          <section class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
+            <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
+              <i class="fa-solid fa-tags text-emerald-600"></i> Tipos de Voluntariado
+            </h3>
+            <div class="flex flex-wrap gap-3">
+              @for (tipo of act.tipos; track tipo) {
+              <span
+                class="bg-white border border-emerald-200 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-700 shadow-sm hover:shadow-md transition-shadow flex items-center gap-2">
+                <i class="fa-solid fa-circle text-emerald-400 text-[6px]"></i>
+                {{ tipo }}
+              </span>
+              }
+            </div>
+          </section>
+          }
 
-                <!-- ODS -->
-                @if (cargandoDetalle()) {
-                  <section class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                    <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
-                        <i class="fa-solid fa-earth-americas text-blue-600"></i> Objetivos de Desarrollo Sostenible (ODS)
-                    </h3>
-                    <div class="flex items-center gap-2 text-gray-500">
-                      <i class="fa-solid fa-spinner fa-spin"></i>
-                      <span class="text-sm">Cargando información...</span>
-                    </div>
-                  </section>
-                } @else if (act.ods && act.ods.length > 0) {
-                  <section class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                    <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
-                        <i class="fa-solid fa-earth-americas text-blue-600"></i> Objetivos de Desarrollo Sostenible (ODS)
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      @for (ods of act.ods; track ods.id) {
-                        <div class="flex items-center gap-3 p-3 rounded-xl border border-white/50 bg-white hover:shadow-md transition-shadow">
-                            <!-- Círculo de color del ODS -->
-                             <div class="w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold shadow-md text-sm"
-                                  [ngClass]="{
+          <!-- ODS -->
+          @if (cargandoDetalle()) {
+          <section class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+            <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
+              <i class="fa-solid fa-earth-americas text-blue-600"></i> Objetivos de Desarrollo Sostenible (ODS)
+            </h3>
+            <div class="flex items-center gap-2 text-gray-500">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <span class="text-sm">Cargando información...</span>
+            </div>
+          </section>
+          } @else if (act.ods && act.ods.length > 0) {
+          <section class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+            <h3 class="flex items-center gap-2 text-lg font-bold text-gray-900 mb-4">
+              <i class="fa-solid fa-earth-americas text-blue-600"></i> Objetivos de Desarrollo Sostenible (ODS)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              @for (ods of act.ods; track ods.id) {
+              <div
+                class="flex items-center gap-3 p-3 rounded-xl border border-white/50 bg-white hover:shadow-md transition-shadow">
+                <!-- Círculo de color del ODS -->
+                <div
+                  class="w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold shadow-md text-sm"
+                  [ngClass]="{
                                     'bg-[#E5243B]': ods.id === 1,
                                     'bg-[#DDA63A]': ods.id === 2,
                                     'bg-[#4C9F38]': ods.id === 3,
@@ -611,117 +624,118 @@
                                     'bg-[#00689D]': ods.id === 16,
                                     'bg-[#19486A]': ods.id === 17
                                   }">
-                                {{ ods.id }}
-                             </div>
-                             <span class="font-medium text-gray-700 text-sm leading-tight">{{ ods.nombre }}</span>
-                        </div>
-                      }
-                    </div>
-                  </section>
-                }
-
-                <!-- Sin tipos ni ODS (solo mostrar si no está cargando) -->
-                @if (!cargandoDetalle() && (!act.tipos || act.tipos.length === 0) && (!act.ods || act.ods.length === 0)) {
-                  <section class="bg-gray-50 rounded-2xl p-6 border border-gray-100 text-center">
-                    <i class="fa-solid fa-info-circle text-gray-300 text-3xl mb-3"></i>
-                    <p class="text-gray-500 text-sm">Esta actividad no tiene tipos de voluntariado ni ODS asignados.</p>
-                  </section>
-                }
-            </div>
-
-            <!-- Sidebar de Detalles -->
-            <div class="md:col-span-1 space-y-6">
-
-                <!-- Info Cards -->
-                <div class="bg-gray-50 rounded-2xl p-4 space-y-4 border border-gray-100">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-1">
-                            <i class="fa-regular fa-calendar"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-semibold uppercase">Fecha de inicio</p>
-                            <p class="font-medium text-gray-900">{{ formatearFecha(act.fecha_inicio) }}</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-1">
-                            <i class="fa-regular fa-clock"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-semibold uppercase">Duración estimada</p>
-                            <p class="font-medium text-gray-900">{{ act.duracion_horas }} horas</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 mt-1">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-semibold uppercase">Ubicación</p>
-                            <p class="font-medium text-gray-900 leading-tight">{{ act.ubicacion || 'No especificada' }}</p>
-                        </div>
-                    </div>
+                  {{ ods.id }}
                 </div>
-
-                <!-- Plazas -->
-                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                    <h4 class="font-bold text-gray-900 mb-3">Disponibilidad</h4>
-                    <div class="flex items-center justify-between text-sm mb-2">
-                        <span class="text-gray-600">Voluntarios inscritos</span>
-                        <span class="font-bold">{{ act.voluntarios_inscritos }} <span class="text-gray-400 font-normal">/ {{ act.cupo_maximo > 0 ? act.cupo_maximo : '∞' }}</span></span>
-                    </div>
-                    @if (act.cupo_maximo > 0) {
-                        <div class="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                             <div class="absolute inset-y-0 left-0 bg-gradient-to-r transition-all duration-700"
-                                  [ngClass]="estaLlena(act) ? 'from-red-500 to-red-600' : 'from-emerald-400 to-emerald-600'"
-                                  [style.width.%]="getPlazasPorcentaje(act)"></div>
-                        </div>
-                        <p class="text-xs text-center mt-2 font-medium"
-                           [ngClass]="estaLlena(act) ? 'text-red-500' : 'text-emerald-600'">
-                           {{ estaLlena(act) ? '¡Cupo completado!' : '¡Aún quedan plazas!' }}
-                        </p>
-                    }
-                </div>
-
+                <span class="font-medium text-gray-700 text-sm leading-tight">{{ ods.nombre }}</span>
+              </div>
+              }
             </div>
+          </section>
+          }
+
+          <!-- Sin tipos ni ODS (solo mostrar si no está cargando) -->
+          @if (!cargandoDetalle() && (!act.tipos || act.tipos.length === 0) && (!act.ods || act.ods.length === 0)) {
+          <section class="bg-gray-50 rounded-2xl p-6 border border-gray-100 text-center">
+            <i class="fa-solid fa-info-circle text-gray-300 text-3xl mb-3"></i>
+            <p class="text-gray-500 text-sm">Esta actividad no tiene tipos de voluntariado ni ODS asignados.</p>
+          </section>
+          }
         </div>
 
-      </div>
+        <!-- Sidebar de Detalles -->
+        <div class="md:col-span-1 space-y-6">
 
-      <!-- Footer con acciones -->
-      <div class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex flex-col sm:flex-row gap-3 text-right">
-        <button (click)="cerrarModal()"
-                class="py-3 px-6 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-colors">
-          Cerrar
-        </button>
+          <!-- Info Cards -->
+          <div class="bg-gray-50 rounded-2xl p-4 space-y-4 border border-gray-100">
+            <div class="flex items-start gap-3">
+              <div
+                class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-1">
+                <i class="fa-regular fa-calendar"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 font-semibold uppercase">Fecha de inicio</p>
+                <p class="font-medium text-gray-900">{{ formatearFecha(act.fecha_inicio) }}</p>
+              </div>
+            </div>
 
-        @if (act.inscrito) {
-          @if (act.estadoInscripcion === 'Pendiente' || act.estadoInscripcion === 'Aceptada') {
-            <button (click)="desapuntarse(act)"
-                    [disabled]="procesando()"
-                    class="flex-1 py-3 px-6 bg-red-100 text-red-700 hover:bg-red-200 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-              @if (procesando()) {
-                <i class="fa-solid fa-spinner fa-spin"></i> Procesando...
-              } @else {
-                <i class="fa-solid fa-user-xmark"></i> Cancelar inscripción
-              }
-            </button>
-          }
-        } @else if (!estaLlena(act)) {
-          <button (click)="inscribirse(act)"
-                  [disabled]="procesando()"
-                  class="flex-1 py-3 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-emerald-200 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-            @if (procesando()) {
-              <i class="fa-solid fa-spinner fa-spin"></i> Enviando solicitud...
-            } @else {
-              <i class="fa-solid fa-paper-plane"></i> Solicitar Inscripción
+            <div class="flex items-start gap-3">
+              <div
+                class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-1">
+                <i class="fa-regular fa-clock"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 font-semibold uppercase">Duración estimada</p>
+                <p class="font-medium text-gray-900">{{ act.duracion_horas }} horas</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div
+                class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 mt-1">
+                <i class="fa-solid fa-location-dot"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 font-semibold uppercase">Ubicación</p>
+                <p class="font-medium text-gray-900 leading-tight">{{ act.ubicacion || 'No especificada' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plazas -->
+          <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <h4 class="font-bold text-gray-900 mb-3">Disponibilidad</h4>
+            <div class="flex items-center justify-between text-sm mb-2">
+              <span class="text-gray-600">Voluntarios inscritos</span>
+              <span class="font-bold">{{ act.voluntarios_inscritos }} <span class="text-gray-400 font-normal">/ {{
+                  act.cupo_maximo > 0 ? act.cupo_maximo : '∞' }}</span></span>
+            </div>
+            @if (act.cupo_maximo > 0) {
+            <div class="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div class="absolute inset-y-0 left-0 bg-gradient-to-r transition-all duration-700"
+                [ngClass]="estaLlena(act) ? 'from-red-500 to-red-600' : 'from-emerald-400 to-emerald-600'"
+                [style.width.%]="getPlazasPorcentaje(act)"></div>
+            </div>
+            <p class="text-xs text-center mt-2 font-medium"
+              [ngClass]="estaLlena(act) ? 'text-red-500' : 'text-emerald-600'">
+              {{ estaLlena(act) ? '¡Cupo completado!' : '¡Aún quedan plazas!' }}
+            </p>
             }
-          </button>
-        }
+          </div>
+
+        </div>
       </div>
+
+    </div>
+
+    <!-- Footer con acciones -->
+    <div class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex flex-col sm:flex-row gap-3 text-right">
+      <button (click)="cerrarModal()"
+        class="py-3 px-6 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-colors">
+        Cerrar
+      </button>
+
+      @if (act.inscrito) {
+      @if (act.estadoInscripcion === 'Pendiente' || act.estadoInscripcion === 'Aceptada') {
+      <button (click)="desapuntarse(act)" [disabled]="procesando()"
+        class="flex-1 py-3 px-6 bg-red-100 text-red-700 hover:bg-red-200 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        @if (procesando()) {
+        <i class="fa-solid fa-spinner fa-spin"></i> Procesando...
+        } @else {
+        <i class="fa-solid fa-user-xmark"></i> Cancelar inscripción
+        }
+      </button>
+      }
+      } @else if (!estaLlena(act)) {
+      <button (click)="inscribirse(act)" [disabled]="procesando()"
+        class="flex-1 py-3 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-emerald-200 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        @if (procesando()) {
+        <i class="fa-solid fa-spinner fa-spin"></i> Enviando solicitud...
+        } @else {
+        <i class="fa-solid fa-paper-plane"></i> Solicitar Inscripción
+        }
+      </button>
+      }
     </div>
   </div>
+</div>
 }
-

@@ -2,6 +2,7 @@ import { Component, signal, computed, inject, OnInit, effect } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VoluntarioService, ActividadDisponible } from '../../services/voluntario.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
     selector: 'app-actividades-disponibles',
@@ -11,6 +12,8 @@ import { VoluntarioService, ActividadDisponible } from '../../services/voluntari
 })
 export class ActividadesDisponibles implements OnInit {
     private voluntarioService = inject(VoluntarioService);
+
+    baseUrl = `${environment.apiUrl}/uploads/actividades/`;
 
     // Filtros
     busqueda = signal('');
@@ -53,12 +56,10 @@ export class ActividadesDisponibles implements OnInit {
     // Datos del catálogo (traídos del servicio)
     tiposCatalogo = computed(() => {
         const tipos = this.voluntarioService.tiposCatalogo();
-        console.log('tiposCatalogo computed:', tipos);
         return tipos;
     });
-    odsCatalogo = computed(() =>  {
+    odsCatalogo = computed(() => {
         const ods = this.voluntarioService.odsCatalogo();
-        console.log('odsCatalogo computed:', ods);
         return ods;
     });
 
@@ -66,26 +67,22 @@ export class ActividadesDisponibles implements OnInit {
     tiposDisponibles = computed(() => {
         const catalogo = this.tiposCatalogo();
         if (!catalogo || catalogo.length === 0) {
-            console.log('tiposDisponibles: catálogo vacío');
             return ['Todos'];
         }
         const tipos = catalogo.map(t => t.nombreTipo).filter(t => t && t.length > 0);
-        console.log('tiposDisponibles:', tipos);
         return ['Todos', ...tipos.sort()];
     });
 
     odsDisponibles = computed(() => {
         const catalogo = this.odsCatalogo();
         if (!catalogo || catalogo.length === 0) {
-            console.log('odsDisponibles: catálogo vacío');
             return ['Todos'];
         }
         const ods = catalogo.map(o => `ODS ${o.id}: ${o.nombre}`).filter(o => o.length > 5);
-        console.log('odsDisponibles:', ods);
         return ['Todos', ...ods.sort((a, b) => {
-             const numA = parseInt(a.match(/ODS (\d+)/)?.[1] || '0');
-             const numB = parseInt(b.match(/ODS (\d+)/)?.[1] || '0');
-             return numA - numB;
+            const numA = parseInt(a.match(/ODS (\d+)/)?.[1] || '0');
+            const numB = parseInt(b.match(/ODS (\d+)/)?.[1] || '0');
+            return numA - numB;
         })];
     });
 
@@ -130,17 +127,12 @@ export class ActividadesDisponibles implements OnInit {
                 tipoId = tipoEncontrado?.id;
             }
 
-            console.log('=== FILTROS DE SERVIDOR ===');
-            console.log('ODS seleccionado:', odsSeleccionado, '-> ID:', odsId);
-            console.log('Tipo seleccionado:', tipoSeleccionado, '-> ID:', tipoId);
-
             // Si hay filtro de ODS o tipo, usar filtro de servidor
             if (odsId || tipoId) {
                 this.usandoFiltroServidor.set(true);
                 this.cargandoFiltros.set(true);
                 this.voluntarioService.cargarActividadesConFiltros(odsId, tipoId).subscribe({
                     next: (actividades) => {
-                        console.log('Actividades recibidas con filtro de servidor:', actividades.length);
                         this.actividadesConFiltro.set(actividades);
                         this.cargandoFiltros.set(false);
                     },
@@ -166,10 +158,6 @@ export class ActividadesDisponibles implements OnInit {
         const fecha = this.filtroFecha();
         const soloDisp = this.soloDisponibles();
 
-        // Debug: mostrar estado
-        console.log('=== FILTRADO LOCAL ===' );
-        console.log('Total actividades (después de filtro servidor):', resultado.length);
-
         // Filtro por búsqueda de texto
         if (busq) {
             resultado = resultado.filter(act =>
@@ -177,11 +165,7 @@ export class ActividadesDisponibles implements OnInit {
                 act.descripcion.toLowerCase().includes(busq) ||
                 act.organizacion.toLowerCase().includes(busq)
             );
-            console.log('Después de búsqueda:', resultado.length);
         }
-
-        // Nota: Los filtros de tipo y ODS ya se aplican en el servidor
-        // No necesitamos filtrarlos aquí
 
         // Filtro por ubicación
         if (ubicacion && ubicacion !== 'Todas') {
@@ -190,7 +174,7 @@ export class ActividadesDisponibles implements OnInit {
 
         // Filtro por organización
         if (org && org !== 'Todas') {
-             resultado = resultado.filter(act => act.organizacion === org);
+            resultado = resultado.filter(act => act.organizacion === org);
         }
 
         // Filtro por fecha
@@ -205,7 +189,6 @@ export class ActividadesDisponibles implements OnInit {
             );
         }
 
-        console.log('Resultado final:', resultado.length);
         return resultado;
     });
 
@@ -219,12 +202,9 @@ export class ActividadesDisponibles implements OnInit {
     }));
 
     ngOnInit() {
-        console.log('=== ActividadesDisponibles INIT ===' );
-
         // Los datos ya se cargan automáticamente desde el servicio
         // pero podemos forzar una recarga si es necesario
         if (this.actividadesBase().length === 0) {
-            console.log('Forzando carga de datos...');
             this.voluntarioService.cargarTodo();
         }
     }
@@ -253,8 +233,13 @@ export class ActividadesDisponibles implements OnInit {
                     // Preservar el estado de inscripción de la actividad original
                     detalleCompleto.inscrito = actividad.inscrito;
                     detalleCompleto.estadoInscripcion = actividad.estadoInscripcion;
+
+                    // Preservar imagen si el detalle no la trae
+                    if (!detalleCompleto.imagen && actividad.imagen) {
+                        detalleCompleto.imagen = actividad.imagen;
+                    }
+
                     this.actividadSeleccionada.set(detalleCompleto);
-                    console.log('Detalle completo cargado:', detalleCompleto);
                 }
                 this.cargandoDetalle.set(false);
             },
