@@ -43,6 +43,17 @@ export interface Curso {
   nombre: string;
 }
 
+export interface TipoVoluntariado {
+  id: number;
+  nombreTipo: string;
+}
+
+export interface OdsCatalogo {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+}
+
 export interface ActividadDisponible {
   id_actividad: number;
   titulo: string;
@@ -56,7 +67,7 @@ export interface ActividadDisponible {
   voluntarios_inscritos: number;
   estado_publicacion: string;
   tipos?: string[];
-  ods?: { id: number; nombre: string; color: string }[];
+  ods?: { id: number; nombre: string; color?: string }[];
   // Estado de inscripción del voluntario actual
   inscrito?: boolean;
   estadoInscripcion?: 'Pendiente' | 'Aceptada' | 'Rechazada' | 'Finalizada' | 'Cancelada' | null;
@@ -120,6 +131,8 @@ export class VoluntarioService {
   // Catálogos
   idiomasCatalogo = signal<Idioma[]>([]);
   cursosCatalogo = signal<Curso[]>([]);
+  tiposCatalogo = signal<TipoVoluntariado[]>([]);
+  odsCatalogo = signal<OdsCatalogo[]>([]);
 
   // Computed para datos derivados
   proximaActividad = computed(() => {
@@ -268,10 +281,108 @@ export class VoluntarioService {
 
   private cargarActividadesDisponiblesAPI(): Observable<ActividadDisponible[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/actividades`).pipe(
-      map(response => response.map(act => this.mapearActividadDisponible(act))),
+      map(response => {
+        console.log('=== RESPUESTA CRUDA DE /actividades ===');
+        console.log('Respuesta completa:', response);
+        if (response && response.length > 0) {
+          console.log('Primera actividad cruda:', JSON.stringify(response[0], null, 2));
+        }
+        return response.map(act => this.mapearActividadDisponible(act));
+      }),
       catchError(err => {
         console.error('Error cargando actividades:', err);
         return of([]);
+      })
+    );
+  }
+
+  // Cargar actividades con filtros de servidor (para ODS y Tipo)
+  cargarActividadesConFiltros(odsId?: number, tipoId?: number): Observable<ActividadDisponible[]> {
+    let url = `${environment.apiUrl}/actividades`;
+    const params: string[] = [];
+
+    if (odsId && odsId > 0) {
+      params.push(`ods_id=${odsId}`);
+    }
+    if (tipoId && tipoId > 0) {
+      params.push(`tipo_id=${tipoId}`);
+    }
+
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+
+    console.log('Cargando actividades con filtros:', url);
+
+    return this.http.get<any[]>(url).pipe(
+      map(response => {
+        const actividades = response.map(act => this.mapearActividadDisponible(act));
+        console.log(`Actividades cargadas con filtros: ${actividades.length}`);
+        return actividades;
+      }),
+      catchError(err => {
+        console.error('Error cargando actividades con filtros:', err);
+        return of([]);
+      })
+    );
+  }
+
+  // Obtener detalle completo de una actividad (incluye ODS y tipos)
+  getDetalleActividad(idActividad: number): Observable<ActividadDisponible | null> {
+    return this.http.get<any>(`${environment.apiUrl}/actividades/${idActividad}`).pipe(
+      map(response => {
+        console.log('Detalle actividad crudo:', response);
+        // Mapear tipos (vienen como array de objetos {id, nombre})
+        const tipos: string[] = [];
+        if (response.tipos && Array.isArray(response.tipos)) {
+          response.tipos.forEach((t: any) => {
+            if (typeof t === 'string') {
+              tipos.push(t);
+            } else if (t.nombre) {
+              tipos.push(t.nombre);
+            } else if (t.nombreTipo) {
+              tipos.push(t.nombreTipo);
+            }
+          });
+        }
+
+        // Mapear ODS (vienen como array de objetos {id, nombre})
+        const ods: { id: number; nombre: string; color?: string }[] = [];
+        if (response.ods && Array.isArray(response.ods)) {
+          response.ods.forEach((o: any) => {
+            ods.push({
+              id: o.id,
+              nombre: o.nombre || `ODS ${o.id}`,
+              color: undefined
+            });
+          });
+        }
+
+        // Verificar estado de inscripción del voluntario actual
+        const actividades = this.actividadesDisponibles();
+        const actExistente = actividades.find(a => a.id_actividad === response.id);
+
+        return {
+          id_actividad: response.id,
+          titulo: response.titulo,
+          descripcion: response.descripcion || '',
+          organizacion: response.nombre_organizacion || 'Desconocida',
+          id_organizacion: response.id_organizacion || 0,
+          ubicacion: response.ubicacion || 'No especificada',
+          fecha_inicio: response.fecha_inicio || '',
+          duracion_horas: response.duracion_horas || 0,
+          cupo_maximo: response.cupo_maximo || 0,
+          voluntarios_inscritos: response.inscritos_confirmados || 0,
+          estado_publicacion: response.estado_publicacion || 'Publicada',
+          tipos: tipos,
+          ods: ods,
+          inscrito: actExistente?.inscrito || false,
+          estadoInscripcion: actExistente?.estadoInscripcion || null
+        } as ActividadDisponible;
+      }),
+      catchError(err => {
+        console.error('Error obteniendo detalle de actividad:', err);
+        return of(null);
       })
     );
   }
@@ -445,6 +556,17 @@ export class VoluntarioService {
     );
   }
 
+  getOrganizacion(id: number): Observable<any> {
+    // Nota: El backend en /organizaciones/{id} espera el ID de usuario, no el ID de organización como entidad (si son el mismo)
+    // Asumimos que id_organizacion en ActividadDisponible es el ID de usuario de la org
+    return this.http.get<any>(`${environment.apiUrl}/organizaciones/${id}`).pipe(
+      catchError(err => {
+        console.error('Error cargando organización:', err);
+        return of(null);
+      })
+    );
+  }
+
   // ==========================================
   // CATÁLOGOS
   // ==========================================
@@ -469,6 +591,39 @@ export class VoluntarioService {
         id: c.id || c.id_curso,
         nombre: c.nombre
       })));
+    });
+
+    // Cargar tipos de voluntariado
+    this.http.get<any[]>(`${environment.apiUrl}/catalogos/tipos-voluntariado`).pipe(
+      catchError((err) => {
+        console.error('Error cargando tipos de voluntariado:', err);
+        return of([]);
+      })
+    ).subscribe(data => {
+      console.log('Tipos de voluntariado cargados:', data);
+      const tipos = data.map(t => ({
+        id: Number(t.id),
+        nombreTipo: t.nombreTipo || t.nombre || ''
+      })).filter(t => t.nombreTipo.length > 0);
+      console.log('Tipos procesados:', tipos);
+      this.tiposCatalogo.set(tipos);
+    });
+
+    // Cargar ODS
+    this.http.get<any[]>(`${environment.apiUrl}/ods`).pipe(
+      catchError((err) => {
+        console.error('Error cargando ODS:', err);
+        return of([]);
+      })
+    ).subscribe(data => {
+      console.log('ODS cargados:', data);
+      const ods = data.map(o => ({
+        id: Number(o.id),
+        nombre: o.nombre || '',
+        descripcion: o.descripcion || ''
+      })).filter(o => o.nombre.length > 0);
+      console.log('ODS procesados:', ods);
+      this.odsCatalogo.set(ods);
     });
   }
 
@@ -575,7 +730,34 @@ export class VoluntarioService {
   }
 
   private mapearActividadDisponible(act: any): ActividadDisponible {
-    return {
+    // La API devuelve "tipo" como string (puede tener múltiples tipos separados por coma)
+    // Convertimos a array para mantener compatibilidad
+    let tiposArray: string[] = [];
+    if (act.tipo && typeof act.tipo === 'string' && act.tipo.trim().length > 0) {
+      // El tipo puede venir como "Tipo1, Tipo2, Tipo3" - separar por coma
+      tiposArray = act.tipo.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+    } else if (Array.isArray(act.tipos)) {
+      tiposArray = act.tipos.map((t: any) => {
+        if (typeof t === 'string') return t;
+        if (t && typeof t === 'object') {
+          return t.nombre || t.nombreTipo || '';
+        }
+        return '';
+      }).filter((t: string) => t.length > 0);
+    }
+
+    // La API no devuelve ODS en /actividades, lo dejamos vacío por ahora
+    // Si la API devolviera "ods", lo mapearíamos aquí
+    let odsArray: { id: number; nombre: string; color?: string }[] = [];
+    if (Array.isArray(act.ods)) {
+      odsArray = act.ods.map((o: any) => ({
+        id: Number(o.id),
+        nombre: o.nombre || '',
+        color: o.color || ''
+      }));
+    }
+
+    const result: ActividadDisponible = {
       id_actividad: act.id_actividad || act.id,
       titulo: act.titulo || '',
       descripcion: act.descripcion || '',
@@ -587,11 +769,13 @@ export class VoluntarioService {
       cupo_maximo: act.cupo_maximo || 0,
       voluntarios_inscritos: act.inscritos_confirmados || act.voluntarios_inscritos || 0,
       estado_publicacion: act.estado_publicacion || 'Publicada',
-      tipos: act.tipos || [],
-      ods: act.ods || [],
+      tipos: tiposArray,
+      ods: odsArray,
       inscrito: false,
       estadoInscripcion: null
     };
+
+    return result;
   }
 
   private mapearMiActividad(act: any): MiActividad {

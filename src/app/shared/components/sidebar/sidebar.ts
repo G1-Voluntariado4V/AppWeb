@@ -56,7 +56,6 @@ export class Sidebar implements OnInit {
 
   displayPhoto(): string | null {
     const photo = this.currentUser()?.foto || this.userPhoto() || null;
-    console.log('🖼️ Sidebar displayPhoto:', photo);
     return photo;
   }
 

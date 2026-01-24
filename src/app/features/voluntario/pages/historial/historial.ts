@@ -1,12 +1,13 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { VoluntarioService, MiActividad } from '../../services/voluntario.service';
 
 @Component({
   selector: 'app-historial',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './historial.html',
 })
 export class Historial implements OnInit {
@@ -20,8 +21,53 @@ export class Historial implements OnInit {
   procesando = signal(false);
   mensaje = signal<{ tipo: 'success' | 'error'; texto: string } | null>(null);
 
+  // Nuevos filtros
+  filtroOrg = signal<string>('Todas');
+  filtroTipo = signal<string>('Todos');
+  filtroOds = signal<string>('Todos');
+  busqueda = signal<string>('');
+
+  // Modal de Organización
+  modalOrgAbierto = signal(false);
+  orgSeleccionada = signal<any>(null);
+  cargandoOrg = signal(false);
+
   cargando = computed(() => this.voluntarioService.cargando());
   actividades = computed(() => this.voluntarioService.misActividades());
+
+  // Catálogos
+  tiposCatalogo = computed(() => this.voluntarioService.tiposCatalogo());
+  odsCatalogo = computed(() => this.voluntarioService.odsCatalogo());
+
+  // Opciones para filtros
+  organizacionesDisponibles = computed(() => {
+    const orgs = new Set<string>();
+    this.actividades().forEach(a => {
+      if (a.organizacion) orgs.add(a.organizacion);
+    });
+    return ['Todas', ...Array.from(orgs).sort()];
+  });
+
+  tiposDisponibles = computed(() => {
+    const catalogo = this.tiposCatalogo();
+    if (catalogo && catalogo.length > 0) {
+      return ['Todos', ...catalogo.map(t => t.nombreTipo).sort()];
+    }
+    // Fallback: extraer de actividades
+    const tipos = new Set<string>();
+    this.actividades().forEach(a => {
+      if (a.tipos) a.tipos.forEach(t => tipos.add(t));
+    });
+    return ['Todos', ...Array.from(tipos).sort()];
+  });
+
+  odsDisponibles = computed(() => {
+    const catalogo = this.odsCatalogo();
+    if (catalogo && catalogo.length > 0) {
+      return ['Todos', ...catalogo.map(o => `ODS ${o.id}: ${o.nombre}`)];
+    }
+    return ['Todos'];
+  });
 
   // Estadísticas
   estadisticas = computed(() => {
@@ -37,18 +83,65 @@ export class Historial implements OnInit {
   });
 
   actividadesVisibles = computed(() => {
-    const filtro = this.filtroActual();
-    const lista = this.actividades();
+    const filtroEstado = this.filtroActual();
+    const filtroOrg = this.filtroOrg();
+    const filtroTipo = this.filtroTipo();
+    const filtroOds = this.filtroOds();
+    const busqueda = this.busqueda().toLowerCase().trim();
 
-    if (filtro === 'Todos') {
-      return lista;
+    let lista = this.actividades();
+
+    // Filtro por estado
+    if (filtroEstado !== 'Todos') {
+      if (filtroEstado === 'Activas') {
+        lista = lista.filter(act => act.estado_solicitud === 'Aceptada' || act.estado_solicitud === 'Pendiente');
+      } else {
+        lista = lista.filter(act => act.estado_solicitud === filtroEstado);
+      }
     }
 
-    if (filtro === 'Activas') {
-      return lista.filter(act => act.estado_solicitud === 'Aceptada' || act.estado_solicitud === 'Pendiente');
+    // Filtro por organización
+    if (filtroOrg !== 'Todas') {
+      lista = lista.filter(act => act.organizacion === filtroOrg);
     }
 
-    return lista.filter(act => act.estado_solicitud === filtro);
+    // Filtro por tipo
+    if (filtroTipo !== 'Todos') {
+      lista = lista.filter(act =>
+        act.tipos && act.tipos.some(t => t.toLowerCase() === filtroTipo.toLowerCase())
+      );
+    }
+
+    // Filtro por ODS
+    if (filtroOds !== 'Todos') {
+      const odsIdMatch = filtroOds.match(/ODS (\d+):/);
+      if (odsIdMatch) {
+        const odsId = parseInt(odsIdMatch[1], 10);
+        lista = lista.filter(act =>
+          act.ods && act.ods.some(o => o.id === odsId)
+        );
+      }
+    }
+
+    // Filtro por búsqueda
+    if (busqueda) {
+      lista = lista.filter(act =>
+        act.titulo.toLowerCase().includes(busqueda) ||
+        act.organizacion.toLowerCase().includes(busqueda) ||
+        (act.descripcion && act.descripcion.toLowerCase().includes(busqueda)) ||
+        (act.ubicacion && act.ubicacion.toLowerCase().includes(busqueda))
+      );
+    }
+
+    return lista;
+  });
+
+  hayFiltrosActivos = computed(() => {
+    return this.filtroActual() !== 'Todos' ||
+           this.filtroOrg() !== 'Todas' ||
+           this.filtroTipo() !== 'Todos' ||
+           this.filtroOds() !== 'Todos' ||
+           this.busqueda().trim() !== '';
   });
 
   ngOnInit() {
@@ -70,6 +163,45 @@ export class Historial implements OnInit {
   seleccionarFiltro(estado: string) {
     this.filtroActual.set(estado);
     this.menuAbierto.set(false);
+  }
+
+  limpiarFiltros() {
+    this.filtroActual.set('Todos');
+    this.filtroOrg.set('Todas');
+    this.filtroTipo.set('Todos');
+    this.filtroOds.set('Todos');
+    this.busqueda.set('');
+  }
+
+  // Modal de Organización
+  abrirModalOrg(nombreOrganizacion: string) {
+    if (!nombreOrganizacion) return;
+
+    // Buscar id_organizacion desde las actividades disponibles del servicio
+    const actividades = this.voluntarioService.actividadesDisponibles();
+    const actConOrg = actividades.find(a => a.organizacion === nombreOrganizacion);
+
+    if (actConOrg && actConOrg.id_organizacion) {
+      this.cargandoOrg.set(true);
+      this.orgSeleccionada.set(null);
+      this.modalOrgAbierto.set(true);
+
+      this.voluntarioService.getOrganizacion(actConOrg.id_organizacion).subscribe({
+        next: (org) => {
+          this.orgSeleccionada.set(org);
+          this.cargandoOrg.set(false);
+        },
+        error: () => {
+          this.cargandoOrg.set(false);
+          this.cerrarModalOrg();
+        }
+      });
+    }
+  }
+
+  cerrarModalOrg() {
+    this.modalOrgAbierto.set(false);
+    this.orgSeleccionada.set(null);
   }
 
   abrirModalDesapuntar(actividad: MiActividad) {
