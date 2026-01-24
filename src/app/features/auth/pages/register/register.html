@@ -267,15 +267,15 @@
                 <!-- Primer selector: Curso (1º o 2º) -->
                 <div>
                   <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Curso</label>
-                  <select formControlName="cursoLevel" (change)="onCursoLevelChange(+$any($event.target).value)"
+                  <select formControlName="cursoLevel" (change)="onLevelChange(+$any($event.target).value)"
                     [class.border-red-500]="isFieldInvalid('cursoLevel')"
                     [class.focus:ring-red-500]="isFieldInvalid('cursoLevel')"
                     class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white">
-                    @if (uniqueCursoLevels().length === 0) {
+                    @if (availableLevels().length === 0) {
                     <option value="" disabled selected>Cargando...</option>
                     } @else {
                     <option value="" disabled selected></option>
-                    @for (level of uniqueCursoLevels(); track level) {
+                    @for (level of availableLevels(); track level) {
                     <option [value]="level">{{ level }}º</option>
                     }
                     }
@@ -287,19 +287,28 @@
 
                 <!-- Segundo selector: Ciclo (DAM, ASIR, SMR...) -->
                 <div class="col-span-4">
-                  <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Ciclo
-                    Formativo</label>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider flex items-center justify-between">
+                    <span>Ciclo Formativo</span>
+                    <button type="button" 
+                      (click)="loadCoursesInBackground()"
+                      title="Recargar ciclos"
+                      class="ml-2 text-gray-400 hover:text-blue-600 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 1119.778 7.107 1 1 0 11-1.999-.214A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101A7.002 7.002 0 01.22 9.867a1 1 0 11.784-1.946z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </label>
                   <select formControlName="id_curso_actual" [class.border-red-500]="isFieldInvalid('id_curso_actual')"
-                    [class.focus:ring-red-500]="isFieldInvalid('id_curso_actual')" [disabled]="!selectedCursoLevel()"
+                    [class.focus:ring-red-500]="isFieldInvalid('id_curso_actual')" [disabled]="!currentSelectedLevel()"
                     class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:cursor-not-allowed">
-                    @if (!selectedCursoLevel()) {
+                    @if (!currentSelectedLevel()) {
                     <option value="" disabled selected>Primero selecciona curso</option>
-                    } @else if (filteredCourses().length === 0) {
+                    } @else if (availableCycles().length === 0) {
                     <option value="" disabled selected>No hay ciclos</option>
                     } @else {
                     <option value="" disabled selected>Selecciona ciclo</option>
-                    @for (course of filteredCourses(); track course.id) {
-                    <option [value]="course.id">{{ formatCourseDisplay(course) }}</option>
+                    @for (course of availableCycles(); track course.id) {
+                    <option [value]="course.id">{{ formatCycleName(course) }}</option>
                     }
                     }
                   </select>

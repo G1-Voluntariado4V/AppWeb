@@ -29,10 +29,12 @@ export class Register implements OnInit {
   errorMessage = signal<string | null>(null);
 
   // Cursos - sistema de dos selectores (curso 1º/2º → ciclo)
-  allCourses = signal<{ id: number; name: string; grado: string; cursoLevel: number; siglas: string }[]>([]);
-  uniqueCursoLevels = signal<number[]>([]); // [1, 2]
-  filteredCourses = signal<{ id: number; name: string; grado: string; cursoLevel: number; siglas: string }[]>([]);
-  selectedCursoLevel = signal<number | null>(null);
+  allCoursesList = signal<{ id: number; name: string; grado: string; cursoLevel: number; siglas: string }[]>([]);
+  availableLevels = signal<number[]>([]); // [1, 2]
+  availableCycles = signal<{ id: number; name: string; siglas: string }[]>([]); // Filtered & Deduped cycles
+  
+  // Signals for UI state
+  currentSelectedLevel = signal<number | null>(null);
 
   ngOnInit() {
     // Suscribirse al estado de autenticación para manejar la recarga de página
@@ -51,16 +53,20 @@ export class Register implements OnInit {
   }
 
   loadCoursesInBackground() {
-    this.http.get<any[]>(`${environment.apiUrl}/catalogos/cursos`).subscribe({
+    // Agregar timestamp para bypass caché
+    const timestamp = new Date().getTime();
+    this.http.get<any[]>(`${environment.apiUrl}/catalogos/cursos?t=${timestamp}`).subscribe({
       next: (response) => {
         if (response && response.length > 0) {
-          // Mapear cursos extrayendo cursoLevel y siglas de la abreviación
-          // Ej: "1DAM" → cursoLevel: 1, siglas: "DAM"
+          // Process raw response
           const courses = response.map(c => {
             const abrev = c.abreviacion || '';
-            // Extraer el curso (1 o 2) del primer dígito
-            const cursoLevel = abrev.match(/^(\d)/) ? parseInt(abrev.match(/^(\d)/)[1], 10) : 1;
-            // Extraer las siglas quitando el número
+            
+            // FIX: Usar 'c.nivel' que viene del backend (si existe), sino fallback a 1.
+            // La BD tiene un campo 'nivel' explícito que vale 1 o 2.
+            const cursoLevel = c.nivel !== undefined ? c.nivel : 1;
+            
+            // Extraer las siglas quitando el número inicial por si acaso
             const siglas = abrev.replace(/^\d+/, '');
 
             return {
@@ -72,34 +78,58 @@ export class Register implements OnInit {
             };
           });
 
-          this.allCourses.set(courses);
+          this.allCoursesList.set(courses);
 
           // Extraer niveles de curso únicos (1, 2)
           const levels = [...new Set(courses.map(c => c.cursoLevel))].sort((a, b) => a - b);
-          this.uniqueCursoLevels.set(levels);
+          this.availableLevels.set(levels);
+
+          console.log('✅ Cursos cargados correctamente:', {
+            total: courses.length,
+            levels: levels
+          });
 
           this.cdr.markForCheck();
         }
       },
-      error: () => {
-        console.log('Error cargando cursos desde API');
+      error: (err) => {
+        console.log('❌ Error cargando cursos desde API:', err);
       }
     });
   }
 
-  // Cuando el usuario selecciona un nivel de curso (1º o 2º)
-  onCursoLevelChange(level: number) {
-    this.selectedCursoLevel.set(level);
-    const filtered = this.allCourses().filter(c => c.cursoLevel === level)
-      .sort((a, b) => a.siglas.localeCompare(b.siglas));
-    this.filteredCourses.set(filtered);
-    // NO se resetea id_curso_actual para mantener la selección si existe
-    this.cdr.markForCheck();
+  // Cuando cambia el nivel (1 o 2)
+  onLevelChange(level: number) {
+    this.currentSelectedLevel.set(level);
+    
+    // 1. Filter ALL courses by Level
+    const coursesForLevel = this.allCoursesList().filter(c => c.cursoLevel === level);
+
+    // 2. Deduplicate Cycles (Handle "repeated" cycles in DB)
+    // We group by 'siglas' (or name) to ensure only ONE option appears per cycle type.
+    const uniqueMap = new Map();
+    coursesForLevel.forEach(c => {
+        // Use siglas as the unique key for the dropdown option
+        if (!uniqueMap.has(c.siglas)) {
+            uniqueMap.set(c.siglas, c);
+        }
+    });
+
+    const uniqueCycles = Array.from(uniqueMap.values()).sort((a, b) => a.siglas.localeCompare(b.siglas));
+    this.availableCycles.set(uniqueCycles);
+
+    // Reset the cycle selection in the form because level changed
+    this.registerForm.get('id_curso_actual')?.setValue(''); 
     this.cdr.markForCheck();
   }
 
-  // Formatea: "DAM - Desarrollo de Aplicaciones Multiplataforma"
-  formatCourseDisplay(course: { siglas: string; name: string }): string {
+  // When cycle is selected, find the correct ID
+  // Note: The select in HTML will bind directly to formControlName="id_curso_actual".
+  // Since 'availableCycles' contains actual course objects (the first one found for that sigla),
+  // the ID will be correct IF there are no duplicate IDs for same Level+Sigla.
+  // If there ARE duplicates (multiple IDs for 1DAM), this picks one.
+  
+  formatCycleName(course: { siglas: string; name: string }): string {
     // Quitar el prefijo "1º " o "2º " del nombre si existe
     let cleanName = course.name.replace(/^\d+º?\s*/, '');
     return `${course.siglas} - ${cleanName}`;
@@ -108,13 +138,16 @@ export class Register implements OnInit {
   selectRole(role: 'volunteer' | 'organizer') {
     this.selectedRole = role;
     this.errorMessage.set(null);
+    // Si es voluntario, recargar cursos para asegurar que tenemos datos actualizados
+    if (role === 'volunteer') {
+      this.loadCoursesInBackground();
+    }
     this.initForm();
     this.cdr.markForCheck();
   }
 
   initForm() {
     const namePattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
-    // Teléfono: opcional prefijo (+XX) seguido de 9 dígitos. Permite espacios.
     const phonePattern = /^(\+\d{1,3}\s?)?\d{9}$/;
 
     if (this.selectedRole === 'volunteer') {
@@ -124,13 +157,13 @@ export class Register implements OnInit {
         apellidos: ['', [Validators.required, Validators.minLength(2), Validators.pattern(namePattern)]],
         telefono: ['', [Validators.required, Validators.pattern(phonePattern)]],
         fecha_nac: ['', [Validators.required, this.fechaNacValidator]],
-        cursoLevel: ['', Validators.required],
-        id_curso_actual: ['', Validators.required],
+        cursoLevel: ['', Validators.required], // Control for Level
+        id_curso_actual: ['', Validators.required], // Control for Cycle ID
       });
 
-      // Resetear filtros
-      this.selectedCursoLevel.set(null);
-      this.filteredCourses.set([]);
+      // Reset internal state
+      this.currentSelectedLevel.set(null);
+      this.availableCycles.set([]);
     } else if (this.selectedRole === 'organizer') {
       this.registerForm = this.fb.group({
         cif: ['', [Validators.required]],
