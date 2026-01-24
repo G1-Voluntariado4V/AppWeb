@@ -1,19 +1,20 @@
 import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { CoordinadorService, DashboardStats, Aviso } from '../../services/coordinador';
-import { ModalEditarPerfil } from '../../components/modal-editar-perfil/modal-editar-perfil';
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [CommonModule, ModalEditarPerfil],
+  imports: [CommonModule, RouterModule],
   templateUrl: './inicio.html',
 })
 export class Inicio implements OnInit {
 
   private coordinadorService = inject(CoordinadorService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   stats = signal<DashboardStats>({
     voluntariosActivos: 0,
@@ -29,7 +30,15 @@ export class Inicio implements OnInit {
   // --- DATOS DEL PERFIL ---
   perfil = computed(() => this.coordinadorService.perfilUsuario());
 
-  modalPerfilVisible = signal(false);
+  // Fecha actual formateada
+  fechaHoy = computed(() => {
+    return new Date().toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  });
 
   ngOnInit() {
     this.cargarDatos();
@@ -51,17 +60,33 @@ export class Inicio implements OnInit {
     this.coordinadorService.getAvisos().subscribe(data => this.avisos.set(data));
   }
 
-  // Métodos del Modal
-  abrirModalPerfil() {
-    this.modalPerfilVisible.set(true);
+  // Navegar al hacer click en un aviso
+  navegarAviso(aviso: Aviso) {
+    if (aviso.ruta) {
+      this.router.navigate([aviso.ruta]);
+    }
   }
 
-  cerrarModalPerfil() {
-    this.modalPerfilVisible.set(false);
+  // Navegar a Mi Perfil
+  irAPerfil() {
+    this.router.navigate(['/coordinador/perfil']);
   }
 
-  actualizarPerfil(nuevosDatos: any) {
-    this.coordinadorService.actualizarPerfilUsuario(nuevosDatos);
+  // Accesos rápidos
+  irAVoluntarios() {
+    this.router.navigate(['/coordinador/usuarios/voluntarios']);
+  }
+
+  irAOrganizaciones() {
+    this.router.navigate(['/coordinador/usuarios/organizaciones']);
+  }
+
+  irAActividades() {
+    this.router.navigate(['/coordinador/actividades']);
+  }
+
+  irAAprobaciones() {
+    this.router.navigate(['/coordinador/aprobaciones/voluntarios']);
   }
 
   private getAnioAcademico(): string {
