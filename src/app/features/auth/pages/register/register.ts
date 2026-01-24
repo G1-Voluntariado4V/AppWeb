@@ -32,7 +32,7 @@ export class Register implements OnInit {
   allCoursesList = signal<{ id: number; name: string; grado: string; cursoLevel: number; siglas: string }[]>([]);
   availableLevels = signal<number[]>([]); // [1, 2]
   availableCycles = signal<{ id: number; name: string; siglas: string }[]>([]); // Filtered & Deduped cycles
-  
+
   // Signals for UI state
   currentSelectedLevel = signal<number | null>(null);
 
@@ -61,11 +61,11 @@ export class Register implements OnInit {
           // Process raw response
           const courses = response.map(c => {
             const abrev = c.abreviacion || '';
-            
+
             // FIX: Usar 'c.nivel' que viene del backend (si existe), sino fallback a 1.
             // La BD tiene un campo 'nivel' explícito que vale 1 o 2.
             const cursoLevel = c.nivel !== undefined ? c.nivel : 1;
-            
+
             // Extraer las siglas quitando el número inicial por si acaso
             const siglas = abrev.replace(/^\d+/, '');
 
@@ -101,7 +101,7 @@ export class Register implements OnInit {
   // Cuando cambia el nivel (1 o 2)
   onLevelChange(level: number) {
     this.currentSelectedLevel.set(level);
-    
+
     // 1. Filter ALL courses by Level
     const coursesForLevel = this.allCoursesList().filter(c => c.cursoLevel === level);
 
@@ -119,7 +119,7 @@ export class Register implements OnInit {
     this.availableCycles.set(uniqueCycles);
 
     // Reset the cycle selection in the form because level changed
-    this.registerForm.get('id_curso_actual')?.setValue(''); 
+    this.registerForm.get('id_curso_actual')?.setValue('');
     this.cdr.markForCheck();
   }
 
@@ -128,7 +128,7 @@ export class Register implements OnInit {
   // Since 'availableCycles' contains actual course objects (the first one found for that sigla),
   // the ID will be correct IF there are no duplicate IDs for same Level+Sigla.
   // If there ARE duplicates (multiple IDs for 1DAM), this picks one.
-  
+
   formatCycleName(course: { siglas: string; name: string }): string {
     // Quitar el prefijo "1º " o "2º " del nombre si existe
     let cleanName = course.name.replace(/^\d+º?\s*/, '');
