@@ -9,35 +9,51 @@
 
   <!-- Filtros -->
   <div
-    class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center relative z-20">
+    class="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center relative z-20">
 
     <div class="relative w-full md:w-96">
-      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+        class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+        <path fill-rule="evenodd"
+          d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+          clip-rule="evenodd" />
+      </svg>
       <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por nombre, email o DNI..."
-        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
+        class="w-full pl-10 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-2xl text-sm transition-all outline-none font-medium">
     </div>
 
-    <div class="relative">
+    <div class="relative w-full md:w-auto">
       <button (click)="toggleFiltro()"
-        class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors min-w-[160px] justify-between">
+        class="w-full md:w-auto flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors min-w-[180px] justify-between shadow-sm">
         <span>
           @if(filtroEstado() === 'Todos') { Estado: Todos }
           @else { Estado: {{ filtroEstado() }} }
         </span>
-        <i class="fa-solid fa-chevron-down text-xs transition-transform" [class.rotate-180]="menuFiltroAbierto()"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+          class="w-4 h-4 transition-transform text-gray-400" [class.rotate-180]="menuFiltroAbierto()">
+          <path fill-rule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clip-rule="evenodd" />
+        </svg>
       </button>
 
       @if (menuFiltroAbierto()) {
       <div class="fixed inset-0 z-10" (click)="toggleFiltro()"></div>
 
       <div
-        class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in slide-in-from-top-2">
+        class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in slide-in-from-top-2">
         @for (estado of estadosDisponibles; track estado) {
         <button (click)="seleccionarFiltro(estado)"
-          class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex justify-between items-center"
+          class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex justify-between items-center transition-colors font-medium border-b border-gray-50 last:border-0"
           [class.font-bold]="filtroEstado() === estado" [class.text-blue-600]="filtroEstado() === estado">
           {{ estado }}
-          @if(filtroEstado() === estado) { <i class="fa-solid fa-check text-blue-600"></i> }
+          @if(filtroEstado() === estado) {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-blue-600">
+            <path fill-rule="evenodd"
+              d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+              clip-rule="evenodd" />
+          </svg>
+          }
         </button>
         }
       </div>
@@ -46,107 +62,137 @@
   </div>
 
   <!-- Tabla -->
-  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 relative z-10">
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 relative z-10 overflow-hidden">
     @if (cargando()) {
-    <div class="p-10 text-center text-gray-400">
-      <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
-      <p>Cargando voluntarios...</p>
+    <div class="p-16 text-center text-gray-400 flex flex-col items-center">
+      <svg class="animate-spin h-8 w-8 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+        </path>
+      </svg>
+      <p class="text-sm font-medium">Cargando voluntarios...</p>
     </div>
     } @else {
-    <div class="overflow-x-auto rounded-3xl">
+    <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
-        <thead class="bg-gray-50/50 border-b border-gray-100">
+        <thead class="bg-gray-50/80 border-b border-gray-100 backdrop-blur-sm">
           <tr>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Voluntario</th>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Curso</th>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Actividades</th>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
-            <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Voluntario</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Curso</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Actividades</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
           @for (vol of voluntariosFiltrados(); track vol.id) {
-          <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer relative" (click)="verDetalle(vol)">
+          <tr class="hover:bg-blue-50/30 transition-colors group cursor-pointer relative" (click)="verDetalle(vol)">
 
             <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-4">
                 <div
-                  class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 overflow-hidden relative">
+                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden relative border border-gray-200 shadow-sm shrink-0">
                   @if (vol.foto) {
                   <img [src]="vol.foto" (error)="vol.foto = null" alt="Foto" class="w-full h-full object-cover">
                   } @else {
-                  <span class="text-sm font-bold text-gray-500">{{ vol.nombre.substring(0,2).toUpperCase() }}</span>
+                  <span class="text-xs font-bold text-blue-600">{{ vol.nombre.substring(0,2).toUpperCase() }}</span>
                   }
                 </div>
                 <div>
                   <p class="font-bold text-gray-900 text-sm">{{ vol.nombre }} {{ vol.apellidos }}</p>
-                  <p class="text-xs text-gray-400">{{ vol.email }}</p>
+                  <p class="text-xs text-gray-400 font-medium">{{ vol.email }}</p>
                 </div>
               </div>
             </td>
 
             <td class="px-6 py-4">
-              <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg text-xs font-bold border border-gray-200">
+              <span
+                class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-xs font-bold border border-gray-200 inline-block">
                 {{ vol.curso }}
               </span>
             </td>
 
             <td class="px-6 py-4">
-              <span class="text-sm font-bold text-gray-900">{{ vol.actividadesCount }} Actividades</span>
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">
+                  {{ vol.actividadesCount }}
+                </span>
+                <span class="text-xs text-gray-500 font-medium">Inscripciones</span>
+              </div>
             </td>
 
             <td class="px-6 py-4">
-              <span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 w-fit"
+              <span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 w-fit border"
                 [class]="getEstadoClase(vol.estado)">
-                <div class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="vol.estado === 'Activa'"
-                  [class.bg-orange-500]="vol.estado === 'Pendiente'" [class.bg-red-500]="vol.estado === 'Bloqueada'"
-                  [class.bg-gray-400]="vol.estado === 'Rechazada'"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
                 {{ vol.estado }}
               </span>
             </td>
 
             <td class="px-6 py-4 text-right">
-              <div class="relative inline-block text-left">
+              <div class="relative inline-block text-left" (click)="$event.stopPropagation()">
                 <button (click)="toggleMenuAcciones(vol.id, $event)"
-                  class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
-                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                  class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path
+                      d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                  </svg>
                 </button>
 
                 <!-- Menú de acciones -->
                 @if (menuAccionesAbiertoId() === vol.id) {
-                <div class="fixed inset-0 z-10" (click)="cerrarMenuAcciones()"></div>
+                <div class="fixed inset-0 z-30" (click)="cerrarMenuAcciones()"></div>
                 <div
-                  class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden text-left">
+                  class="absolute right-0 top-full mt-1 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 z-40 overflow-hidden text-left animate-in zoom-in-95 duration-100 origin-top-right">
 
                   @if (vol.estado !== 'Activa') {
                   <button (click)="activar(vol, $event)"
-                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600">
-                    <i class="fa-solid fa-check-circle"></i>
+                    class="w-full text-left px-4 py-3 text-xs font-bold hover:bg-green-50 flex items-center gap-3 text-green-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                      <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                        clip-rule="evenodd" />
+                    </svg>
                     Activar cuenta
                   </button>
                   }
 
                   @if (vol.estado !== 'Bloqueada') {
                   <button (click)="bloquear(vol, $event)"
-                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 text-orange-600">
-                    <i class="fa-solid fa-ban"></i>
+                    class="w-full text-left px-4 py-3 text-xs font-bold hover:bg-orange-50 flex items-center gap-3 text-orange-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                      <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                        clip-rule="evenodd" />
+                    </svg>
                     Bloquear cuenta
                   </button>
                   }
 
                   @if (vol.estado === 'Pendiente') {
                   <button (click)="rechazar(vol, $event)"
-                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-600">
-                    <i class="fa-solid fa-times"></i>
-                    Rechazar solicitud
+                    class="w-full text-left px-4 py-3 text-xs font-bold hover:bg-gray-50 flex items-center gap-3 text-gray-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                      <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                        clip-rule="evenodd" />
+                    </svg>
+                    Rechazar
                   </button>
                   }
 
-                  <div class="border-t border-gray-100"></div>
+                  <div class="border-t border-gray-100 my-1"></div>
 
                   <button (click)="eliminar(vol, $event)"
-                    class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-2 text-red-600">
-                    <i class="fa-solid fa-trash"></i>
+                    class="w-full text-left px-4 py-3 text-xs font-bold hover:bg-red-50 flex items-center gap-3 text-red-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                      <path fill-rule="evenodd"
+                        d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
+                        clip-rule="evenodd" />
+                    </svg>
                     Eliminar usuario
                   </button>
                 </div>
@@ -159,9 +205,15 @@
 
           @if (voluntariosFiltrados().length === 0) {
           <tr>
-            <td colspan="5" class="px-6 py-10 text-center text-gray-400">
-              <i class="fa-solid fa-users-slash text-3xl mb-2"></i>
-              <p>No se encontraron voluntarios</p>
+            <td colspan="5" class="px-6 py-20 text-center text-gray-400">
+              <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                  class="w-8 h-8 opacity-50">
+                  <path
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 01-2.07-.655zM16.44 15.98a4.97 4.97 0 002.07-.654.78.78 0 00.358-.442 3 3 0 00-4.308-3.516 6.484 6.484 0 011.905 3.959c.023.222.014.442-.025.654z" />
+                </svg>
+              </div>
+              <p class="font-medium">No se encontraron voluntarios</p>
             </td>
           </tr>
           }

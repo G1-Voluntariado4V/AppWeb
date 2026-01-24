@@ -1,56 +1,127 @@
-import { Component, input, output, signal, inject, OnInit } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CoordinadorService, VoluntarioAdmin } from '../../services/coordinador';
+import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
+import { CoordinadorService, VoluntarioAdmin, ActividadAdmin } from '../../services/coordinador';
 import { ToastService } from '../../../../core/services/toast.service';
+import { ModalDetalleActividad } from '../modal-detalle-actividad/modal-detalle-actividad';
 
 @Component({
   selector: 'app-modal-detalle-voluntario',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalDetalleActividad],
   templateUrl: './modal-detalle-voluntario.html',
 })
 export class ModalDetalleVoluntario implements OnInit {
-  private coordinadorService = inject(CoordinadorService);
+  public coordinadorService = inject(CoordinadorService);
   private toastService = inject(ToastService);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
 
   vol = input.required<VoluntarioAdmin>();
   close = output<void>();
   updated = output<void>();
 
-  // Estado de edición
+  // Estado local
+  volCompleto = signal<VoluntarioAdmin | null>(null);
+  vData = computed(() => this.volCompleto() || this.vol());
+
   editando = signal(false);
   guardando = signal(false);
 
-  // Datos reales del backend
+  actividadSeleccionada = signal<ActividadAdmin | null>(null);
+
   historial = signal<any[]>([]);
   horasTotales = signal(0);
   actividadesCount = signal(0);
   cargandoHistorial = signal(true);
 
-  // Datos editables
+  // Editables
   nombreEditable = '';
   apellidosEditable = '';
   telefonoEditable = '';
+  cursoEditable = '';      // Nombre del curso (para mostrar cuando no se edita o fallback)
+  fechaNacEditable = '';
   descripcionEditable = '';
 
+  // Selección de curso
+  selectedLevel = signal<number>(1);
+  selectedCursoId: number | null = null; // ID real del curso seleccionado
+
+  // Listas cargadas
+  allCourses: any[] = [];
+  availableLevels = signal<number[]>([]);
+  availableCycles = signal<any[]>([]);
+
   ngOnInit() {
+    this.volCompleto.set(this.vol());
     this.cargarHistorial();
+    this.cargarDetalleCompleto();
+    this.cargarCursosBackend();
+  }
+
+  cargarDetalleCompleto() {
+    this.coordinadorService.getVoluntarioDetalle(this.vol().id).subscribe({
+      next: (fullData) => {
+        const current = this.volCompleto();
+        const merged = current ? {
+          ...current,
+          ...fullData,
+          dni: fullData.dni || current.dni,
+          foto: fullData.foto || current.foto,
+          curso: fullData.curso || current.curso,
+          descripcion: fullData.descripcion || current.descripcion
+        } : fullData;
+
+        this.volCompleto.set(merged);
+        console.log('DEBUG MODAL - Detalle cargado. Foto:', merged.foto);
+      },
+      error: (err) => console.error('Error cargando detalle voluntario:', err)
+    });
+  }
+
+  cargarCursosBackend() {
+    // Carga independiente para asegurar datos frescos como en Registro
+    const t = new Date().getTime();
+    this.http.get<any[]>(`${this.apiUrl}/catalogos/cursos?t=${t}`).subscribe({
+      next: (data) => {
+        this.allCourses = data.map(c => ({
+          ...c,
+          nivel: c.nivel !== undefined ? c.nivel : (c.nombre.match(/^(\d+)º/)?.[1] ? parseInt(c.nombre.match(/^(\d+)º/)[1]) : 1),
+          nombreClean: c.nombre
+        }));
+
+        const levels = [...new Set(this.allCourses.map(c => c.nivel))].sort((a, b) => a - b);
+        this.availableLevels.set(levels.length ? levels : [1, 2]);
+
+        // Si estamos editando y ya tenemos curso seleccionado, recalcular availableCycles podría ser útil,
+        // pero lo hacemos en iniciarEdicion.
+      },
+      error: (err) => console.error('Error cargando cursos en modal:', err)
+    });
   }
 
   cargarHistorial() {
     this.cargandoHistorial.set(true);
     this.coordinadorService.getHistorialVoluntario(this.vol().id).subscribe({
       next: (data) => {
-        this.historial.set(data.actividades || []);
+        const acts = data.actividades || [];
+        this.historial.set(acts);
         this.horasTotales.set(data.resumen?.horas_acumuladas || 0);
-        this.actividadesCount.set(data.resumen?.total_participaciones || 0);
+
+        // El contador de "Aprobadas" sigue siendo solo de las aceptadas/finalizadas
+        const countAprobadas = acts.filter((a: any) => {
+          const s = a.estado || a.estado_solicitud || a.status;
+          return s === 'Aceptada' || s === 'Finalizada';
+        }).length;
+
+        this.actividadesCount.set(countAprobadas);
         this.cargandoHistorial.set(false);
       },
-      error: () => {
-        this.toastService.error('Error al cargar historial');
-        this.cargandoHistorial.set(false);
-      }
+      error: () => this.cargandoHistorial.set(false)
     });
   }
 
@@ -59,22 +130,56 @@ export class ModalDetalleVoluntario implements OnInit {
     this.close.emit();
   }
 
+  verActividad(idActividad: number) {
+    if (!idActividad) return;
+    const dummy: ActividadAdmin = {
+      id: idActividad, title: 'Cargando...', organizacion: '...',
+      fecha_inicio: new Date().toISOString(), estado: 'Publicada'
+    } as any;
+    this.actividadSeleccionada.set(dummy);
+  }
+
+  cerrarActividad() {
+    this.actividadSeleccionada.set(null);
+  }
+
+  // --- LOGICA CURSOS ---
+
+  onLevelChange(level: number) {
+    this.selectedLevel.set(level);
+    const filtered = this.allCourses.filter(c => c.nivel === level);
+    this.availableCycles.set(filtered);
+    this.selectedCursoId = null; // Reset selección específica
+  }
+
   iniciarEdicion() {
-    const v = this.vol();
-    // Separar nombre y apellidos si están juntos
-    const partes = v.nombre.split(' ');
-    if (v.apellidos) {
-      this.nombreEditable = v.nombre;
-      this.apellidosEditable = v.apellidos;
-    } else if (partes.length > 1) {
-      this.nombreEditable = partes[0];
-      this.apellidosEditable = partes.slice(1).join(' ');
-    } else {
-      this.nombreEditable = v.nombre;
-      this.apellidosEditable = '';
-    }
+    const v = this.vData();
+    this.nombreEditable = v.nombre || '';
+    this.apellidosEditable = v.apellidos || '';
     this.telefonoEditable = v.telefono || '';
-    this.descripcionEditable = '';
+    this.descripcionEditable = v.descripcion || '';
+    this.cursoEditable = v.curso || '';
+    this.fechaNacEditable = v.fecha_nac ? v.fecha_nac.split('T')[0] : '';
+
+    // Intentar detectar ID o Nivel del curso actual
+    // Si tenemos el nombre "1º DAM", buscamos match en allCourses
+    if (this.allCourses.length > 0 && this.cursoEditable) {
+      const found = this.allCourses.find(c => c.nombre === this.cursoEditable);
+      if (found) {
+        this.selectedLevel.set(found.nivel);
+        this.selectedCursoId = found.id;
+        this.onLevelChange(found.nivel);
+        this.selectedCursoId = found.id; // Restaurar tras reset en onLevelChange
+      } else {
+        // Fallback parseo string
+        const match = this.cursoEditable.match(/^(\d+)º/);
+        const lvl = match ? parseInt(match[1]) : 1;
+        this.onLevelChange(lvl);
+      }
+    } else {
+      this.onLevelChange(1);
+    }
+
     this.editando.set(true);
   }
 
@@ -90,20 +195,41 @@ export class ModalDetalleVoluntario implements OnInit {
 
     this.guardando.set(true);
 
-    this.coordinadorService.editarVoluntario(this.vol().id, {
+    // Buscar el nombre del curso seleccionado por ID si existe
+    let cursoNombreFinal = this.cursoEditable;
+    if (this.selectedCursoId) {
+      const c = this.allCourses.find(x => x.id == this.selectedCursoId);
+      if (c) cursoNombreFinal = c.nombre;
+    }
+
+    const payload: any = {
       nombre: this.nombreEditable.trim(),
       apellidos: this.apellidosEditable.trim(),
       telefono: this.telefonoEditable.trim() || undefined,
-      descripcion: this.descripcionEditable.trim() || undefined
-    }).subscribe({
+      descripcion: this.descripcionEditable.trim() || undefined,
+      curso: cursoNombreFinal,     // String para interfaz legacy
+      id_curso_actual: this.selectedCursoId, // ID para backend (si lo soporta)
+      fecha_nac: this.fechaNacEditable || undefined
+    };
+
+    this.coordinadorService.editarVoluntario(this.vol().id, payload).subscribe({
       next: () => {
         this.toastService.success('Voluntario actualizado correctamente');
         this.guardando.set(false);
         this.editando.set(false);
+
+        // Actualizar local
+        this.volCompleto.update(v => v ? ({
+          ...v,
+          ...payload,
+          curso: cursoNombreFinal || v.curso // Asegurar string
+        }) : null);
+
         this.updated.emit();
       },
       error: (err: any) => {
-        this.toastService.error('Error: ' + (err.error?.error || 'Error al guardar'));
+        console.error(err);
+        this.toastService.error('Error al guardar cambios.');
         this.guardando.set(false);
       }
     });
@@ -111,12 +237,12 @@ export class ModalDetalleVoluntario implements OnInit {
 
   getEstadoClase(estado: string): string {
     const clases: Record<string, string> = {
-      'Aceptada': 'bg-green-100 text-green-700',
-      'Pendiente': 'bg-orange-100 text-orange-700',
-      'Rechazada': 'bg-red-100 text-red-700',
-      'Finalizada': 'bg-blue-100 text-blue-700',
-      'Cancelada': 'bg-gray-100 text-gray-700'
+      'Activa': 'bg-green-100 text-green-700 border-green-200',
+      'Aceptada': 'bg-green-100 text-green-700 border-green-200',
+      'Pendiente': 'bg-orange-100 text-orange-700 border-orange-200',
+      'Bloqueada': 'bg-red-100 text-red-700 border-red-200',
+      'Rechazada': 'bg-red-100 text-red-700 border-red-200',
     };
-    return clases[estado] || 'bg-gray-100 text-gray-700';
+    return clases[estado] || 'bg-gray-50 text-gray-600 border-gray-200';
   }
 }

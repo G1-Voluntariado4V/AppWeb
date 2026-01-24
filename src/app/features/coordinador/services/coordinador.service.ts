@@ -15,7 +15,14 @@ export interface DashboardStats {
     usuariosPendientes: number;
 }
 
-export interface Aviso { id: number; titulo: string; subtitulo: string; tipo: 'alerta' | 'info'; }
+export interface Aviso {
+    id: number;
+    titulo: string;
+    subtitulo: string;
+    tipo: 'alerta' | 'info' | 'success';
+    ruta?: string; // Ruta para navegar al hacer click
+    icono?: string; // Icono FontAwesome opcional
+}
 
 export interface PerfilCoordinadorUI {
     id_usuario?: number;
@@ -42,6 +49,9 @@ export interface TipoVoluntariado {
 export interface Curso {
     id: number;
     nombre: string;
+    nivel?: number;
+    abreviacion?: string;
+    grado?: string;
 }
 
 export interface OrganizacionAdmin {
@@ -70,6 +80,7 @@ export interface VoluntarioAdmin {
     estado: 'Activa' | 'Pendiente' | 'Bloqueada' | 'Rechazada';
     actividadesCount: number;
     foto?: string | null;
+    descripcion?: string;
 }
 
 export interface ActividadAdmin {
@@ -97,6 +108,7 @@ export interface UsuarioAdmin {
     fecha_registro?: string;
     nombre?: string;
     apellidos?: string;
+    foto?: string | null;
 }
 
 export interface InscripcionPendiente {
@@ -192,7 +204,7 @@ export class CoordinadorService {
 
     // --- CATÁLOGOS ---
     cargarCatalogos(): void {
-        this.http.get<any[]>(`${this.apiUrl}/catalogos/ods`).pipe(
+        this.http.get<any[]>(`${this.apiUrl}/ods`).pipe(
             catchError(() => of([]))
         ).subscribe(data => {
             const mapped = data.map(o => ({ id: o.id ?? o.id_ods, nombre: o.nombre, descripcion: o.descripcion }));
@@ -206,10 +218,17 @@ export class CoordinadorService {
             this._tiposList.set(mapped);
         });
 
-        this.http.get<any[]>(`${this.apiUrl}/catalogos/cursos`).pipe(
+        const timestamp = new Date().getTime();
+        this.http.get<any[]>(`${this.apiUrl}/catalogos/cursos?t=${timestamp}`).pipe(
             catchError(() => of([]))
         ).subscribe(data => {
-            const mapped = data.map(c => ({ id: c.id ?? c.id_curso, nombre: c.nombre }));
+            const mapped = data.map(c => ({
+                id: c.id ?? c.id_curso,
+                nombre: c.nombre,
+                nivel: c.nivel,
+                abreviacion: c.abreviacion,
+                grado: c.grado
+            }));
             this._cursosList.set(mapped);
         });
     }
@@ -240,23 +259,78 @@ export class CoordinadorService {
 
     getAvisos(): Observable<Aviso[]> {
         return forkJoin({
-            usuarios: this.http.get<any[]>(`${this.apiUrl}/usuarios`).pipe(catchError(() => of([]))),
-            actividades: this.http.get<any[]>(`${this.apiUrl}/actividades`).pipe(catchError(() => of([])))
+            voluntarios: this.getSolicitudesVoluntarios().pipe(catchError(() => of([]))),
+            organizaciones: this.getSolicitudesOrganizaciones().pipe(catchError(() => of([]))),
+            actividades: this.getSolicitudesActividades().pipe(catchError(() => of([]))),
+            inscripciones: this.getInscripcionesPendientes().pipe(catchError(() => of([])))
         }).pipe(
-            map(({ usuarios, actividades }) => {
+            map(({ voluntarios, organizaciones, actividades, inscripciones }) => {
                 const avisos: Aviso[] = [];
-                const pendientes = usuarios.filter(u => u.estado_cuenta === 'Pendiente').length;
-                const actividadesRevision = actividades.filter(a => a.estado_publicacion === 'En revision').length;
+                let idCounter = 1;
 
-                if (pendientes > 0) {
-                    avisos.push({ id: 1, titulo: 'Usuarios pendientes', subtitulo: `${pendientes} solicitudes nuevas`, tipo: 'alerta' });
+                // Voluntarios pendientes
+                const volPendientes = voluntarios.length;
+                if (volPendientes > 0) {
+                    avisos.push({
+                        id: idCounter++,
+                        titulo: 'Voluntarios pendientes',
+                        subtitulo: `${volPendientes} ${volPendientes === 1 ? 'solicitud' : 'solicitudes'} de registro`,
+                        tipo: 'alerta',
+                        ruta: '/coordinador/aprobaciones/voluntarios',
+                        icono: 'fa-user-clock'
+                    });
                 }
-                if (actividadesRevision > 0) {
-                    avisos.push({ id: 2, titulo: 'Actividades en revisión', subtitulo: `${actividadesRevision} propuestas pendientes`, tipo: 'info' });
+
+                // Organizaciones pendientes
+                const orgPendientes = organizaciones.length;
+                if (orgPendientes > 0) {
+                    avisos.push({
+                        id: idCounter++,
+                        titulo: 'Organizaciones pendientes',
+                        subtitulo: `${orgPendientes} ${orgPendientes === 1 ? 'organización' : 'organizaciones'} por aprobar`,
+                        tipo: 'alerta',
+                        ruta: '/coordinador/aprobaciones/organizaciones',
+                        icono: 'fa-building-circle-exclamation'
+                    });
                 }
+
+                // Actividades en revisión
+                const actRevision = actividades.length;
+                if (actRevision > 0) {
+                    avisos.push({
+                        id: idCounter++,
+                        titulo: 'Actividades en revisión',
+                        subtitulo: `${actRevision} ${actRevision === 1 ? 'actividad' : 'actividades'} por revisar`,
+                        tipo: 'info',
+                        ruta: '/coordinador/aprobaciones/actividades',
+                        icono: 'fa-calendar-check'
+                    });
+                }
+
+                // Inscripciones pendientes
+                const inscripcionesPendientes = inscripciones.length;
+                if (inscripcionesPendientes > 0) {
+                    avisos.push({
+                        id: idCounter++,
+                        titulo: 'Inscripciones nuevas',
+                        subtitulo: `${inscripcionesPendientes} ${inscripcionesPendientes === 1 ? 'voluntario espera' : 'voluntarios esperan'} confirmación`,
+                        tipo: 'success', // Usamos success o info par diferenciar
+                        ruta: '/coordinador/aprobaciones/actividades', // Redirige a actividades donde se gestionan
+                        icono: 'fa-clipboard-user'
+                    });
+                }
+
+                // Si no hay nada pendiente
                 if (avisos.length === 0) {
-                    avisos.push({ id: 0, titulo: 'Todo al día', subtitulo: 'No hay tareas pendientes', tipo: 'info' });
+                    avisos.push({
+                        id: 0,
+                        titulo: '¡Todo al día!',
+                        subtitulo: 'No hay tareas pendientes',
+                        tipo: 'success',
+                        icono: 'fa-circle-check'
+                    });
                 }
+
                 return avisos;
             })
         );
@@ -272,82 +346,208 @@ export class CoordinadorService {
                 estado_cuenta: u.estado_cuenta,
                 fecha_registro: u.fecha_registro,
                 nombre: u.nombre,
-                apellidos: u.apellidos
+                apellidos: u.apellidos,
+                foto: this.resolveImagenUrl(u.img_perfil)
             }))),
             catchError(() => of([]))
+        );
+    }
+
+    // --- DETALLE VOLUNTARIO ---
+    getVoluntarioDetalle(id: number): Observable<VoluntarioAdmin> {
+        return this.http.get<any>(`${this.apiUrl}/voluntarios/${id}`).pipe(
+            map(v => ({
+                id: v.id_usuario ?? v.id,
+                nombre: v.nombre,
+                apellidos: v.apellidos,
+                email: v.correo || v.email,
+                dni: v.dni || 'N/A',
+                telefono: v.telefono,
+                curso: v.curso || v.curso_actual || 'Sin asignar',
+                fecha_nac: v.fecha_nac,
+                estado: v.estado_cuenta || 'Pendiente',
+                descripcion: v.descripcion,
+                actividadesCount: 0,
+                foto: this.resolveImagenUrl(v.img_perfil || v.foto_perfil)
+            }))
         );
     }
 
     // --- VOLUNTARIOS ---
     getVoluntarios(): Observable<VoluntarioAdmin[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/voluntarios`).pipe(
-            map(data => data.map(v => ({
-                id: v.id_usuario,
-                nombre: v.nombre || '',
-                apellidos: v.apellidos || '',
-                email: v.correo || '',
-                dni: v.dni,
-                telefono: v.telefono,
-                curso: v.curso_actual || v.nombre_curso || 'Sin asignar',
-                fecha_nac: v.fecha_nac,
-                estado: v.estado_cuenta || 'Pendiente',
-                actividadesCount: v.total_inscripciones || 0,
-                foto: v.foto_perfil || v.img_perfil
-            }))),
-            catchError(() => of([]))
+        console.log('DEBUG: Iniciando getVoluntarios con merge de fotos...');
+
+        // Obtenemos los usuarios para tener la foto real (desde USUARIO.img_perfil)
+        return forkJoin({
+            volAjax: this.http.get<any[]>(`${this.apiUrl}/voluntarios`).pipe(catchError(() => of([]))),
+            usrAjax: this.getUsuarios().pipe(catchError(() => of([])))
+        }).pipe(
+            switchMap(({ volAjax, usrAjax }) => {
+                if (!volAjax || volAjax.length === 0) return of([]);
+
+                const peticiones = volAjax.map(v =>
+                    this.getHistorialVoluntario(v.id_usuario || v.id).pipe(
+                        map(historial => {
+                            const rawCurso = v.curso || v.curso_actual || v.nombre_curso;
+
+                            // Buscamos la foto en el listado de usuarios si en voluntarios viene nula
+                            const userMatch = usrAjax.find(u => u.id === (v.id_usuario || v.id));
+                            const rawFoto = v.img_perfil || v.foto_perfil || v.foto || v.imagen || userMatch?.foto;
+
+                            return {
+                                id: v.id_usuario ?? v.id,
+                                nombre: v.nombre,
+                                apellidos: v.apellidos,
+                                email: v.correo_usuario || v.email || v.correo,
+                                dni: v.dni || 'N/A',
+                                telefono: v.telefono,
+                                curso: rawCurso || 'Sin asignar',
+                                fecha_nac: v.fecha_nac,
+                                estado: v.estado_cuenta,
+                                descripcion: '',
+                                actividadesCount: historial.resumen?.total_participaciones || 0,
+                                foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(v.img_perfil || v.foto_perfil || v.foto || userMatch?.foto || null)
+                            } as VoluntarioAdmin;
+                        }),
+                        catchError((err) => {
+                            console.error(`DEBUG: Error historial voluntario ${v.id_usuario}:`, err);
+                            const userMatch = usrAjax.find(u => u.id === (v.id_usuario || v.id));
+                            const rawFoto = v.img_perfil || v.foto_perfil || v.foto || userMatch?.foto;
+                            return of({
+                                id: v.id_usuario ?? v.id,
+                                nombre: v.nombre,
+                                apellidos: v.apellidos,
+                                email: v.correo_usuario || v.email || v.correo,
+                                dni: v.dni || 'N/A',
+                                telefono: v.telefono,
+                                curso: v.curso_actual || 'Sin asignar',
+                                fecha_nac: v.fecha_nac,
+                                estado: v.estado_cuenta,
+                                actividadesCount: 0,
+                                foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(v.img_perfil || v.foto_perfil || v.foto || userMatch?.foto || null)
+                            } as VoluntarioAdmin);
+                        })
+                    )
+                );
+                return forkJoin(peticiones);
+            })
         );
+    }
+
+    private resolveImagenUrl(imagen: string | null): string | null {
+        if (!imagen) return null;
+        if (imagen.startsWith('http')) return imagen;
+        // Asumimos estructura: http://host:port/api -> http://host:port/uploads/usuarios/img
+        const baseUrl = this.apiUrl.replace(/\/api\/?$/, '');
+        return `${baseUrl}/uploads/usuarios/${imagen}`;
     }
 
     // --- ORGANIZACIONES ---
     getOrganizaciones(): Observable<OrganizacionAdmin[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/organizaciones`).pipe(
-            map(data => data.map(o => ({
-                id: o.id_usuario,
-                nombre: o.nombre || '',
-                cif: o.cif,
-                email: o.correo || '',
-                telefono: o.telefono,
-                direccion: o.direccion,
-                sitioWeb: o.sitio_web,
-                descripcion: o.descripcion,
-                estado: o.estado_cuenta || 'Pendiente',
-                fecha_registro: o.fecha_registro,
-                actividadesCount: o.total_actividades || 0
-            }))),
+        return this.http.get<any[]>(`${this.apiUrl}/usuarios`).pipe(
+            map(data => data
+                .filter(u =>
+                    u.nombre_rol === 'Organización' || u.nombre_rol === 'Organizacion' ||
+                    u.rol === 'Organización' || u.rol === 'Organizacion'
+                )
+                .map(o => ({
+                    id: o.id_usuario,
+                    nombre: o.nombre || '',
+                    cif: o.cif || 'N/A', // El endpoint /usuarios podría no traer CIF
+                    email: o.correo || '',
+                    telefono: o.telefono,
+                    direccion: o.direccion,
+                    sitioWeb: o.sitio_web,
+                    descripcion: o.descripcion,
+                    estado: o.estado_cuenta || 'Pendiente',
+                    fecha_registro: o.fecha_registro,
+                    actividadesCount: o.total_actividades || 0
+                }))
+            ),
             catchError(() => of([]))
         );
     }
 
-    // --- ACTIVIDADES ---
     getActividades(): Observable<ActividadAdmin[]> {
-        // Esperamos a tener el usuario cargado para asegurar el X-Admin-Id
         return this.authService.backendUser$.pipe(
-            // Filtramos hasta que usuario y su ID existan
             filter((u): u is BackendUser => !!u && !!u.id_usuario),
-            take(1), // Solo necesitamos el primero para lanzar la petición
+            take(1),
             switchMap((u: BackendUser) => {
                 const headers = new HttpHeaders({
                     'Content-Type': 'application/json',
                     'X-Admin-Id': u.id_usuario!.toString()
                 });
-                return this.http.get<any[]>(`${this.apiUrl}/coord/actividades`, { headers });
-            }),
-            map(data => data.map(a => ({
-                id: a.id_actividad,
+                // 1. Obtener lista base (puede venir incompleta de tipos/ods)
+                return this.http.get<any[]>(`${this.apiUrl}/coord/actividades`, { headers }).pipe(
+                    switchMap(actividadesBase => {
+                        if (!actividadesBase || actividadesBase.length === 0) return of([]);
+
+                        // 2. Enriquecer cada actividad pidiendo su detalle público (que sí trae tipos/ods)
+                        const peticiones = actividadesBase.map(a =>
+                            this.getActividadDetalle(a.id_actividad).pipe(
+                                // Si falla el detalle público (ej. error server), usamos la data base
+                                catchError((err) => {
+                                    console.warn(`Error enriqueciendo actividad ${a.id_actividad}`, err);
+                                    return of({
+                                        id: a.id_actividad,
+                                        titulo: a.titulo || '',
+                                        descripcion: a.descripcion,
+                                        organizacion: a.nombre_organizacion || 'Sin organización',
+                                        organizacionId: a.id_organizacion,
+                                        fecha_inicio: a.fecha_inicio,
+                                        duracion_horas: a.duracion_horas,
+                                        cupo_maximo: a.cupo_maximo,
+                                        inscritos_confirmados: a.inscritos_confirmados || 0,
+                                        inscritos_pendientes: a.inscritos_pendientes || 0,
+                                        ubicacion: a.ubicacion,
+                                        estado: this.normalizarEstado(a.estado_publicacion),
+                                        ods: [],
+                                        tipos: []
+                                    } as ActividadAdmin);
+                                })
+                            )
+                        );
+                        // Ejecutamos todas en paralelo
+                        return forkJoin(peticiones);
+                    })
+                );
+            })
+        );
+    }
+
+    // --- DETALLE ACTIVIDAD (PÚBLICO/General) ---
+    getActividadDetalle(id: number): Observable<ActividadAdmin> {
+        // Usamos endpoint /actividades/{id} que devuelve el DTO completo
+        return this.http.get<any>(`${this.apiUrl}/actividades/${id}`).pipe(
+            map(a => ({
+                id: a.id ?? a.id_actividad,
                 titulo: a.titulo || '',
                 descripcion: a.descripcion,
-                organizacion: a.nombre_organizacion || 'Sin organización',
-                organizacionId: a.id_organizacion,
+                organizacion: a.nombre_organizacion || a.organizacion?.nombre || 'Sin organización',
+                organizacionId: a.id_organizacion ?? a.organizacion?.id,
                 fecha_inicio: a.fecha_inicio,
                 duracion_horas: a.duracion_horas,
                 cupo_maximo: a.cupo_maximo,
                 inscritos_confirmados: a.inscritos_confirmados || 0,
                 inscritos_pendientes: a.inscritos_pendientes || 0,
                 ubicacion: a.ubicacion,
-                estado: this.normalizarEstado(a.estado_publicacion),
-                ods: a.ods || [],
-                tipos: a.tipos || []
-            })))
+                estado: this.normalizarEstado(a.estado_publicacion || a.estado),
+                // El endpoint público /actividades/{id} SÍ devuelve estos arrays
+                ods: a.ods || a.ODS || [],
+                tipos: a.tipos || a.tipos_voluntariado || []
+            }))
+        );
+    }
+
+    // Helper para obtener headers como Observable (para no repetir lógica)
+    private getAdminHeadersObservable(): Observable<HttpHeaders> {
+        return this.authService.backendUser$.pipe(
+            filter((u): u is BackendUser => !!u && !!u.id_usuario),
+            take(1),
+            map(u => new HttpHeaders({
+                'Content-Type': 'application/json',
+                'X-Admin-Id': u.id_usuario!.toString()
+            }))
         );
     }
 
@@ -462,7 +662,7 @@ export class CoordinadorService {
     }
 
     // --- EDITAR VOLUNTARIO (Como coordinador) ---
-    editarVoluntario(id: number, datos: { nombre: string; apellidos: string; telefono?: string; descripcion?: string }): Observable<any> {
+    editarVoluntario(id: number, datos: { nombre: string; apellidos: string; telefono?: string; descripcion?: string; curso?: string; fecha_nac?: string }): Observable<any> {
         return this.http.put(
             `${this.apiUrl}/voluntarios/${id}`,
             datos,
@@ -641,6 +841,7 @@ export class CoordinadorService {
         const correoBackend = respuesta.usuario?.correo ?? respuesta.correo ?? backendUser.correo;
         const fotoGoogle = this.googlePhoto;
         const fotoBackend = respuesta.img_perfil || backendUser.img_perfil;
+        const fotoBackendResolved = this.resolveImagenUrl(fotoBackend);
 
         return {
             id_usuario: backendUser.id_usuario,
@@ -649,7 +850,7 @@ export class CoordinadorService {
             cargo: this.resolverCargo((respuesta.usuario)?.rol?.nombre || respuesta.rol || backendUser.rol),
             email: correoGoogle ?? correoBackend ?? this.perfilPorDefecto.email,
             telefono: respuesta.telefono ?? backendUser.telefono ?? null,
-            foto: fotoGoogle ?? fotoBackend ?? null,
+            foto: fotoBackendResolved || fotoGoogle || null,
             estado_cuenta: backendUser.estado_cuenta
         };
     }

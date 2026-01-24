@@ -24,7 +24,13 @@ export class Actividades implements OnInit {
 
   // Filtros
   filtroEstado = signal('Todos');
+  filtroOrganizacion = signal('Todas');
+  filtroTipo = signal('Todos');
+  filtroFechaInicio = signal<string | null>(null);
+  filtroFechaFin = signal<string | null>(null);
   menuFiltroAbierto = signal(false);
+  menuFiltroOrgAbierto = signal(false);
+  menuFiltroTipoAbierto = signal(false);
 
   // Modales
   modalCrearVisible = signal(false);
@@ -32,24 +38,65 @@ export class Actividades implements OnInit {
   actividadParaEditar = signal<ActividadAdmin | null>(null);
   actividadParaVerParticipantes = signal<ActividadAdmin | null>(null);
 
-  // Estados disponibles para filtro
+  // Listas para filtros (Computed)
   estadosDisponibles = ['Todos', 'Publicada', 'En revision', 'Cancelada', 'Rechazada', 'Finalizada'];
+
+  organizacionesDisponibles = computed(() => {
+    const orgs = new Set(this.actividades().map(a => a.organizacion).filter(Boolean));
+    return ['Todas', ...Array.from(orgs).sort()];
+  });
+
+  tiposDisponibles = computed(() => {
+    const tipos = this.coordinadorService.tiposList();
+    const nombres = tipos.map(t => t.nombreTipo).sort();
+    return ['Todos', ...nombres];
+  });
 
   // Computed para filtrar
   actividadesFiltradas = computed(() => {
     const term = this.busqueda().toLowerCase();
     const estado = this.filtroEstado();
+    const org = this.filtroOrganizacion();
+    const tipo = this.filtroTipo();
+    const fInicio = this.filtroFechaInicio();
+    const fFin = this.filtroFechaFin();
 
     return this.actividades().filter(act => {
+      // Filtro texto
       const matchTexto = act.titulo.toLowerCase().includes(term) ||
         act.organizacion.toLowerCase().includes(term);
+
+      // Filtro estado
       const matchEstado = estado === 'Todos' || act.estado === estado;
-      return matchTexto && matchEstado;
+
+      // Filtro organización
+      const matchOrg = org === 'Todas' || act.organizacion === org;
+
+      // Filtro tipo
+      const matchTipo = tipo === 'Todos' || (act.tipos && act.tipos.some((t: any) => {
+        const nombreT = t.nombreTipo || t.nombre || t.nombre_tipo || (typeof t === 'string' ? t : '');
+        return nombreT === tipo;
+      }));
+
+      // Filtro fechas
+      let matchFecha = true;
+      if (act.fecha_inicio) {
+        const fechaAct = new Date(act.fecha_inicio);
+        if (fInicio) {
+          matchFecha = matchFecha && fechaAct >= new Date(fInicio);
+        }
+        if (fFin) {
+          matchFecha = matchFecha && fechaAct <= new Date(fFin);
+        }
+      }
+
+      return matchTexto && matchEstado && matchOrg && matchTipo && matchFecha;
     });
   });
 
   ngOnInit() {
     this.cargarDatos();
+    this.coordinadorService.cargarCatalogos();
   }
 
   cargarDatos() {
@@ -69,11 +116,47 @@ export class Actividades implements OnInit {
   // Filtros
   toggleFiltro() {
     this.menuFiltroAbierto.update(v => !v);
+    this.menuFiltroOrgAbierto.set(false);
+    this.menuFiltroTipoAbierto.set(false);
   }
 
   seleccionarFiltro(estado: string) {
     this.filtroEstado.set(estado);
     this.menuFiltroAbierto.set(false);
+  }
+
+  toggleFiltroOrg() {
+    this.menuFiltroOrgAbierto.update(v => !v);
+    this.menuFiltroAbierto.set(false);
+    this.menuFiltroTipoAbierto.set(false);
+  }
+
+  seleccionarFiltroOrg(org: string) {
+    this.filtroOrganizacion.set(org);
+    this.menuFiltroOrgAbierto.set(false);
+  }
+
+  toggleFiltroTipo() {
+    this.menuFiltroTipoAbierto.update(v => !v);
+    this.menuFiltroAbierto.set(false);
+    this.menuFiltroOrgAbierto.set(false);
+  }
+
+  seleccionarFiltroTipo(tipo: string) {
+    this.filtroTipo.set(tipo);
+    this.menuFiltroTipoAbierto.set(false);
+  }
+
+  limpiarFiltros() {
+    this.filtroEstado.set('Todos');
+    this.filtroOrganizacion.set('Todas');
+    this.filtroTipo.set('Todos');
+    this.filtroFechaInicio.set(null);
+    this.filtroFechaFin.set(null);
+    this.busqueda.set('');
+    this.menuFiltroAbierto.set(false);
+    this.menuFiltroOrgAbierto.set(false);
+    this.menuFiltroTipoAbierto.set(false);
   }
 
   // Modal Crear
@@ -121,8 +204,8 @@ export class Actividades implements OnInit {
   cerrarDetalle() { this.actividadSeleccionada.set(null); }
 
   // Editar - IMPLEMENTADO (FIX BUG-017)
-  editar(id: number, event: Event) {
-    event.stopPropagation();
+  editar(id: number, event?: Event) {
+    if (event) event.stopPropagation();
     const actividad = this.actividades().find(a => a.id === id);
     if (actividad) {
       this.actividadParaEditar.set(actividad);

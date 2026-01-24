@@ -165,7 +165,42 @@ export class AuthService {
         );
 
         this.persistBackendUser(backendUser);
+
+        // Sincronizar foto de Google al backend si existe
+        if (photoUrl && backendUser.id_usuario) {
+            // Ejecutamos en segundo plano para no bloquear el login
+            this.uploadGooglePhotoToBackend(backendUser.id_usuario, photoUrl).then(() => {
+                // Opcional: recargar usuario para obtener la nueva URL local si fuera necesario
+            });
+        }
+
         return backendUser;
+    }
+
+    // Sube la foto de Google al backend simulando un form upload
+    private async uploadGooglePhotoToBackend(userId: number, photoUrl: string): Promise<void> {
+        try {
+            console.log('Sincronizando foto de Google al backend...');
+            const response = await fetch(photoUrl);
+            const blob = await response.blob();
+
+            // Detectar extensión
+            let ext = 'jpg';
+            if (blob.type === 'image/png') ext = 'png';
+            else if (blob.type === 'image/webp') ext = 'webp';
+
+            const file = new File([blob], `google_profile.${ext}`, { type: blob.type });
+
+            const formData = new FormData();
+            formData.append('imagen', file);
+
+            await firstValueFrom(
+                this.http.post(`${environment.apiUrl}/usuarios/${userId}/imagen`, formData)
+            );
+            console.log('Foto de Google sincronizada correctamente.');
+        } catch (error) {
+            console.error('Error al sincronizar foto de Google:', error);
+        }
     }
 
     async registerUser(userData: any): Promise<any> {

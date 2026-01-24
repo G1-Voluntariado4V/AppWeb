@@ -13,40 +13,127 @@
   </div>
 
   <!-- Filtros -->
-  <div
-    class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center relative z-20">
+  <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 relative z-20">
 
-    <div class="relative w-full md:w-96">
-      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-      <input type="text" [(ngModel)]="busqueda" placeholder="Buscar actividad..."
-        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none">
+    <!-- Fila superior: Búsqueda y Filtros Principales -->
+    <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+      <!-- Búsqueda -->
+      <div class="relative w-full md:w-96">
+        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por título o organización..."
+          class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl text-sm transition-all outline-none text-gray-700 font-medium">
+      </div>
+
+      <!-- Botones de limpieza -->
+      <button (click)="limpiarFiltros()"
+        class="text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1 bg-gray-50 px-3 py-1.5 rounded-lg border border-transparent hover:border-gray-200">
+        <i class="fa-solid fa-filter-circle-xmark"></i> Limpiar filtros
+      </button>
     </div>
 
-    <div class="relative">
-      <button (click)="toggleFiltro()"
-        class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors min-w-[180px] justify-between">
-        <span>
-          @if(filtroEstado() === 'Todos') { Estado: Todos }
-          @else { Estado: {{ filtroEstado() }} }
-        </span>
-        <i class="fa-solid fa-chevron-down text-xs transition-transform" [class.rotate-180]="menuFiltroAbierto()"></i>
-      </button>
+    <!-- Fila secundaria: Filtros detallados -->
+    <div class="flex flex-wrap gap-2 items-center">
 
-      @if (menuFiltroAbierto()) {
-      <div class="fixed inset-0 z-10" (click)="toggleFiltro()"></div>
-
-      <div
-        class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in slide-in-from-top-2">
-        @for (estado of estadosDisponibles; track estado) {
-        <button (click)="seleccionarFiltro(estado)"
-          class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex justify-between items-center"
-          [class.font-bold]="filtroEstado() === estado" [class.text-blue-600]="filtroEstado() === estado">
-          {{ estado }}
-          @if(filtroEstado() === estado) { <i class="fa-solid fa-check text-blue-600"></i> }
+      <!-- Filtro Estado -->
+      <div class="relative group">
+        <button (click)="toggleFiltro()"
+          class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-w-[160px] justify-between shadow-sm">
+          <span>Estado: <span class="text-blue-600">{{ filtroEstado() }}</span></span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform"
+            [class.rotate-180]="menuFiltroAbierto()"></i>
         </button>
+
+        @if (menuFiltroAbierto()) {
+        <div class="fixed inset-0 z-10" (click)="toggleFiltro()"></div>
+        <div
+          class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div class="max-h-60 overflow-y-auto custom-scrollbar">
+            @for (estado of estadosDisponibles; track estado) {
+            <button (click)="seleccionarFiltro(estado)"
+              class="w-full text-left px-4 py-2.5 text-xs hover:bg-blue-50 hover:text-blue-700 flex justify-between items-center transition-colors border-b border-gray-50 last:border-0"
+              [class.font-bold]="filtroEstado() === estado" [class.text-blue-600]="filtroEstado() === estado">
+              {{ estado }}
+              @if(filtroEstado() === estado) { <i class="fa-solid fa-check text-blue-600"></i> }
+            </button>
+            }
+          </div>
+        </div>
         }
       </div>
-      }
+
+      <!-- Filtro Organización -->
+      <div class="relative group">
+        <button (click)="toggleFiltroOrg()"
+          class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-w-[200px] justify-between shadow-sm">
+          <span class="truncate max-w-[180px]">Org: <span class="text-blue-600">{{ filtroOrganizacion() }}</span></span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform"
+            [class.rotate-180]="menuFiltroOrgAbierto()"></i>
+        </button>
+
+        @if (menuFiltroOrgAbierto()) {
+        <div class="fixed inset-0 z-10" (click)="toggleFiltroOrg()"></div>
+        <div
+          class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div class="p-2 border-b border-gray-100 bg-gray-50/50">
+            <p class="text-[10px] uppercase font-bold text-gray-400">Seleccionar Organización</p>
+          </div>
+          <div class="max-h-60 overflow-y-auto custom-scrollbar">
+            @for (org of organizacionesDisponibles(); track org) {
+            <button (click)="seleccionarFiltroOrg(org)"
+              class="w-full text-left px-4 py-2.5 text-xs hover:bg-blue-50 hover:text-blue-700 flex justify-between items-center transition-colors border-b border-gray-50 last:border-0"
+              [class.font-bold]="filtroOrganizacion() === org" [class.text-blue-600]="filtroOrganizacion() === org">
+              <span class="truncate">{{ org }}</span>
+              @if(filtroOrganizacion() === org) { <i class="fa-solid fa-check text-blue-600 shrink-0 ml-2"></i> }
+            </button>
+            }
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Filtro Tipo -->
+      <div class="relative group">
+        <button (click)="toggleFiltroTipo()"
+          class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-w-[180px] justify-between shadow-sm">
+          <span class="truncate max-w-[160px]">Tipo: <span class="text-blue-600">{{ filtroTipo() }}</span></span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform"
+            [class.rotate-180]="menuFiltroTipoAbierto()"></i>
+        </button>
+
+        @if (menuFiltroTipoAbierto()) {
+        <div class="fixed inset-0 z-10" (click)="toggleFiltroTipo()"></div>
+        <div
+          class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div class="p-2 border-b border-gray-100 bg-gray-50/50">
+            <p class="text-[10px] uppercase font-bold text-gray-400">Seleccionar Tipo</p>
+          </div>
+          <div class="max-h-60 overflow-y-auto custom-scrollbar">
+            @for (tipo of tiposDisponibles(); track tipo) {
+            <button (click)="seleccionarFiltroTipo(tipo)"
+              class="w-full text-left px-4 py-2.5 text-xs hover:bg-blue-50 hover:text-blue-700 flex justify-between items-center transition-colors border-b border-gray-50 last:border-0"
+              [class.font-bold]="filtroTipo() === tipo" [class.text-blue-600]="filtroTipo() === tipo">
+              <span class="truncate">{{ tipo }}</span>
+              @if(filtroTipo() === tipo) { <i class="fa-solid fa-check text-blue-600 shrink-0 ml-2"></i> }
+            </button>
+            }
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Filtros Fecha -->
+      <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+        <div class="flex items-center gap-1">
+          <i class="fa-regular fa-calendar text-gray-400 text-xs"></i>
+          <input type="date" [ngModel]="filtroFechaInicio()" (ngModelChange)="filtroFechaInicio.set($event)"
+            class="bg-transparent text-xs text-gray-600 font-medium outline-none w-24 cursor-pointer">
+        </div>
+        <span class="text-gray-300">|</span>
+        <div class="flex items-center gap-1">
+          <input type="date" [ngModel]="filtroFechaFin()" (ngModelChange)="filtroFechaFin.set($event)"
+            class="bg-transparent text-xs text-gray-600 font-medium outline-none w-24 cursor-pointer">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -76,7 +163,15 @@
             <td class="px-6 py-4">
               <div>
                 <p class="font-bold text-gray-900 text-sm">{{ act.titulo }}</p>
-                <p class="text-xs text-gray-400">{{ act.ubicacion || 'Sin ubicación' }}</p>
+                <p class="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                    class="w-3 h-3 text-gray-300">
+                    <path fill-rule="evenodd"
+                      d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.456-.966 2.283-1.749 1.653-1.564 3.346-3.806 3.346-6.6a7 7 0 10-14 0c0 2.794 1.693 5.036 3.346 6.6.827.783 1.663 1.365 2.283 1.749.311.192.571.336.757.433.093.048.175.09.243.12l.044.019.012.004.003.001a1 1 0 00.002 0zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  {{ act.ubicacion || 'Sin ubicación' }}
+                </p>
               </div>
             </td>
 
@@ -91,41 +186,67 @@
             </td>
 
             <td class="px-6 py-4">
-              <span class="text-sm text-gray-600">{{ formatearFecha(act.fecha_inicio) }}</span>
+              <span class="text-sm text-gray-600 font-medium whitespace-nowrap">{{ formatearFecha(act.fecha_inicio)
+                }}</span>
             </td>
 
             <td class="px-6 py-4">
-              <span class="px-2.5 py-1 rounded-lg text-xs font-bold" [class]="getEstadoClase(act.estado)">
+              <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold border whitespace-nowrap"
+                [class]="getEstadoClase(act.estado) + ' border-current border-opacity-20'">
                 {{ act.estado }}
               </span>
             </td>
 
             <td class="px-6 py-4 text-right">
-              <div class="flex items-center justify-end gap-1">
+              <div class="flex items-center justify-end gap-2">
                 @if (act.estado === 'En revision') {
                 <button (click)="aprobar(act.id, $event)"
-                  class="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors" title="Aprobar">
-                  <i class="fa-solid fa-check"></i>
+                  class="w-8 h-8 flex items-center justify-center bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors border border-green-200"
+                  title="Aprobar">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd" />
+                  </svg>
                 </button>
                 <button (click)="rechazar(act.id, $event)"
-                  class="p-2 hover:bg-red-100 rounded-lg text-red-500 transition-colors" title="Rechazar">
-                  <i class="fa-solid fa-xmark"></i>
+                  class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                  title="Rechazar">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path
+                      d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                  </svg>
                 </button>
                 }
+
                 <button (click)="verParticipantes(act, $event)"
-                  class="p-2 hover:bg-violet-100 rounded-lg text-gray-400 hover:text-violet-600 transition-colors"
+                  class="w-8 h-8 flex items-center justify-center bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition-colors border border-violet-200"
                   title="Ver Participantes">
-                  <i class="fa-solid fa-users"></i>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path
+                      d="M7 8a3 3 0 100-6 3 3 0 000 6zM14.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM1.615 16.428a1.224 1.224 0 01-.569-1.175 6.002 6.002 0 0111.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 017 18a9.953 9.953 0 01-5.385-1.572zM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 00-1.588-3.755 4.502 4.502 0 015.874 2.636.818.818 0 01-.36.98A7.465 7.465 0 0114.5 16z" />
+                  </svg>
                 </button>
+
                 <button (click)="editar(act.id, $event)"
-                  class="p-2 hover:bg-gray-100 rounded-lg hover:text-blue-600 text-gray-400 transition-colors"
+                  class="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
                   title="Editar">
-                  <i class="fa-solid fa-pen"></i>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path
+                      d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
+                    <path
+                      d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
+                  </svg>
                 </button>
+
                 <button (click)="eliminar(act.id, $event)"
-                  class="p-2 hover:bg-red-100 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
+                  class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-500 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors border border-gray-200"
                   title="Eliminar">
-                  <i class="fa-solid fa-trash"></i>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd"
+                      d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
+                      clip-rule="evenodd" />
+                  </svg>
                 </button>
               </div>
             </td>
@@ -135,9 +256,20 @@
 
           @if (actividadesFiltradas().length === 0) {
           <tr>
-            <td colspan="5" class="px-6 py-10 text-center text-gray-400">
-              <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
-              <p>No se encontraron actividades</p>
+            <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-50 rounded-full mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                  class="w-6 h-6 text-gray-300">
+                  <path fill-rule="evenodd"
+                    d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z"
+                    clip-rule="evenodd" />
+                </svg>
+              </div>
+              <p class="font-medium">No se encontraron actividades</p>
+              <p class="text-xs mt-1">Intenta ajustar los filtros de búsqueda</p>
+              <button (click)="limpiarFiltros()" class="mt-4 text-blue-600 text-xs font-bold hover:underline">
+                Limpiar filtros
+              </button>
             </td>
           </tr>
           }
@@ -153,7 +285,8 @@
   }
 
   @if (actividadSeleccionada()) {
-  <app-modal-detalle-actividad [act]="actividadSeleccionada()!" (close)="cerrarDetalle()">
+  <app-modal-detalle-actividad [act]="actividadSeleccionada()!" (close)="cerrarDetalle()"
+    (edit)="editar(actividadSeleccionada()!.id); cerrarDetalle()">
   </app-modal-detalle-actividad>
   }
 

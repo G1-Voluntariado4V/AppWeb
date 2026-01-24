@@ -15,14 +15,21 @@ export class ModalDetalleActividad implements OnInit {
 
   act = input.required<ActividadAdmin>();
   close = output<void>();
+  edit = output<void>();
 
   inscritos = signal<any[]>([]);
   cargandoInscritos = signal(true);
   procesandoAccion = signal(false);
 
-  // Computed para formatear fecha
+  // Signal para almacenar la data completa cargada del servidor
+  actLoaded = signal<ActividadAdmin | null>(null);
+
+  // Computed que usa la data cargada si existe, o el input inicial por defecto
+  actividadDisplay = computed(() => this.actLoaded() || this.act());
+
+  // Computed para formatear fecha (usando actividadDisplay)
   fechaFormateada = computed(() => {
-    const fecha = this.act().fecha_inicio;
+    const fecha = this.actividadDisplay().fecha_inicio;
     if (!fecha) return 'Sin fecha';
     try {
       return new Date(fecha).toLocaleDateString('es-ES', {
@@ -37,7 +44,18 @@ export class ModalDetalleActividad implements OnInit {
   });
 
   ngOnInit() {
+    this.cargarDetalleCompleto();
     this.cargarInscritos();
+  }
+
+  cargarDetalleCompleto() {
+    this.coordinadorService.getActividadDetalle(this.act().id).subscribe({
+      next: (data) => {
+        console.log('Detalle completo cargado:', data);
+        this.actLoaded.set(data);
+      },
+      error: (err) => console.error('Error cargando detalle actividad', err)
+    });
   }
 
   cargarInscritos() {
