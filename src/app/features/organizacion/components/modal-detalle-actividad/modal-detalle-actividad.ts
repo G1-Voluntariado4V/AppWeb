@@ -1,6 +1,6 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActividadOrg } from '../../services/organizacion.service';
+import { ActividadOrg, OrganizacionService } from '../../services/organizacion.service';
 import { ModalVoluntariosComponent } from '../modal-voluntarios/modal-voluntarios';
 
 @Component({
@@ -11,9 +11,16 @@ import { ModalVoluntariosComponent } from '../modal-voluntarios/modal-voluntario
 })
 export class ModalDetalleActividad {
 
+  private orgService = inject(OrganizacionService);
+
   act = input.required<ActividadOrg>();
   close = output<void>();
+  deleted = output<number>(); // Emite el ID de la actividad eliminada
+
   mostrarVoluntarios = signal(false);
+  mostrarConfirmacion = signal(false);
+  eliminando = signal(false);
+  errorEliminar = signal<string | null>(null);
 
   getEstadoIcono(): string {
     const iconos: { [key: string]: string } = {
@@ -43,9 +50,60 @@ export class ModalDetalleActividad {
     }
   }
 
+  formatearFechaCorta(): string {
+    const fecha = this.act().fecha_inicio;
+    if (!fecha) return '-';
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short'
+      });
+    } catch {
+      return fecha;
+    }
+  }
+
   calcularOcupacion(): number {
     const cupo = this.act().cupo_maximo || 1;
     const inscritos = this.act().voluntariosInscritos || 0;
     return Math.round((inscritos / cupo) * 100);
+  }
+
+  // Mostrar confirmación de eliminación
+  confirmarEliminar(): void {
+    this.mostrarConfirmacion.set(true);
+    this.errorEliminar.set(null);
+  }
+
+  // Cancelar eliminación
+  cancelarEliminar(): void {
+    this.mostrarConfirmacion.set(false);
+    this.errorEliminar.set(null);
+  }
+
+  // Eliminar actividad
+  eliminarActividad(): void {
+    if (this.eliminando()) return;
+
+    this.eliminando.set(true);
+    this.errorEliminar.set(null);
+
+    this.orgService.eliminarActividad(this.act().id).subscribe({
+      next: (result) => {
+        this.eliminando.set(false);
+        if (result.success) {
+          this.deleted.emit(this.act().id);
+          this.close.emit();
+        } else {
+          this.errorEliminar.set(result.mensaje);
+        }
+      },
+      error: (err) => {
+        this.eliminando.set(false);
+        this.errorEliminar.set('Error al eliminar la actividad');
+        console.error('Error eliminando actividad:', err);
+      }
+    });
   }
 }

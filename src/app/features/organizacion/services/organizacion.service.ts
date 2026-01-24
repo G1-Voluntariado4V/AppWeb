@@ -276,8 +276,8 @@ export class OrganizacionService {
 
   // --- CARGAR CATÁLOGOS (ODS y Tipos) ---
   private cargarCatalogos() {
-    // ODS
-    this.http.get<any[]>(`${this.apiUrl}/catalogos/ods`)
+    // ODS - Ruta correcta: /ods (no /catalogos/ods)
+    this.http.get<any[]>(`${this.apiUrl}/ods`)
       .pipe(catchError(() => of([])))
       .subscribe(data => {
         this._odsList.set(data.map(o => ({
@@ -388,6 +388,29 @@ export class OrganizacionService {
       this.cargarActividadesDesdeBackend(orgId);
       this.cargarEstadisticasDesdeBackend(orgId);
     }
+  }
+
+  // Eliminar actividad
+  eliminarActividad(actividadId: number): Observable<{ success: boolean; mensaje: string }> {
+    const orgId = this.perfil().id;
+    if (!orgId) {
+      return of({ success: false, mensaje: 'ID de organización no encontrado' });
+    }
+
+    return this.http.delete(`${this.apiUrl}/actividades/${actividadId}`).pipe(
+      tap(() => {
+        // Actualizar lista local eliminando la actividad
+        this._actividades.update(list => list.filter(a => a.id !== actividadId));
+        // Recargar estadísticas
+        this.cargarEstadisticasDesdeBackend(orgId);
+      }),
+      map(() => ({ success: true, mensaje: 'Actividad eliminada correctamente' })),
+      catchError(err => {
+        const mensaje = err.error?.detail || err.error?.error || err.error?.mensaje || 'Error al eliminar la actividad';
+        console.error('Error eliminando actividad:', err);
+        return of({ success: false, mensaje });
+      })
+    );
   }
 
   // Actualizar perfil en el backend - CORREGIDO: Ahora persiste los cambios

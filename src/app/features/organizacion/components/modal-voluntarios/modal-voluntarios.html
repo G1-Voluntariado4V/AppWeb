@@ -1,10 +1,10 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
     (click)="close.emit()">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200"
         (click)="$event.stopPropagation()">
 
         <!-- Header -->
-        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
             <div>
                 <h3 class="text-lg font-bold text-gray-900">Voluntarios Inscritos</h3>
                 <p class="text-sm text-gray-500">{{ actividadTitulo() }}</p>
@@ -15,7 +15,7 @@
         </div>
 
         <!-- Body -->
-        <div class="p-6 max-h-[60vh] overflow-y-auto">
+        <div class="flex-1 p-6 overflow-y-auto">
 
             @if (cargando()) {
             <div class="flex justify-center py-8">
@@ -29,11 +29,13 @@
             } @else {
             <div class="space-y-3">
                 @for (vol of voluntarios(); track vol.id_voluntario) {
-                <div (click)="seleccionado.set(vol)"
-                    class="flex items-center justify-between p-4 bg-white border rounded-xl hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group">
-                    <div class="flex items-center gap-4">
+                <div
+                    class="flex items-center justify-between p-4 bg-white border rounded-xl hover:shadow-md hover:border-blue-200 transition-all group">
+
+                    <!-- Info del voluntario (clickeable para ver detalle) -->
+                    <div class="flex items-center gap-4 cursor-pointer flex-1 min-w-0" (click)="seleccionado.set(vol)">
                         <div
-                            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors overflow-hidden">
+                            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors overflow-hidden shrink-0">
                             @if (vol.foto) {
                             <img [src]="vol.foto" (error)="vol.foto = null" alt="Avatar"
                                 class="w-full h-full object-cover">
@@ -41,14 +43,18 @@
                             {{ vol.nombre.charAt(0) }}{{ vol.apellidos.charAt(0) }}
                             }
                         </div>
-                        <div>
-                            <h4 class="font-medium text-gray-900 group-hover:text-blue-600">{{ vol.nombre }} {{
+                        <div class="min-w-0">
+                            <h4 class="font-medium text-gray-900 group-hover:text-blue-600 truncate">{{ vol.nombre }} {{
                                 vol.apellidos }}</h4>
-                            <p class="text-sm text-gray-500">{{ vol.email }}</p>
+                            <p class="text-sm text-gray-500 truncate">{{ vol.email }}</p>
                         </div>
                     </div>
-                    <div class="flex flex-col items-end gap-1">
-                        <span class="px-3 py-1 rounded-full text-xs font-medium"
+
+                    <!-- Estado y acciones -->
+                    <div class="flex items-center gap-3 shrink-0 ml-4">
+
+                        <!-- Badge de estado -->
+                        <span class="px-3 py-1 rounded-full text-xs font-medium hidden sm:inline-block"
                             [class.bg-green-100]="vol.estado_solicitud === 'Aceptada'"
                             [class.text-green-700]="vol.estado_solicitud === 'Aceptada'"
                             [class.bg-yellow-100]="vol.estado_solicitud === 'Pendiente'"
@@ -57,9 +63,67 @@
                             [class.text-red-700]="vol.estado_solicitud === 'Rechazada'">
                             {{ vol.estado_solicitud }}
                         </span>
-                        <span class="text-xs text-gray-400">
-                            {{ formatearFecha(vol.fecha_solicitud) }}
-                        </span>
+
+                        <!-- Botones de acción -->
+                        <div class="flex items-center gap-1">
+
+                            @if (procesando() === vol.id_voluntario) {
+                            <!-- Spinner de cargando -->
+                            <div class="w-8 h-8 flex items-center justify-center">
+                                <i class="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                            </div>
+                            } @else {
+
+                            @if (vol.estado_solicitud === 'Pendiente') {
+                            <!-- Pendiente: mostrar Aceptar y Rechazar -->
+                            <button (click)="aceptarVoluntario(vol, $event)"
+                                class="w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all flex items-center justify-center"
+                                title="Aceptar">
+                                <i class="fa-solid fa-check text-sm"></i>
+                            </button>
+                            <button (click)="rechazarVoluntario(vol, $event)"
+                                class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center"
+                                title="Rechazar">
+                                <i class="fa-solid fa-times text-sm"></i>
+                            </button>
+                            }
+
+                            @if (vol.estado_solicitud === 'Aceptada') {
+                            <!-- Aceptado: mostrar Rechazar y Volver a pendiente -->
+                            <button (click)="volverPendiente(vol, $event)"
+                                class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-500 hover:text-white transition-all flex items-center justify-center"
+                                title="Volver a pendiente">
+                                <i class="fa-solid fa-rotate-left text-sm"></i>
+                            </button>
+                            <button (click)="rechazarVoluntario(vol, $event)"
+                                class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center"
+                                title="Rechazar">
+                                <i class="fa-solid fa-times text-sm"></i>
+                            </button>
+                            }
+
+                            @if (vol.estado_solicitud === 'Rechazada') {
+                            <!-- Rechazado: mostrar Aceptar y Volver a pendiente -->
+                            <button (click)="aceptarVoluntario(vol, $event)"
+                                class="w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all flex items-center justify-center"
+                                title="Aceptar">
+                                <i class="fa-solid fa-check text-sm"></i>
+                            </button>
+                            <button (click)="volverPendiente(vol, $event)"
+                                class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-500 hover:text-white transition-all flex items-center justify-center"
+                                title="Volver a pendiente">
+                                <i class="fa-solid fa-rotate-left text-sm"></i>
+                            </button>
+                            }
+
+                            <!-- Botón ver detalle -->
+                            <button (click)="seleccionado.set(vol); $event.stopPropagation()"
+                                class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center"
+                                title="Ver detalle">
+                                <i class="fa-solid fa-eye text-sm"></i>
+                            </button>
+                            }
+                        </div>
                     </div>
                 </div>
                 }
@@ -68,7 +132,10 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 bg-gray-50 border-t text-right">
+        <div class="px-6 py-4 bg-gray-50 border-t flex justify-between items-center shrink-0">
+            <p class="text-sm text-gray-500">
+                <span class="font-medium">{{ voluntarios().length }}</span> voluntario(s) inscrito(s)
+            </p>
             <button (click)="close.emit()"
                 class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium transition-colors">
                 Cerrar

@@ -130,27 +130,37 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
-          @for (act of actividadesRecientes().slice(0, 5); track act.id) {
-          <tr class="group hover:bg-gray-50/50 transition-colors">
+          @for (act of actividadesRecientes().slice(0, 3); track act.id) {
+          <tr class="group hover:bg-blue-50/50 transition-colors cursor-pointer" (click)="abrirDetalleActividad(act)">
             <td class="py-4 px-6">
-              <p class="font-bold text-gray-900 text-sm">{{ act.titulo }}</p>
-              @if (act.ubicacion) {
-              <p class="text-xs text-gray-400">{{ act.ubicacion }}</p>
-              }
+              <div class="flex items-center gap-3">
+                <div>
+                  <p class="font-bold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{{ act.titulo
+                    }}</p>
+                  @if (act.ubicacion) {
+                  <p class="text-xs text-gray-400">{{ act.ubicacion }}</p>
+                  }
+                </div>
+              </div>
             </td>
             <td class="py-4 px-6 text-sm text-gray-500">{{ formatearFecha(act.fecha_inicio) }}</td>
             <td class="py-4 px-6 text-sm">
               <span class="font-bold text-blue-600">{{ act.voluntariosInscritos }}</span>
               <span class="text-gray-400"> / {{ act.cupo_maximo }}</span>
             </td>
-            <td class="py-4 px-6 text-right">
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold" [class.bg-green-100]="act.estado === 'Publicada'"
-                [class.text-green-700]="act.estado === 'Publicada'" [class.bg-amber-100]="act.estado === 'En revision'"
-                [class.text-amber-700]="act.estado === 'En revision'" [class.bg-blue-100]="act.estado === 'Finalizada'"
-                [class.text-blue-700]="act.estado === 'Finalizada'" [class.bg-red-100]="act.estado === 'Rechazada'"
-                [class.text-red-700]="act.estado === 'Rechazada'">
-                {{ act.estado }}
-              </span>
+            <td class="py-4 px-6">
+              <div class="flex items-center justify-end gap-2">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                  [class.bg-green-100]="act.estado === 'Publicada'" [class.text-green-700]="act.estado === 'Publicada'"
+                  [class.bg-amber-100]="act.estado === 'En revision'"
+                  [class.text-amber-700]="act.estado === 'En revision'"
+                  [class.bg-blue-100]="act.estado === 'Finalizada'" [class.text-blue-700]="act.estado === 'Finalizada'"
+                  [class.bg-red-100]="act.estado === 'Rechazada'" [class.text-red-700]="act.estado === 'Rechazada'">
+                  {{ act.estado }}
+                </span>
+                <i
+                  class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors text-xs"></i>
+              </div>
             </td>
           </tr>
           }
@@ -174,3 +184,9 @@
   </div>
 
 </div>
+
+<!-- Modal de detalle de actividad -->
+@if (actividadSeleccionada()) {
+<app-modal-detalle-actividad [act]="actividadSeleccionada()!" (close)="cerrarDetalleActividad()"
+  (deleted)="onActividadEliminada($event)" />
+}

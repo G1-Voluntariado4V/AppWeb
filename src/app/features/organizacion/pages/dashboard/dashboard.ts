@@ -1,19 +1,37 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OrganizacionService } from '../../services/organizacion.service';
+import { OrganizacionService, ActividadOrg } from '../../services/organizacion.service';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/modal-detalle-actividad';
 
 @Component({
   selector: 'app-dashboard-org',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ModalDetalleActividad],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
 
   private orgService = inject(OrganizacionService);
   private authService = inject(AuthService);
+
+  // Modal de detalle de actividad
+  actividadSeleccionada = signal<ActividadOrg | null>(null);
+
+  abrirDetalleActividad(actividad: ActividadOrg): void {
+    this.actividadSeleccionada.set(actividad);
+  }
+
+  cerrarDetalleActividad(): void {
+    this.actividadSeleccionada.set(null);
+  }
+
+  // Manejar eliminación de actividad
+  onActividadEliminada(id: number): void {
+    this.actividadSeleccionada.set(null);
+    // El servicio ya actualiza la lista automáticamente
+  }
 
   // Computed que garantiza foto de Google con prioridad
   perfil = computed(() => {

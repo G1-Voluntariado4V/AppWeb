@@ -1,5 +1,6 @@
-<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]"
+    (click)="$event.stopPropagation()">
 
     <!-- Header -->
     <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
@@ -14,13 +15,30 @@
     </div>
 
     <!-- Body -->
-    <div class="p-8 bg-gray-50/50 overflow-y-auto">
+    <div class="p-8 bg-gray-50/50 overflow-y-auto flex-1">
 
       <!-- Error Message -->
       @if (error()) {
       <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
         <i class="fa-solid fa-circle-exclamation"></i>
         {{ error() }}
+      </div>
+      }
+
+      <!-- Progress indicator for periodic activities -->
+      @if (progreso()) {
+      <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <div class="flex items-center gap-3 mb-2">
+          <i class="fa-solid fa-spinner fa-spin text-blue-600"></i>
+          <span class="text-blue-700 text-sm font-medium">
+            Creando actividades: {{ progreso()!.actual }} de {{ progreso()!.total }}
+          </span>
+        </div>
+        <div class="h-2 bg-blue-100 rounded-full overflow-hidden">
+          <div class="h-full bg-blue-500 rounded-full transition-all duration-300"
+            [style.width.%]="(progreso()!.actual / progreso()!.total) * 100">
+          </div>
+        </div>
       </div>
       }
 
@@ -36,15 +54,29 @@
             </label>
             <input type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)"
               class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-              placeholder="Ej: Recogida de alimentos solidaria">
+              placeholder="Ej: Recogida de alimentos solidaria" maxlength="100">
           </div>
 
-          <!-- Descripción -->
+          <!-- Descripción con contador -->
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
-            <textarea [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" rows="4"
+            <label class="block text-sm font-bold text-gray-700 mb-2">
+              Descripción
+              <span class="font-normal text-gray-400 text-xs ml-2">
+                ({{ caracteresRestantes }} caracteres restantes)
+              </span>
+            </label>
+            <textarea [ngModel]="descripcion()" (ngModelChange)="actualizarDescripcion($event)" rows="4"
               class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
-              placeholder="Describe en qué consiste la actividad, qué tareas realizarán los voluntarios..."></textarea>
+              [class.border-red-300]="caracteresRestantes < 0" [class.focus:border-red-500]="caracteresRestantes < 0"
+              placeholder="Describe en qué consiste la actividad, qué tareas realizarán los voluntarios..."
+              [maxlength]="MAX_DESCRIPCION"></textarea>
+            <div class="flex justify-between mt-1">
+              <p class="text-xs text-gray-400">Máximo {{ MAX_DESCRIPCION }} caracteres</p>
+              <p class="text-xs" [class.text-red-500]="caracteresRestantes < 50"
+                [class.text-gray-400]="caracteresRestantes >= 50">
+                {{ descripcion().length }}/{{ MAX_DESCRIPCION }}
+              </p>
+            </div>
           </div>
 
           <!-- Ubicación -->
@@ -80,7 +112,9 @@
 
           <!-- Tipos de Voluntariado -->
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-3">Tipo de Voluntariado</label>
+            <label class="block text-sm font-bold text-gray-700 mb-3">
+              Tipo de Voluntariado <span class="text-red-500">*</span>
+            </label>
             <div class="flex flex-wrap gap-2">
               @for (tipo of tiposList(); track tipo.id) {
               <button type="button" (click)="toggleTipo(tipo.id)"
@@ -102,7 +136,7 @@
         </div>
 
         <!-- Columna Lateral -->
-        <div class="space-y-6">
+        <div class="space-y-5">
 
           <!-- Fecha y Hora -->
           <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
@@ -112,10 +146,15 @@
             </label>
             <div class="space-y-3">
               <input type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)"
+                [min]="getFechaMinima()"
                 class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
               <input type="time" [ngModel]="horaInicio()" (ngModelChange)="horaInicio.set($event)"
                 class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
             </div>
+            <p class="text-xs text-gray-400 mt-2">
+              <i class="fa-solid fa-info-circle mr-1"></i>
+              La fecha debe ser futura
+            </p>
           </div>
 
           <!-- Duración -->
@@ -124,18 +163,20 @@
               <i class="fa-regular fa-clock mr-2 text-green-500"></i>
               Duración (horas) <span class="text-red-500">*</span>
             </label>
-            <div class="flex items-center gap-3">
-              <button type="button" (click)="duracionHoras.set(Math.max(1, duracionHoras() - 1))"
-                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
-                -
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="actualizarDuracion(duracionHoras() - 1)"
+                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                <i class="fa-solid fa-minus text-xs"></i>
               </button>
-              <input type="number" [ngModel]="duracionHoras()" (ngModelChange)="duracionHoras.set($event)" min="1"
-                class="flex-1 text-center border border-gray-200 rounded-xl px-3 py-2 text-lg font-bold outline-none focus:border-blue-500">
-              <button type="button" (click)="duracionHoras.set(duracionHoras() + 1)"
-                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
-                +
+              <input type="number" [ngModel]="duracionHoras()" (ngModelChange)="actualizarDuracion($event)"
+                [min]="MIN_DURACION" [max]="MAX_DURACION"
+                class="w-full min-w-0 text-center border border-gray-200 rounded-xl px-2 py-2 text-lg font-bold outline-none focus:border-blue-500">
+              <button type="button" (click)="actualizarDuracion(duracionHoras() + 1)"
+                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                <i class="fa-solid fa-plus text-xs"></i>
               </button>
             </div>
+            <p class="text-xs text-gray-400 mt-2 text-center">{{ MIN_DURACION }} - {{ MAX_DURACION }} horas</p>
           </div>
 
           <!-- Cupo Máximo -->
@@ -144,19 +185,72 @@
               <i class="fa-solid fa-users mr-2 text-purple-500"></i>
               Cupo Máximo <span class="text-red-500">*</span>
             </label>
-            <div class="flex items-center gap-3">
-              <button type="button" (click)="cupoMaximo.set(Math.max(1, cupoMaximo() - 1))"
-                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
-                -
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="actualizarCupo(cupoMaximo() - 1)"
+                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                <i class="fa-solid fa-minus text-xs"></i>
               </button>
-              <input type="number" [ngModel]="cupoMaximo()" (ngModelChange)="cupoMaximo.set($event)" min="1"
-                class="flex-1 text-center border border-gray-200 rounded-xl px-3 py-2 text-lg font-bold outline-none focus:border-blue-500">
-              <button type="button" (click)="cupoMaximo.set(cupoMaximo() + 1)"
-                class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors">
-                +
+              <input type="number" [ngModel]="cupoMaximo()" (ngModelChange)="actualizarCupo($event)" [min]="MIN_CUPO"
+                [max]="MAX_CUPO"
+                class="w-full min-w-0 text-center border border-gray-200 rounded-xl px-2 py-2 text-lg font-bold outline-none focus:border-blue-500">
+              <button type="button" (click)="actualizarCupo(cupoMaximo() + 1)"
+                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                <i class="fa-solid fa-plus text-xs"></i>
               </button>
             </div>
-            <p class="text-xs text-gray-400 mt-2 text-center">voluntarios</p>
+            <p class="text-xs text-gray-400 mt-2 text-center">{{ MIN_CUPO }} - {{ MAX_CUPO }} voluntarios</p>
+          </div>
+
+          <!-- Actividad Periódica -->
+          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <label class="text-sm font-bold text-gray-700">
+                <i class="fa-solid fa-repeat mr-2 text-indigo-500"></i>
+                Actividad Periódica
+              </label>
+              <button type="button" (click)="esPeriodica.set(!esPeriodica())"
+                class="relative w-12 h-6 rounded-full transition-colors" [class.bg-indigo-500]="esPeriodica()"
+                [class.bg-gray-300]="!esPeriodica()">
+                <span class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
+                  [class.left-1]="!esPeriodica()" [class.left-7]="esPeriodica()"></span>
+              </button>
+            </div>
+
+            @if (esPeriodica()) {
+            <div class="space-y-3 pt-3 border-t border-gray-100">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Frecuencia</label>
+                <select [ngModel]="frecuencia()" (ngModelChange)="frecuencia.set($event)"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                  <option value="semanal">Semanal</option>
+                  <option value="quincenal">Quincenal</option>
+                  <option value="mensual">Mensual</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Número de repeticiones</label>
+                <div class="flex items-center gap-2">
+                  <button type="button" (click)="repeticiones.set(Math.max(2, repeticiones() - 1))"
+                    class="w-8 h-8 shrink-0 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center text-xs">
+                    -
+                  </button>
+                  <input type="number" [ngModel]="repeticiones()"
+                    (ngModelChange)="repeticiones.set(Math.max(2, $event))" min="2" max="52"
+                    class="w-full min-w-0 text-center border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold outline-none focus:border-indigo-500">
+                  <button type="button" (click)="repeticiones.set(Math.min(52, repeticiones() + 1))"
+                    class="w-8 h-8 shrink-0 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center text-xs">
+                    +
+                  </button>
+                </div>
+              </div>
+              <p class="text-xs text-indigo-600 bg-indigo-50 rounded-lg p-2">
+                <i class="fa-solid fa-info-circle mr-1"></i>
+                Se crearán {{ repeticiones() }} actividades
+                {{ frecuencia() === 'semanal' ? 'cada semana' : frecuencia() === 'quincenal' ? 'cada 2 semanas' : 'cada
+                mes' }}
+              </p>
+            </div>
+            }
           </div>
 
           <!-- Info -->
