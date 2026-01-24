@@ -42,6 +42,7 @@ export class Perfil implements OnInit {
 
   inicial = computed(() => (this.perfil().nombre || 'U').charAt(0).toUpperCase());
   rol = computed(() => this.perfil().cargo || 'Coordinador');
+  nombreCompleto = computed(() => [this.perfil().nombre, this.perfil().apellidos].filter(Boolean).join(' '));
 
   constructor() {
     // Effect para actualizar los campos editables cuando el perfil cambia del backend

@@ -49,8 +49,11 @@ export class CoordinadorLayout {
     const perfil = this.coordinadorService.perfilUsuario();
     const googlePhoto = this.authService.getGooglePhoto();
 
+    // Unir nombre y apellidos para la visualización en el layout
+    const nombreFull = [perfil.nombre, perfil.apellidos].filter(Boolean).join(' ');
+
     return {
-      nombre: perfil.nombre,
+      nombre: nombreFull || 'Coordinador',
       cargo: perfil.cargo,
       email: perfil.email,
       telefono: perfil.telefono,

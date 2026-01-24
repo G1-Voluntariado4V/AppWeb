@@ -373,11 +373,13 @@ export class CoordinadorService {
         );
     }
 
-    // --- VOLUNTARIOS ---
-    getVoluntarios(): Observable<VoluntarioAdmin[]> {
-        console.log('DEBUG: Iniciando getVoluntarios con merge de fotos...');
+    /**
+     * Obtiene la lista de voluntarios. 
+     * Optimizado: No carga el historial (actividadesCount) por defecto para evitar N peticiones.
+     */
+    getVoluntarios(enrich = false): Observable<VoluntarioAdmin[]> {
+        console.log(`DEBUG: getVoluntarios(enrich=${enrich})`);
 
-        // Obtenemos los usuarios para tener la foto real (desde USUARIO.img_perfil)
         return forkJoin({
             volAjax: this.http.get<any[]>(`${this.apiUrl}/voluntarios`).pipe(catchError(() => of([]))),
             usrAjax: this.getUsuarios().pipe(catchError(() => of([])))
@@ -385,15 +387,35 @@ export class CoordinadorService {
             switchMap(({ volAjax, usrAjax }) => {
                 if (!volAjax || volAjax.length === 0) return of([]);
 
+                if (!enrich) {
+                    const list = volAjax.map(v => {
+                        const userMatch = usrAjax.find(u => u.id === (v.id_usuario || v.id));
+                        const rawFoto = v.img_perfil || v.foto_perfil || v.foto || v.imagen || userMatch?.foto;
+
+                        return {
+                            id: v.id_usuario ?? v.id,
+                            nombre: v.nombre,
+                            apellidos: v.apellidos,
+                            email: v.correo_usuario || v.email || v.correo,
+                            dni: v.dni || 'N/A',
+                            telefono: v.telefono,
+                            curso: v.curso || v.curso_actual || v.nombre_curso || 'Sin asignar',
+                            fecha_nac: v.fecha_nac,
+                            estado: v.estado_cuenta,
+                            descripcion: '',
+                            actividadesCount: 0, // No cargamos si no se pide enrich
+                            foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(rawFoto || null)
+                        } as VoluntarioAdmin;
+                    });
+                    return of(list);
+                }
+
+                // Si se pide enrichment (solo para la vista principal de gestión quizás)
                 const peticiones = volAjax.map(v =>
                     this.getHistorialVoluntario(v.id_usuario || v.id).pipe(
                         map(historial => {
-                            const rawCurso = v.curso || v.curso_actual || v.nombre_curso;
-
-                            // Buscamos la foto en el listado de usuarios si en voluntarios viene nula
                             const userMatch = usrAjax.find(u => u.id === (v.id_usuario || v.id));
                             const rawFoto = v.img_perfil || v.foto_perfil || v.foto || v.imagen || userMatch?.foto;
-
                             return {
                                 id: v.id_usuario ?? v.id,
                                 nombre: v.nombre,
@@ -401,32 +423,26 @@ export class CoordinadorService {
                                 email: v.correo_usuario || v.email || v.correo,
                                 dni: v.dni || 'N/A',
                                 telefono: v.telefono,
-                                curso: rawCurso || 'Sin asignar',
+                                curso: v.curso || v.curso_actual || v.nombre_curso || 'Sin asignar',
                                 fecha_nac: v.fecha_nac,
                                 estado: v.estado_cuenta,
-                                descripcion: '',
                                 actividadesCount: historial.resumen?.total_participaciones || 0,
-                                foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(v.img_perfil || v.foto_perfil || v.foto || userMatch?.foto || null)
+                                foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(rawFoto || null)
                             } as VoluntarioAdmin;
                         }),
-                        catchError((err) => {
-                            console.error(`DEBUG: Error historial voluntario ${v.id_usuario}:`, err);
-                            const userMatch = usrAjax.find(u => u.id === (v.id_usuario || v.id));
-                            const rawFoto = v.img_perfil || v.foto_perfil || v.foto || userMatch?.foto;
-                            return of({
-                                id: v.id_usuario ?? v.id,
-                                nombre: v.nombre,
-                                apellidos: v.apellidos,
-                                email: v.correo_usuario || v.email || v.correo,
-                                dni: v.dni || 'N/A',
-                                telefono: v.telefono,
-                                curso: v.curso_actual || 'Sin asignar',
-                                fecha_nac: v.fecha_nac,
-                                estado: v.estado_cuenta,
-                                actividadesCount: 0,
-                                foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(v.img_perfil || v.foto_perfil || v.foto || userMatch?.foto || null)
-                            } as VoluntarioAdmin);
-                        })
+                        catchError(() => of({
+                            id: v.id_usuario ?? v.id,
+                            nombre: v.nombre,
+                            apellidos: v.apellidos,
+                            email: v.correo_usuario || v.email || v.correo,
+                            dni: v.dni || 'N/A',
+                            telefono: v.telefono,
+                            curso: v.curso || v.curso_actual || v.nombre_curso || 'Sin asignar',
+                            fecha_nac: v.fecha_nac,
+                            estado: v.estado_cuenta,
+                            actividadesCount: 0,
+                            foto: this.resolveImagenUrl(null)
+                        } as VoluntarioAdmin))
                     )
                 );
                 return forkJoin(peticiones);
@@ -444,31 +460,41 @@ export class CoordinadorService {
 
     // --- ORGANIZACIONES ---
     getOrganizaciones(): Observable<OrganizacionAdmin[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/usuarios`).pipe(
-            map(data => data
-                .filter(u =>
-                    u.nombre_rol === 'Organización' || u.nombre_rol === 'Organizacion' ||
-                    u.rol === 'Organización' || u.rol === 'Organizacion'
-                )
-                .map(o => ({
-                    id: o.id_usuario,
-                    nombre: o.nombre || '',
-                    cif: o.cif || 'N/A', // El endpoint /usuarios podría no traer CIF
-                    email: o.correo || '',
+        return forkJoin({
+            orgs: this.http.get<any[]>(`${this.apiUrl}/organizaciones`, { headers: this.getAdminHeaders() }),
+            acts: this.getActividades(false).pipe(catchError(() => of([])))
+        }).pipe(
+            map(({ orgs, acts }) => orgs.map(o => {
+                const id = o.id_usuario || o.id;
+                // Calculamos el conteo en el frontend para no tocar la API ni la BD
+                const count = acts.filter(a => a.organizacionId === id && a.estado === 'Publicada').length;
+
+                return {
+                    id: id,
+                    nombre: o.nombre || o.nombre_organizacion || 'Sin nombre',
+                    cif: o.cif || 'N/A',
+                    email: o.correo || o.correo_usuario || o.email || '',
                     telefono: o.telefono,
                     direccion: o.direccion,
-                    sitioWeb: o.sitio_web,
+                    sitioWeb: o.sitio_web || o.sitioWeb,
                     descripcion: o.descripcion,
-                    estado: o.estado_cuenta || 'Pendiente',
+                    estado: o.estado_cuenta || o.estado || 'Pendiente',
                     fecha_registro: o.fecha_registro,
-                    actividadesCount: o.total_actividades || 0
-                }))
-            ),
-            catchError(() => of([]))
+                    actividadesCount: count
+                } as OrganizacionAdmin;
+            })),
+            catchError(err => {
+                console.error('Error fetching organizations enriched:', err);
+                return of([]);
+            })
         );
     }
 
-    getActividades(): Observable<ActividadAdmin[]> {
+    /**
+     * Obtiene la lista de actividades. 
+     * Optimizado: No carga el detalle completo por defecto.
+     */
+    getActividades(enrich = false): Observable<ActividadAdmin[]> {
         return this.authService.backendUser$.pipe(
             filter((u): u is BackendUser => !!u && !!u.id_usuario),
             take(1),
@@ -477,41 +503,69 @@ export class CoordinadorService {
                     'Content-Type': 'application/json',
                     'X-Admin-Id': u.id_usuario!.toString()
                 });
-                // 1. Obtener lista base (puede venir incompleta de tipos/ods)
+
                 return this.http.get<any[]>(`${this.apiUrl}/coord/actividades`, { headers }).pipe(
                     switchMap(actividadesBase => {
                         if (!actividadesBase || actividadesBase.length === 0) return of([]);
 
-                        // 2. Enriquecer cada actividad pidiendo su detalle público (que sí trae tipos/ods)
+                        if (!enrich) {
+                            return of(actividadesBase.map(a => ({
+                                id: a.id_actividad,
+                                titulo: a.titulo || '',
+                                descripcion: a.descripcion,
+                                organizacion: a.nombre_organizacion || 'Sin organización',
+                                organizacionId: a.id_organizacion,
+                                fecha_inicio: a.fecha_inicio,
+                                duracion_horas: a.duracion_horas,
+                                cupo_maximo: a.cupo_maximo,
+                                inscritos_confirmados: a.inscritos_confirmados || 0,
+                                inscritos_pendientes: a.inscritos_pendientes || 0,
+                                ubicacion: a.ubicacion,
+                                estado: this.normalizarEstado(a.estado_publicacion),
+                                ods: [],
+                                tipos: []
+                            } as ActividadAdmin)));
+                        }
+
+                        // Enrichment solo si es necesario (trae ODS/Tipos)
                         const peticiones = actividadesBase.map(a =>
                             this.getActividadDetalle(a.id_actividad).pipe(
-                                // Si falla el detalle público (ej. error server), usamos la data base
-                                catchError((err) => {
-                                    console.warn(`Error enriqueciendo actividad ${a.id_actividad}`, err);
-                                    return of({
-                                        id: a.id_actividad,
-                                        titulo: a.titulo || '',
-                                        descripcion: a.descripcion,
-                                        organizacion: a.nombre_organizacion || 'Sin organización',
-                                        organizacionId: a.id_organizacion,
-                                        fecha_inicio: a.fecha_inicio,
-                                        duracion_horas: a.duracion_horas,
-                                        cupo_maximo: a.cupo_maximo,
-                                        inscritos_confirmados: a.inscritos_confirmados || 0,
-                                        inscritos_pendientes: a.inscritos_pendientes || 0,
-                                        ubicacion: a.ubicacion,
-                                        estado: this.normalizarEstado(a.estado_publicacion),
-                                        ods: [],
-                                        tipos: []
-                                    } as ActividadAdmin);
-                                })
+                                catchError(() => of({
+                                    id: a.id_actividad,
+                                    titulo: a.titulo || '',
+                                    estado: this.normalizarEstado(a.estado_publicacion),
+                                    organizacion: a.nombre_organizacion || 'Sin organización',
+                                    fecha_inicio: a.fecha_inicio
+                                } as ActividadAdmin))
                             )
                         );
-                        // Ejecutamos todas en paralelo
                         return forkJoin(peticiones);
                     })
                 );
             })
+        );
+    }
+
+    // --- ACTIVIDADES DE UNA ORGANIZACIÓN ---
+    getActividadesDeOrganizacion(idOrg: number): Observable<ActividadAdmin[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/organizaciones/${idOrg}/actividades`).pipe(
+            map(data => data.map(a => ({
+                id: a.id ?? a.id_actividad,
+                titulo: a.titulo || '',
+                descripcion: a.descripcion,
+                organizacion: a.nombre_organizacion || 'Sin organización',
+                organizacionId: idOrg,
+                fecha_inicio: a.fecha_inicio,
+                duracion_horas: a.duracion_horas,
+                cupo_maximo: a.cupo_maximo,
+                inscritos_confirmados: a.inscritos_confirmados || 0,
+                inscritos_pendientes: a.inscritos_pendientes || 0,
+                ubicacion: a.ubicacion,
+                estado: this.normalizarEstado(a.estado_publicacion || a.estado),
+                ods: a.ods || [],
+                tipos: a.tipos || []
+            } as ActividadAdmin))),
+            catchError(() => of([]))
         );
     }
 
@@ -554,7 +608,8 @@ export class CoordinadorService {
     private normalizarEstado(estado: string): any {
         if (!estado) return 'En revision';
         // Capitalizar primera letra: 'finalizada' -> 'Finalizada'
-        return estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+        const s = estado || '';
+        return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
     }
 
     // --- CREAR ACTIVIDAD ---
@@ -614,8 +669,9 @@ export class CoordinadorService {
     }
 
     // --- SOLICITUDES PENDIENTES ---
+    // OPTIMIZADO: No pedimos enrich (true) para las listas de aprobación
     getSolicitudesVoluntarios(): Observable<VoluntarioAdmin[]> {
-        return this.getVoluntarios().pipe(
+        return this.getVoluntarios(false).pipe(
             map(vols => vols.filter(v => v.estado === 'Pendiente'))
         );
     }
@@ -627,7 +683,7 @@ export class CoordinadorService {
     }
 
     getSolicitudesActividades(): Observable<ActividadAdmin[]> {
-        return this.getActividades().pipe(
+        return this.getActividades(false).pipe(
             map(acts => acts.filter(a => a.estado === 'En revision'))
         );
     }
@@ -671,7 +727,7 @@ export class CoordinadorService {
     }
 
     // --- EDITAR ORGANIZACIÓN (Como coordinador) ---
-    editarOrganizacion(id: number, datos: { nombre: string; descripcion?: string; telefono?: string; direccion?: string }): Observable<any> {
+    editarOrganizacion(id: number, datos: { nombre: string; descripcion?: string; telefono?: string; direccion?: string; sitioWeb?: string }): Observable<any> {
         return this.http.put(
             `${this.apiUrl}/organizaciones/${id}`,
             datos,
@@ -713,40 +769,39 @@ export class CoordinadorService {
     // --- INSCRIPCIONES ---
 
     // Obtiene todas las inscripciones pendientes de todas las actividades
+    // OPTIMIZADO: Usa getActividades(false) para evitar enrichment masivo.
     getInscripcionesPendientes(): Observable<InscripcionPendiente[]> {
-        return this.getActividades().pipe(
+        return this.getActividades(false).pipe(
             switchMap(actividades => {
-                // Filtramos solo actividades publicadas
-                const actividadesPublicadas = actividades.filter(a => a.estado === 'Publicada');
+                // Filtramos solo actividades publicadas que tienen inscripciones pendientes
+                const conPendientes = actividades.filter(a => a.estado === 'Publicada' && (a.inscritos_pendientes || 0) > 0);
 
-                if (actividadesPublicadas.length === 0) {
-                    return of([]);
-                }
+                if (conPendientes.length === 0) return of([]);
 
-                // Obtenemos inscripciones de cada actividad
-                const requests = actividadesPublicadas.map(act =>
+                // Obtenemos inscripciones solo de las que realmente tienen algo
+                const requests = conPendientes.map(act =>
                     this.http.get<any[]>(
                         `${this.apiUrl}/actividades/${act.id}/inscripciones`,
                         { headers: this.getAdminHeaders() }
                     ).pipe(
-                        map(inscripciones => inscripciones.map(ins => ({
-                            id_actividad: act.id,
-                            titulo_actividad: act.titulo,
-                            organizacion: act.organizacion,
-                            fecha_actividad: act.fecha_inicio,
-                            id_voluntario: ins.id_voluntario,
-                            nombre_voluntario: ins.nombre_voluntario || '',
-                            email_voluntario: ins.email_voluntario || '',
-                            estado_solicitud: ins.estado || ins.estado_solicitud,
-                            fecha_solicitud: ins.fecha_solicitud
-                        }))),
+                        map(inscripciones => inscripciones
+                            .filter(ins => (ins.estado || ins.estado_solicitud) === 'Pendiente')
+                            .map(ins => ({
+                                id_actividad: act.id,
+                                titulo_actividad: act.titulo,
+                                organizacion: act.organizacion,
+                                fecha_actividad: act.fecha_inicio,
+                                id_voluntario: ins.id_voluntario,
+                                nombre_voluntario: ins.nombre_voluntario || '',
+                                email_voluntario: ins.email_voluntario || '',
+                                estado_solicitud: 'Pendiente',
+                                fecha_solicitud: ins.fecha_solicitud
+                            }))),
                         catchError(() => of([]))
                     )
                 );
 
-                return forkJoin(requests).pipe(
-                    map(results => results.flat().filter(ins => ins.estado_solicitud === 'Pendiente'))
-                );
+                return forkJoin(requests).pipe(map(results => results.flat()));
             })
         );
     }
@@ -804,7 +859,8 @@ export class CoordinadorService {
             tap(() => {
                 this.perfilUsuario.update(actual => ({
                     ...actual,
-                    nombre: `${datos.nombre} ${datos.apellidos}`.trim(),
+                    nombre: datos.nombre.trim(),
+                    apellidos: datos.apellidos.trim(),
                     telefono: datos.telefono
                 }));
             })
@@ -835,7 +891,6 @@ export class CoordinadorService {
     }
 
     private mapearPerfil(respuesta: any, backendUser: BackendUser): PerfilCoordinadorUI {
-        const nombreCompleto = [respuesta.nombre, respuesta.apellidos].filter(Boolean).join(' ').trim();
         const nombreBackendUser = [backendUser.nombre, backendUser.apellidos].filter(Boolean).join(' ').trim();
         const correoGoogle = this.googleEmail;
         const correoBackend = respuesta.usuario?.correo ?? respuesta.correo ?? backendUser.correo;
@@ -843,10 +898,12 @@ export class CoordinadorService {
         const fotoBackend = respuesta.img_perfil || backendUser.img_perfil;
         const fotoBackendResolved = this.resolveImagenUrl(fotoBackend);
 
+        // Si tenemos datos del perfil (respuesta.nombre), los usamos tal cual para evitar duplicados.
+        // Si no, recurrimos al backendUser o al correo.
         return {
             id_usuario: backendUser.id_usuario,
-            nombre: nombreCompleto || nombreBackendUser || correoGoogle?.split('@')[0] || this.perfilPorDefecto.nombre,
-            apellidos: respuesta.apellidos,
+            nombre: respuesta.nombre || backendUser.nombre || correoGoogle?.split('@')[0] || this.perfilPorDefecto.nombre,
+            apellidos: respuesta.apellidos || backendUser.apellidos || '',
             cargo: this.resolverCargo((respuesta.usuario)?.rol?.nombre || respuesta.rol || backendUser.rol),
             email: correoGoogle ?? correoBackend ?? this.perfilPorDefecto.email,
             telefono: respuesta.telefono ?? backendUser.telefono ?? null,

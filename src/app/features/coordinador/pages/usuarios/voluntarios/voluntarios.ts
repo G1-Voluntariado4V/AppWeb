@@ -53,7 +53,7 @@ export class Voluntarios implements OnInit {
 
   cargarDatos() {
     this.cargando.set(true);
-    this.coordinadorService.getVoluntarios().subscribe({
+    this.coordinadorService.getVoluntarios(true).subscribe({
       next: (data) => {
         this.voluntarios.set(data);
         this.cargando.set(false);

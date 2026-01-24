@@ -1,13 +1,14 @@
 import { Component, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CoordinadorService, OrganizacionAdmin } from '../../services/coordinador';
+import { CoordinadorService, OrganizacionAdmin, ActividadAdmin } from '../../services/coordinador.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { ModalDetalleActividad } from '../modal-detalle-actividad/modal-detalle-actividad';
 
 @Component({
   selector: 'app-modal-detalle-organizacion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalDetalleActividad],
   templateUrl: './modal-detalle-organizacion.html',
 })
 export class ModalDetalleOrganizacion {
@@ -27,6 +28,37 @@ export class ModalDetalleOrganizacion {
   descripcionEditable = '';
   telefonoEditable = '';
   direccionEditable = '';
+  sitioWebEditable = '';
+
+  // Actividades
+  actividades = signal<ActividadAdmin[]>([]);
+  cargandoActividades = signal(false);
+  actividadSeleccionada = signal<ActividadAdmin | null>(null);
+
+  ngOnInit() {
+    this.cargarActividades();
+  }
+
+  cargarActividades() {
+    this.cargandoActividades.set(true);
+    this.coordinadorService.getActividadesDeOrganizacion(this.org().id).subscribe({
+      next: (acts) => {
+        this.actividades.set(acts);
+        this.cargandoActividades.set(false);
+      },
+      error: () => {
+        this.cargandoActividades.set(false);
+      }
+    });
+  }
+
+  verActividad(act: ActividadAdmin) {
+    this.actividadSeleccionada.set(act);
+  }
+
+  cerrarModalActividad() {
+    this.actividadSeleccionada.set(null);
+  }
 
   getEstadoClase(estado: string): string {
     const clases: Record<string, string> = {
@@ -49,6 +81,7 @@ export class ModalDetalleOrganizacion {
     this.descripcionEditable = o.descripcion || '';
     this.telefonoEditable = o.telefono || '';
     this.direccionEditable = o.direccion || '';
+    this.sitioWebEditable = o.sitioWeb || '';
     this.editando.set(true);
   }
 
@@ -68,7 +101,8 @@ export class ModalDetalleOrganizacion {
       nombre: this.nombreEditable.trim(),
       descripcion: this.descripcionEditable.trim() || undefined,
       telefono: this.telefonoEditable.trim() || undefined,
-      direccion: this.direccionEditable.trim() || undefined
+      direccion: this.direccionEditable.trim() || undefined,
+      sitioWeb: this.sitioWebEditable.trim() || undefined
     }).subscribe({
       next: () => {
         this.toastService.success('Organización actualizada correctamente');

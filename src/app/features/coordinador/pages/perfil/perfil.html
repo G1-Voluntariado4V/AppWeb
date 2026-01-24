@@ -22,7 +22,7 @@
 
 		<div class="flex-1 space-y-2 z-10">
 			<div class="flex items-center flex-wrap gap-2">
-				<h1 class="text-2xl font-bold text-gray-900">{{ perfil().nombre }}</h1>
+				<h1 class="text-2xl font-bold text-gray-900">{{ nombreCompleto() }}</h1>
 				<span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">{{ rol() }}</span>
 				@if (perfil().estado_cuenta) {
 				<span class="px-3 py-1 rounded-full text-xs font-semibold"
@@ -89,7 +89,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
 					<p class="text-xs text-gray-500 mb-1">Nombre completo</p>
-					<p class="text-gray-900 font-semibold">{{ perfil().nombre }}</p>
+					<p class="text-gray-900 font-semibold">{{ nombreCompleto() }}</p>
 				</div>
 
 				<div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
