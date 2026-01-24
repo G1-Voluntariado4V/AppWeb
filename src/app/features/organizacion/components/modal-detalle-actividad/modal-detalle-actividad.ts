@@ -15,6 +15,7 @@ export class ModalDetalleActividad {
 
   act = input.required<ActividadOrg>();
   close = output<void>();
+  edit = output<void>(); // Emite cuando se quiere editar
   deleted = output<number>(); // Emite el ID de la actividad eliminada
 
   mostrarVoluntarios = signal(false);

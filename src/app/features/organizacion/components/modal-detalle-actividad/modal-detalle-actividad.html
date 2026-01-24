@@ -6,18 +6,27 @@
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
         (click)="$event.stopPropagation()">
 
-        <!-- Header con gradiente según estado -->
-        <div class="h-24 relative shrink-0" [class.bg-gradient-to-r]="true"
-            [class.from-amber-400]="act().estado === 'En revision'"
-            [class.to-orange-500]="act().estado === 'En revision'" [class.from-green-400]="act().estado === 'Publicada'"
-            [class.to-emerald-600]="act().estado === 'Publicada'" [class.from-blue-400]="act().estado === 'Finalizada'"
-            [class.to-indigo-600]="act().estado === 'Finalizada'" [class.from-red-400]="act().estado === 'Rechazada'"
-            [class.to-rose-600]="act().estado === 'Rechazada'">
+        <!-- Header con imagen o gradiente -->
+        <div class="h-48 relative shrink-0 overflow-hidden bg-gray-100">
+            @if (act().imagen) {
+            <img [src]="'http://localhost:8000/uploads/actividades/' + act().imagen" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            } @else {
+            <div class="w-full h-full" [class.bg-gradient-to-r]="true"
+                [class.from-amber-400]="act().estado === 'En revision'"
+                [class.to-orange-500]="act().estado === 'En revision'"
+                [class.from-green-400]="act().estado === 'Publicada'"
+                [class.to-emerald-600]="act().estado === 'Publicada'"
+                [class.from-blue-400]="act().estado === 'Finalizada'"
+                [class.to-indigo-600]="act().estado === 'Finalizada'"
+                [class.from-red-400]="act().estado === 'Rechazada'" [class.to-rose-600]="act().estado === 'Rechazada'">
+            </div>
+            }
 
             <!-- Badge Estado -->
             <div class="absolute top-4 left-5">
                 <span
-                    class="bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-2">
+                    class="backdrop-blur-md bg-white/30 text-white px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 border border-white/20 shadow-sm">
                     <i class="fa-solid" [class]="getEstadoIcono()"></i>
                     {{ act().estado }}
                 </span>
@@ -25,7 +34,7 @@
 
             <!-- Botón Cerrar -->
             <button (click)="close.emit()"
-                class="absolute top-4 right-4 w-8 h-8 bg-black/20 text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-colors">
+                class="absolute top-4 right-4 w-8 h-8 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-colors backdrop-blur-sm">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -227,12 +236,21 @@
                 }
             </div>
 
-            <button (click)="close.emit()"
-                class="px-5 py-2.5 text-gray-500 font-bold text-sm hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors">
-                Cerrar
-            </button>
-        </div>
+            <div class="flex gap-3">
+                @if (act().estado === 'En revision') {
+                <button (click)="edit.emit()"
+                    class="px-5 py-2.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Editar
+                </button>
+                }
 
+                <button (click)="close.emit()"
+                    class="px-5 py-2.5 text-gray-500 font-bold text-sm hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 

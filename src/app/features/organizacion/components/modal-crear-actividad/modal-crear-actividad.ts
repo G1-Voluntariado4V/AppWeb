@@ -1,7 +1,7 @@
-import { Component, output, signal, inject, OnInit } from '@angular/core';
+import { Component, output, input, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { OrganizacionService, ODS, TipoVoluntariado } from '../../services/organizacion.service';
+import { OrganizacionService, ODS, TipoVoluntariado, ActividadOrg } from '../../services/organizacion.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -12,6 +12,7 @@ import { catchError, map } from 'rxjs/operators';
   templateUrl: './modal-crear-actividad.html',
 })
 export class ModalCrearActividad implements OnInit {
+  actividadEditar = input<ActividadOrg | null>(null); // Input opcional para modo edición
   close = output<void>();
   save = output<any>();
 
@@ -33,7 +34,11 @@ export class ModalCrearActividad implements OnInit {
   cupoMaximo = signal(10);
   ubicacion = signal('');
 
-  // Actividad periódica
+  // Imagen
+  archivoImagen = signal<File | null>(null);
+  previewImagen = signal<string | null>(null);
+
+  // Actividad periódica (deshabilitada en edición)
   esPeriodica = signal(false);
   frecuencia = signal<'semanal' | 'quincenal' | 'mensual'>('semanal');
   repeticiones = signal(4);
@@ -55,9 +60,36 @@ export class ModalCrearActividad implements OnInit {
   readonly MIN_CUPO = 1;
 
   ngOnInit() {
-    // Establecer fecha mínima como hoy
-    const hoy = new Date().toISOString().split('T')[0];
-    if (!this.fechaInicio()) {
+    const act = this.actividadEditar();
+    if (act) {
+      // Cargar datos en modo edición
+      this.titulo.set(act.titulo);
+      this.descripcion.set(act.descripcion || '');
+      this.ubicacion.set(act.ubicacion || '');
+      this.duracionHoras.set(act.duracion_horas);
+      this.cupoMaximo.set(act.cupo_maximo);
+
+      // Cargar selecciones
+      this.odsSeleccionados.set(act.ods?.map(o => o.id) || []);
+      this.tiposSeleccionados.set(act.tipos?.map(t => t.id) || []);
+
+      // Cargar fecha y hora
+      if (act.fecha_inicio) {
+        const date = new Date(act.fecha_inicio);
+        this.fechaInicio.set(date.toISOString().split('T')[0]);
+        const hora = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        this.horaInicio.set(`${hora}:${min}`);
+      }
+
+      // Cargar imagen existente
+      if (act.imagen) {
+        this.previewImagen.set(`http://localhost:8000/uploads/actividades/${act.imagen}`);
+      }
+
+    } else {
+      // Modo creación: Fecha por defecto hoy
+      const hoy = new Date().toISOString().split('T')[0];
       this.fechaInicio.set(hoy);
     }
   }
@@ -206,11 +238,62 @@ export class ModalCrearActividad implements OnInit {
 
     this.guardando.set(true);
 
-    if (this.esPeriodica()) {
-      this.crearActividadesPeriodicas();
+    if (this.actividadEditar()) {
+      this.guardarEdicion();
     } else {
-      this.crearActividadUnica();
+      if (this.esPeriodica()) {
+        this.crearActividadesPeriodicas();
+      } else {
+        this.crearActividadUnica();
+      }
     }
+  }
+
+  private guardarEdicion() {
+    const act = this.actividadEditar()!;
+    const fechaCompleta = `${this.fechaInicio()} ${this.horaInicio()}:00`;
+
+    const datos = {
+      titulo: this.titulo(),
+      descripcion: this.descripcion() || undefined,
+      fecha_inicio: fechaCompleta,
+      duracion_horas: Number(this.duracionHoras()),
+      cupo_maximo: Number(this.cupoMaximo()),
+      ubicacion: this.ubicacion(),
+      odsIds: this.odsSeleccionados(),
+      tiposIds: this.tiposSeleccionados()
+    };
+
+    // Imagen
+    const imagen = this.archivoImagen();
+
+    this.orgService.actualizarActividad(act.id, datos, imagen).subscribe({
+      next: (respuesta) => {
+        this.guardando.set(false);
+        this.save.emit(respuesta);
+        this.close.emit();
+      },
+      error: (err) => {
+        this.guardando.set(false);
+        const mensaje = err.error?.error || err.error?.mensaje || 'Error al actualizar la actividad';
+        this.error.set(mensaje);
+      }
+    });
+  }
+
+  seleccionarImagen(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.archivoImagen.set(file);
+      const reader = new FileReader();
+      reader.onload = (e) => this.previewImagen.set(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  borrarImagen() {
+    this.archivoImagen.set(null);
+    this.previewImagen.set(null);
   }
 
   private crearActividadUnica() {
@@ -228,8 +311,9 @@ export class ModalCrearActividad implements OnInit {
     };
 
     console.log('📤 Enviando datos de actividad:', datos);
+    const imagen = this.archivoImagen();
 
-    this.orgService.crearActividad(datos).subscribe({
+    this.orgService.crearActividad(datos, imagen).subscribe({
       next: (respuesta) => {
         this.guardando.set(false);
         this.save.emit(respuesta);
@@ -246,6 +330,7 @@ export class ModalCrearActividad implements OnInit {
   private crearActividadesPeriodicas() {
     const fechas = this.calcularFechasPeriodicas();
     const total = fechas.length;
+    const imagen = this.archivoImagen();
 
     this.progreso.set({ actual: 0, total });
 
@@ -262,7 +347,7 @@ export class ModalCrearActividad implements OnInit {
         tiposIds: this.tiposSeleccionados()
       };
 
-      return this.orgService.crearActividad(datos).pipe(
+      return this.orgService.crearActividad(datos, imagen).pipe(
         map(respuesta => {
           // Actualizar progreso
           this.progreso.update(p => p ? { ...p, actual: p.actual + 1 } : null);

@@ -64,16 +64,40 @@ export class Actividades {
   }
 
   // --- ACCIONES ---
-  abrirCrear() { this.modalCrearVisible.set(true); }
-  cerrarCrear() { this.modalCrearVisible.set(false); }
+
 
   onActividadCreada(respuesta: any) {
-    console.log('Actividad creada:', respuesta);
+    console.log('Actividad guardada:', respuesta);
     // El servicio ya recarga las actividades automáticamente
+    this.actividadParaEditar.set(null); // Limpiar edición
+  }
+
+  onActividadEliminada(id: number) {
+    this.actividadSeleccionada.set(null);
+    // El servicio actualiza la lista
   }
 
   verDetalle(act: ActividadOrg) { this.actividadSeleccionada.set(act); }
   cerrarDetalle() { this.actividadSeleccionada.set(null); }
+
+  // Editar
+  actividadParaEditar = signal<ActividadOrg | null>(null);
+
+  abrirCrear() {
+    this.actividadParaEditar.set(null); // Modo crear
+    this.modalCrearVisible.set(true);
+  }
+
+  abrirEditar(act: ActividadOrg) {
+    this.actividadParaEditar.set(act); // Modo editar
+    this.actividadSeleccionada.set(null); // Cerrar detalle
+    this.modalCrearVisible.set(true); // Abrir formulario
+  }
+
+  cerrarCrear() {
+    this.modalCrearVisible.set(false);
+    this.actividadParaEditar.set(null);
+  }
 
   recargar() {
     this.orgService.recargarDatos();

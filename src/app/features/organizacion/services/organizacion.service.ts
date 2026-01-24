@@ -20,6 +20,7 @@ export interface ActividadOrg {
   inscritosPendientes: number;
   ods?: { id: number; nombre: string }[];
   tipos?: { id: number; nombre: string }[];
+  imagen?: string | null;
 }
 
 export interface PerfilOrganizacion {
@@ -251,7 +252,8 @@ export class OrganizacionService {
       voluntariosInscritos: a.inscritos_confirmados || a.voluntariosInscritos || 0,
       inscritosPendientes: a.inscritos_pendientes || 0,
       ods: a.ods || [],
-      tipos: a.tipos || a.tiposVoluntariado || []
+      tipos: a.tipos || a.tiposVoluntariado || [],
+      imagen: a.imagen_actividad || a.imagen || null
     };
   }
 
@@ -332,7 +334,7 @@ export class OrganizacionService {
     ubicacion: string;
     odsIds: number[];
     tiposIds: number[];
-  }): Observable<any> {
+  }, imagen?: File | null): Observable<any> {
     const orgId = this.perfil().id;
     if (!orgId) {
       return of({ error: 'No se encontró el ID de la organización' });
@@ -350,14 +352,107 @@ export class OrganizacionService {
       tiposIds: datos.tiposIds
     };
 
-    return this.http.post<any>(`${this.apiUrl}/organizaciones/${orgId}/actividades`, payload).pipe(
+    // 1. Crear actividad (JSON)
+    const createRequest$ = this.http.post<any>(`${this.apiUrl}/organizaciones/${orgId}/actividades`, payload);
+
+    return createRequest$.pipe(
+      // 2. Si se crea con éxito y hay imagen, subirla
+      switchMap(respuestaCreacion => {
+        // La respuesta suele tener la actividad creada o el ID.
+        // Asumimos que devuelve la actividad completa con 'id' o 'id_actividad'
+        const actId = respuestaCreacion.id || respuestaCreacion.id_actividad;
+
+        if (imagen && actId) {
+          const formData = new FormData();
+          formData.append('imagen', imagen);
+
+          return this.http.post<any>(`${this.apiUrl}/actividades/${actId}/imagen`, formData).pipe(
+            map(respuestaImagen => {
+              // Combinar respuesta de creación con info de imagen (opcional)
+              // O devolver la de creación pero con la ruta de imagen actualizada
+              return {
+                ...respuestaCreacion,
+                imagen_actividad: respuestaImagen['img_actividad'] || null,
+                imagen: respuestaImagen['img_actividad'] || null
+              };
+            }),
+            catchError(err => {
+              console.error(`Error subiendo imagen para actividad ${actId}:`, err);
+              // Devolver respuesta de creación aunque falle la imagen (éxito parcial)
+              return of(respuestaCreacion);
+            })
+          );
+        }
+        return of(respuestaCreacion);
+      }),
       tap(respuesta => {
         // Recargar actividades después de crear
         this.cargarActividadesDesdeBackend(orgId);
         this.cargarEstadisticasDesdeBackend(orgId);
       }),
       catchError(err => {
+        // Mejor manejo de errores Symfony
         console.error('Error creando actividad:', err);
+        throw err;
+      })
+    );
+  }
+
+  // Actualizar actividad
+  actualizarActividad(id: number, datos: {
+    titulo: string;
+    descripcion?: string;
+    fecha_inicio: string;
+    duracion_horas: number;
+    cupo_maximo: number;
+    ubicacion: string;
+    odsIds: number[];
+    tiposIds: number[];
+  }, imagen?: File | null): Observable<any> {
+    const orgId = this.perfil().id;
+    if (!orgId) return of({ error: 'No se encontró el ID de la organización' });
+
+    // Payload JSON para PUT (el backend espera esto, no FormData)
+    const payload = {
+      titulo: datos.titulo,
+      descripcion: datos.descripcion || '',
+      fecha_inicio: datos.fecha_inicio,
+      duracion_horas: datos.duracion_horas,
+      cupo_maximo: datos.cupo_maximo,
+      ubicacion: datos.ubicacion,
+      id_organizacion: orgId,
+      odsIds: datos.odsIds,
+      tiposIds: datos.tiposIds
+    };
+
+    // 1. Petición de actualización de datos
+    const updateRequest$ = this.http.put<any>(`${this.apiUrl}/actividades/${id}`, payload);
+
+    return updateRequest$.pipe(
+      // 2. Si tiene éxito y hay imagen, subimos la imagen usando el endpoint específico
+      switchMap((respuestaDatos) => {
+        if (imagen) {
+          const formData = new FormData();
+          formData.append('imagen', imagen);
+
+          return this.http.post(`${this.apiUrl}/actividades/${id}/imagen`, formData).pipe(
+            map(() => respuestaDatos), // Devolvemos la respuesta original para mantener consistencia
+            catchError(err => {
+              console.error('Error subiendo imagen:', err);
+              // Si falla la imagen, al menos los datos se guardaron.
+              throw err;
+            })
+          );
+        }
+        return of(respuestaDatos);
+      }),
+      // 3. Efectos secundarios (recargar datos)
+      tap(() => {
+        this.cargarActividadesDesdeBackend(orgId);
+        this.cargarEstadisticasDesdeBackend(orgId);
+      }),
+      catchError(err => {
+        console.error('Error actualizando actividad:', err);
         throw err;
       })
     );

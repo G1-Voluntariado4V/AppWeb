@@ -5,8 +5,10 @@
     <!-- Header -->
     <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Solicitar Nueva Actividad</h2>
-        <p class="text-sm text-gray-500 mt-1">Completa los datos para enviar tu actividad a revisión</p>
+        <h2 class="text-2xl font-bold text-gray-900">{{ actividadEditar() ? 'Editar Actividad' : 'Solicitar Nueva
+          Actividad' }}</h2>
+        <p class="text-sm text-gray-500 mt-1">{{ actividadEditar() ? 'Modifica los datos de tu actividad' : 'Completa
+          los datos para enviar tu actividad a revisión' }}</p>
       </div>
       <button (click)="close.emit()"
         class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-colors">
@@ -25,271 +27,376 @@
       </div>
       }
 
-      <!-- Progress indicator for periodic activities -->
+      <!-- Progress indicator -->
       @if (progreso()) {
-      <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-        <div class="flex items-center gap-3 mb-2">
-          <i class="fa-solid fa-spinner fa-spin text-blue-600"></i>
-          <span class="text-blue-700 text-sm font-medium">
-            Creando actividades: {{ progreso()!.actual }} de {{ progreso()!.total }}
-          </span>
-        </div>
-        <div class="h-2 bg-blue-100 rounded-full overflow-hidden">
-          <div class="h-full bg-blue-500 rounded-full transition-all duration-300"
-            [style.width.%]="(progreso()!.actual / progreso()!.total) * 100">
-          </div>
-        </div>
-      </div>
+      <!-- ... (código existente de progreso) ... -->
       }
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- ... -->
+      </div>
 
-        <!-- Columna Principal -->
-        <div class="lg:col-span-2 space-y-6">
+      <!-- ... -->
+      <!-- Actividad Periódica (SOLO EN CREACIÓN) -->
+      @if (!actividadEditar()) {
+      <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+        <!-- ... código existente periodica ... -->
+        <div class="flex items-center justify-between mb-4">
+          <label class="text-sm font-bold text-gray-700">
+            <i class="fa-solid fa-repeat mr-2 text-indigo-500"></i>
+            Actividad Periódica
+          </label>
+          <button type="button" (click)="esPeriodica.set(!esPeriodica())"
+            class="relative w-12 h-6 rounded-full transition-colors" [class.bg-indigo-500]="esPeriodica()"
+            [class.bg-gray-300]="!esPeriodica()">
+            <span class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
+              [class.left-1]="!esPeriodica()" [class.left-7]="esPeriodica()"></span>
+          </button>
+        </div>
 
-          <!-- Título -->
+        @if (esPeriodica()) {
+        <!-- ... contenido de periódica ... -->
+        <div class="space-y-3 pt-3 border-t border-gray-100">
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-              Título de la Actividad <span class="text-red-500">*</span>
-            </label>
-            <input type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)"
-              class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-              placeholder="Ej: Recogida de alimentos solidaria" maxlength="100">
+            <label class="block text-xs text-gray-500 mb-1">Frecuencia</label>
+            <select [ngModel]="frecuencia()" (ngModelChange)="frecuencia.set($event)"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
+              <option value="semanal">Semanal</option>
+              <option value="quincenal">Quincenal</option>
+              <option value="mensual">Mensual</option>
+            </select>
           </div>
+          <!-- ... -->
+        </div>
+        }
+      </div>
+      }
+      <!-- ... -->
 
-          <!-- Descripción con contador -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-              Descripción
-              <span class="font-normal text-gray-400 text-xs ml-2">
-                ({{ caracteresRestantes }} caracteres restantes)
-              </span>
-            </label>
-            <textarea [ngModel]="descripcion()" (ngModelChange)="actualizarDescripcion($event)" rows="4"
-              class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
-              [class.border-red-300]="caracteresRestantes < 0" [class.focus:border-red-500]="caracteresRestantes < 0"
-              placeholder="Describe en qué consiste la actividad, qué tareas realizarán los voluntarios..."
-              [maxlength]="MAX_DESCRIPCION"></textarea>
-            <div class="flex justify-between mt-1">
-              <p class="text-xs text-gray-400">Máximo {{ MAX_DESCRIPCION }} caracteres</p>
-              <p class="text-xs" [class.text-red-500]="caracteresRestantes < 50"
-                [class.text-gray-400]="caracteresRestantes >= 50">
-                {{ descripcion().length }}/{{ MAX_DESCRIPCION }}
-              </p>
-            </div>
+      <!-- Footer -->
+      <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-between items-center shrink-0">
+        <p class="text-xs text-gray-400">
+          <span class="text-red-500">*</span> Campos obligatorios
+        </p>
+        <div class="flex gap-3">
+          <button (click)="close.emit()" [disabled]="guardando()"
+            class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50">
+            Cancelar
+          </button>
+          <button (click)="guardar()" [disabled]="guardando()"
+            class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+            @if (guardando()) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            {{ actividadEditar() ? 'Guardando...' : 'Enviando...' }}
+            } @else {
+            <i class="fa-solid fa-paper-plane"></i>
+            {{ actividadEditar() ? 'Guardar Cambios' : 'Enviar Solicitud' }}
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="p-8 bg-gray-50/50 overflow-y-auto flex-1">
+
+        <!-- Error Message -->
+        @if (error()) {
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          {{ error() }}
+        </div>
+        }
+
+        <!-- Progress indicator for periodic activities -->
+        @if (progreso()) {
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div class="flex items-center gap-3 mb-2">
+            <i class="fa-solid fa-spinner fa-spin text-blue-600"></i>
+            <span class="text-blue-700 text-sm font-medium">
+              Creando actividades: {{ progreso()!.actual }} de {{ progreso()!.total }}
+            </span>
           </div>
-
-          <!-- Ubicación -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-              Ubicación <span class="text-red-500">*</span>
-            </label>
-            <input type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)"
-              class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-              placeholder="Ej: Calle Mayor 15, Pamplona">
-          </div>
-
-          <!-- ODS -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-3">ODS Relacionados</label>
-            <div class="flex flex-wrap gap-2">
-              @for (ods of odsList(); track ods.id) {
-              <button type="button" (click)="toggleOds(ods.id)"
-                class="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
-                [class.opacity-40]="!odsSeleccionados().includes(ods.id)"
-                [class.ring-2]="odsSeleccionados().includes(ods.id)"
-                [class.ring-offset-2]="odsSeleccionados().includes(ods.id)" [style.background-color]="ods.color"
-                [style.color]="'white'">
-                <span class="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-[10px]">{{ ods.id
-                  }}</span>
-                <span class="hidden sm:inline">{{ ods.nombre }}</span>
-              </button>
-              } @empty {
-              <p class="text-gray-400 text-sm">Cargando ODS...</p>
-              }
-            </div>
-          </div>
-
-          <!-- Tipos de Voluntariado -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-3">
-              Tipo de Voluntariado <span class="text-red-500">*</span>
-            </label>
-            <div class="flex flex-wrap gap-2">
-              @for (tipo of tiposList(); track tipo.id) {
-              <button type="button" (click)="toggleTipo(tipo.id)"
-                class="px-4 py-2 rounded-xl text-sm font-medium transition-all border-2"
-                [class.bg-blue-600]="tiposSeleccionados().includes(tipo.id)"
-                [class.text-white]="tiposSeleccionados().includes(tipo.id)"
-                [class.border-blue-600]="tiposSeleccionados().includes(tipo.id)"
-                [class.bg-white]="!tiposSeleccionados().includes(tipo.id)"
-                [class.text-gray-700]="!tiposSeleccionados().includes(tipo.id)"
-                [class.border-gray-200]="!tiposSeleccionados().includes(tipo.id)"
-                [class.hover:border-blue-300]="!tiposSeleccionados().includes(tipo.id)">
-                {{ tipo.nombre }}
-              </button>
-              } @empty {
-              <p class="text-gray-400 text-sm">Cargando tipos...</p>
-              }
+          <div class="h-2 bg-blue-100 rounded-full overflow-hidden">
+            <div class="h-full bg-blue-500 rounded-full transition-all duration-300"
+              [style.width.%]="(progreso()!.actual / progreso()!.total) * 100">
             </div>
           </div>
         </div>
+        }
 
-        <!-- Columna Lateral -->
-        <div class="space-y-5">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          <!-- Fecha y Hora -->
-          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <label class="block text-sm font-bold text-gray-700 mb-4">
-              <i class="fa-regular fa-calendar mr-2 text-blue-500"></i>
-              Fecha y Hora <span class="text-red-500">*</span>
-            </label>
-            <div class="space-y-3">
-              <input type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)"
-                [min]="getFechaMinima()"
-                class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
-              <input type="time" [ngModel]="horaInicio()" (ngModelChange)="horaInicio.set($event)"
-                class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
-            </div>
-            <p class="text-xs text-gray-400 mt-2">
-              <i class="fa-solid fa-info-circle mr-1"></i>
-              La fecha debe ser futura
-            </p>
-          </div>
+          <!-- Columna Principal -->
+          <div class="lg:col-span-2 space-y-6">
 
-          <!-- Duración -->
-          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <label class="block text-sm font-bold text-gray-700 mb-4">
-              <i class="fa-regular fa-clock mr-2 text-green-500"></i>
-              Duración (horas) <span class="text-red-500">*</span>
-            </label>
-            <div class="flex items-center gap-2">
-              <button type="button" (click)="actualizarDuracion(duracionHoras() - 1)"
-                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
-                <i class="fa-solid fa-minus text-xs"></i>
-              </button>
-              <input type="number" [ngModel]="duracionHoras()" (ngModelChange)="actualizarDuracion($event)"
-                [min]="MIN_DURACION" [max]="MAX_DURACION"
-                class="w-full min-w-0 text-center border border-gray-200 rounded-xl px-2 py-2 text-lg font-bold outline-none focus:border-blue-500">
-              <button type="button" (click)="actualizarDuracion(duracionHoras() + 1)"
-                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
-                <i class="fa-solid fa-plus text-xs"></i>
-              </button>
-            </div>
-            <p class="text-xs text-gray-400 mt-2 text-center">{{ MIN_DURACION }} - {{ MAX_DURACION }} horas</p>
-          </div>
 
-          <!-- Cupo Máximo -->
-          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <label class="block text-sm font-bold text-gray-700 mb-4">
-              <i class="fa-solid fa-users mr-2 text-purple-500"></i>
-              Cupo Máximo <span class="text-red-500">*</span>
-            </label>
-            <div class="flex items-center gap-2">
-              <button type="button" (click)="actualizarCupo(cupoMaximo() - 1)"
-                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
-                <i class="fa-solid fa-minus text-xs"></i>
-              </button>
-              <input type="number" [ngModel]="cupoMaximo()" (ngModelChange)="actualizarCupo($event)" [min]="MIN_CUPO"
-                [max]="MAX_CUPO"
-                class="w-full min-w-0 text-center border border-gray-200 rounded-xl px-2 py-2 text-lg font-bold outline-none focus:border-blue-500">
-              <button type="button" (click)="actualizarCupo(cupoMaximo() + 1)"
-                class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
-                <i class="fa-solid fa-plus text-xs"></i>
-              </button>
-            </div>
-            <p class="text-xs text-gray-400 mt-2 text-center">{{ MIN_CUPO }} - {{ MAX_CUPO }} voluntarios</p>
-          </div>
-
-          <!-- Actividad Periódica -->
-          <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-              <label class="text-sm font-bold text-gray-700">
-                <i class="fa-solid fa-repeat mr-2 text-indigo-500"></i>
-                Actividad Periódica
-              </label>
-              <button type="button" (click)="esPeriodica.set(!esPeriodica())"
-                class="relative w-12 h-6 rounded-full transition-colors" [class.bg-indigo-500]="esPeriodica()"
-                [class.bg-gray-300]="!esPeriodica()">
-                <span class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
-                  [class.left-1]="!esPeriodica()" [class.left-7]="esPeriodica()"></span>
-              </button>
-            </div>
-
-            @if (esPeriodica()) {
-            <div class="space-y-3 pt-3 border-t border-gray-100">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Frecuencia</label>
-                <select [ngModel]="frecuencia()" (ngModelChange)="frecuencia.set($event)"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
-                  <option value="semanal">Semanal</option>
-                  <option value="quincenal">Quincenal</option>
-                  <option value="mensual">Mensual</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Número de repeticiones</label>
-                <div class="flex items-center gap-2">
-                  <button type="button" (click)="repeticiones.set(Math.max(2, repeticiones() - 1))"
-                    class="w-8 h-8 shrink-0 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center text-xs">
-                    -
-                  </button>
-                  <input type="number" [ngModel]="repeticiones()"
-                    (ngModelChange)="repeticiones.set(Math.max(2, $event))" min="2" max="52"
-                    class="w-full min-w-0 text-center border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold outline-none focus:border-indigo-500">
-                  <button type="button" (click)="repeticiones.set(Math.min(52, repeticiones() + 1))"
-                    class="w-8 h-8 shrink-0 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center text-xs">
-                    +
+            <!-- Imagen de Cabecera -->
+            <div class="mb-4">
+              <label class="block text-sm font-bold text-gray-700 mb-2">Imagen de portada</label>
+              <div class="flex items-center gap-4">
+                @if (previewImagen()) {
+                <div class="relative w-32 h-20 rounded-xl overflow-hidden border border-gray-200 group">
+                  <img [src]="previewImagen()" class="w-full h-full object-cover">
+                  <button (click)="borrarImagen()"
+                    class="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <i class="fa-solid fa-trash"></i>
                   </button>
                 </div>
+                }
+                <label
+                  class="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition-colors flex items-center gap-2">
+                  <i class="fa-regular fa-image"></i>
+                  <span>{{ previewImagen() ? 'Cambiar imagen' : 'Seleccionar imagen' }}</span>
+                  <input type="file" (change)="seleccionarImagen($event)" accept="image/*" class="hidden">
+                </label>
               </div>
-              <p class="text-xs text-indigo-600 bg-indigo-50 rounded-lg p-2">
+              <p class="text-xs text-gray-400 mt-1">Recomendado: 1200x600px. JPG o PNG.</p>
+            </div>
+
+            <!-- Título -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">
+                Título de la Actividad <span class="text-red-500">*</span>
+              </label>
+              <input type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)"
+                class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                placeholder="Ej: Recogida de alimentos solidaria" maxlength="100">
+            </div>
+
+            <!-- Descripción con contador -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">
+                Descripción
+                <span class="font-normal text-gray-400 text-xs ml-2">
+                  ({{ caracteresRestantes }} caracteres restantes)
+                </span>
+              </label>
+              <textarea [ngModel]="descripcion()" (ngModelChange)="actualizarDescripcion($event)" rows="4"
+                class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
+                [class.border-red-300]="caracteresRestantes < 0" [class.focus:border-red-500]="caracteresRestantes < 0"
+                placeholder="Describe en qué consiste la actividad, qué tareas realizarán los voluntarios..."
+                [maxlength]="MAX_DESCRIPCION"></textarea>
+              <div class="flex justify-between mt-1">
+                <p class="text-xs text-gray-400">Máximo {{ MAX_DESCRIPCION }} caracteres</p>
+                <p class="text-xs" [class.text-red-500]="caracteresRestantes < 50"
+                  [class.text-gray-400]="caracteresRestantes >= 50">
+                  {{ descripcion().length }}/{{ MAX_DESCRIPCION }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Ubicación -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">
+                Ubicación <span class="text-red-500">*</span>
+              </label>
+              <input type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)"
+                class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                placeholder="Ej: Calle Mayor 15, Pamplona">
+            </div>
+
+            <!-- ODS -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-3">ODS Relacionados</label>
+              <div class="flex flex-wrap gap-2">
+                @for (ods of odsList(); track ods.id) {
+                <button type="button" (click)="toggleOds(ods.id)"
+                  class="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+                  [class.opacity-40]="!odsSeleccionados().includes(ods.id)"
+                  [class.ring-2]="odsSeleccionados().includes(ods.id)"
+                  [class.ring-offset-2]="odsSeleccionados().includes(ods.id)" [style.background-color]="ods.color"
+                  [style.color]="'white'">
+                  <span class="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-[10px]">{{ ods.id
+                    }}</span>
+                  <span class="hidden sm:inline">{{ ods.nombre }}</span>
+                </button>
+                } @empty {
+                <p class="text-gray-400 text-sm">Cargando ODS...</p>
+                }
+              </div>
+            </div>
+
+            <!-- Tipos de Voluntariado -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-3">
+                Tipo de Voluntariado <span class="text-red-500">*</span>
+              </label>
+              <div class="flex flex-wrap gap-2">
+                @for (tipo of tiposList(); track tipo.id) {
+                <button type="button" (click)="toggleTipo(tipo.id)"
+                  class="px-4 py-2 rounded-xl text-sm font-medium transition-all border-2"
+                  [class.bg-blue-600]="tiposSeleccionados().includes(tipo.id)"
+                  [class.text-white]="tiposSeleccionados().includes(tipo.id)"
+                  [class.border-blue-600]="tiposSeleccionados().includes(tipo.id)"
+                  [class.bg-white]="!tiposSeleccionados().includes(tipo.id)"
+                  [class.text-gray-700]="!tiposSeleccionados().includes(tipo.id)"
+                  [class.border-gray-200]="!tiposSeleccionados().includes(tipo.id)"
+                  [class.hover:border-blue-300]="!tiposSeleccionados().includes(tipo.id)">
+                  {{ tipo.nombre }}
+                </button>
+                } @empty {
+                <p class="text-gray-400 text-sm">Cargando tipos...</p>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Lateral -->
+          <div class="space-y-5">
+
+            <!-- Fecha y Hora -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+              <label class="block text-sm font-bold text-gray-700 mb-4">
+                <i class="fa-regular fa-calendar mr-2 text-blue-500"></i>
+                Fecha y Hora <span class="text-red-500">*</span>
+              </label>
+              <div class="space-y-3">
+                <input type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)"
+                  [min]="getFechaMinima()"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
+                <input type="time" [ngModel]="horaInicio()" (ngModelChange)="horaInicio.set($event)"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500">
+              </div>
+              <p class="text-xs text-gray-400 mt-2">
                 <i class="fa-solid fa-info-circle mr-1"></i>
-                Se crearán {{ repeticiones() }} actividades
-                {{ frecuencia() === 'semanal' ? 'cada semana' : frecuencia() === 'quincenal' ? 'cada 2 semanas' : 'cada
-                mes' }}
+                La fecha debe ser futura
               </p>
             </div>
-            }
-          </div>
 
-          <!-- Info -->
-          <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
-            <div class="flex gap-3">
-              <i class="fa-solid fa-circle-info text-amber-500 mt-0.5"></i>
-              <div class="text-xs text-amber-700">
-                <p class="font-bold mb-1">Estado: En revisión</p>
-                <p>Tu actividad será revisada por un coordinador antes de ser publicada.</p>
+            <!-- Duración -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+              <label class="block text-sm font-bold text-gray-700 mb-4">
+                <i class="fa-regular fa-clock mr-2 text-green-500"></i>
+                Duración (horas) <span class="text-red-500">*</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <button type="button" (click)="actualizarDuracion(duracionHoras() - 1)"
+                  class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                  <i class="fa-solid fa-minus text-xs"></i>
+                </button>
+                <input type="number" [ngModel]="duracionHoras()" (ngModelChange)="actualizarDuracion($event)"
+                  [min]="MIN_DURACION" [max]="MAX_DURACION"
+                  class="w-full min-w-0 text-center border border-gray-200 rounded-xl px-2 py-2 text-lg font-bold outline-none focus:border-blue-500">
+                <button type="button" (click)="actualizarDuracion(duracionHoras() + 1)"
+                  class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+              </div>
+              <p class="text-xs text-gray-400 mt-2 text-center">{{ MIN_DURACION }} - {{ MAX_DURACION }} horas</p>
+            </div>
+
+            <!-- Cupo Máximo -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+              <label class="block text-sm font-bold text-gray-700 mb-4">
+                <i class="fa-solid fa-users mr-2 text-purple-500"></i>
+                Cupo Máximo <span class="text-red-500">*</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <button type="button" (click)="actualizarCupo(cupoMaximo() - 1)"
+                  class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                  <i class="fa-solid fa-minus text-xs"></i>
+                </button>
+                <input type="number" [ngModel]="cupoMaximo()" (ngModelChange)="actualizarCupo($event)" [min]="MIN_CUPO"
+                  [max]="MAX_CUPO"
+                  class="w-full min-w-0 text-center border border-gray-200 rounded-xl px-2 py-2 text-lg font-bold outline-none focus:border-blue-500">
+                <button type="button" (click)="actualizarCupo(cupoMaximo() + 1)"
+                  class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center">
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+              </div>
+              <p class="text-xs text-gray-400 mt-2 text-center">{{ MIN_CUPO }} - {{ MAX_CUPO }} voluntarios</p>
+            </div>
+
+            <!-- Actividad Periódica -->
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <label class="text-sm font-bold text-gray-700">
+                  <i class="fa-solid fa-repeat mr-2 text-indigo-500"></i>
+                  Actividad Periódica
+                </label>
+                <button type="button" (click)="esPeriodica.set(!esPeriodica())"
+                  class="relative w-12 h-6 rounded-full transition-colors" [class.bg-indigo-500]="esPeriodica()"
+                  [class.bg-gray-300]="!esPeriodica()">
+                  <span class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
+                    [class.left-1]="!esPeriodica()" [class.left-7]="esPeriodica()"></span>
+                </button>
+              </div>
+
+              @if (esPeriodica()) {
+              <div class="space-y-3 pt-3 border-t border-gray-100">
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Frecuencia</label>
+                  <select [ngModel]="frecuencia()" (ngModelChange)="frecuencia.set($event)"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                    <option value="semanal">Semanal</option>
+                    <option value="quincenal">Quincenal</option>
+                    <option value="mensual">Mensual</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Número de repeticiones</label>
+                  <div class="flex items-center gap-2">
+                    <button type="button" (click)="repeticiones.set(Math.max(2, repeticiones() - 1))"
+                      class="w-8 h-8 shrink-0 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center text-xs">
+                      -
+                    </button>
+                    <input type="number" [ngModel]="repeticiones()"
+                      (ngModelChange)="repeticiones.set(Math.max(2, $event))" min="2" max="52"
+                      class="w-full min-w-0 text-center border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold outline-none focus:border-indigo-500">
+                    <button type="button" (click)="repeticiones.set(Math.min(52, repeticiones() + 1))"
+                      class="w-8 h-8 shrink-0 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center text-xs">
+                      +
+                    </button>
+                  </div>
+                </div>
+                <p class="text-xs text-indigo-600 bg-indigo-50 rounded-lg p-2">
+                  <i class="fa-solid fa-info-circle mr-1"></i>
+                  Se crearán {{ repeticiones() }} actividades
+                  {{ frecuencia() === 'semanal' ? 'cada semana' : frecuencia() === 'quincenal' ? 'cada 2 semanas' :
+                  'cada
+                  mes' }}
+                </p>
+              </div>
+              }
+            </div>
+
+            <!-- Info -->
+            <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+              <div class="flex gap-3">
+                <i class="fa-solid fa-circle-info text-amber-500 mt-0.5"></i>
+                <div class="text-xs text-amber-700">
+                  <p class="font-bold mb-1">Estado: En revisión</p>
+                  <p>Tu actividad será revisada por un coordinador antes de ser publicada.</p>
+                </div>
               </div>
             </div>
           </div>
+
         </div>
-
       </div>
-    </div>
 
-    <!-- Footer -->
-    <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-between items-center shrink-0">
-      <p class="text-xs text-gray-400">
-        <span class="text-red-500">*</span> Campos obligatorios
-      </p>
-      <div class="flex gap-3">
-        <button (click)="close.emit()" [disabled]="guardando()"
-          class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50">
-          Cancelar
-        </button>
-        <button (click)="guardar()" [disabled]="guardando()"
-          class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
-          @if (guardando()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Enviando...
-          } @else {
-          <i class="fa-solid fa-paper-plane"></i>
-          Enviar Solicitud
-          }
-        </button>
+      <!-- Footer -->
+      <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-between items-center shrink-0">
+        <p class="text-xs text-gray-400">
+          <span class="text-red-500">*</span> Campos obligatorios
+        </p>
+        <div class="flex gap-3">
+          <button (click)="close.emit()" [disabled]="guardando()"
+            class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50">
+            Cancelar
+          </button>
+          <button (click)="guardar()" [disabled]="guardando()"
+            class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+            @if (guardando()) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Enviando...
+            } @else {
+            <i class="fa-solid fa-paper-plane"></i>
+            Enviar Solicitud
+            }
+          </button>
+        </div>
       </div>
-    </div>
 
+    </div>
   </div>
-</div>

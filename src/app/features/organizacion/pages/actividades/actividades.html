@@ -159,12 +159,14 @@
 
   <!-- Modales -->
   @if (modalCrearVisible()) {
-  <app-modal-crear-actividad (close)="cerrarCrear()" (save)="onActividadCreada($event)">
+  <app-modal-crear-actividad [actividadEditar]="actividadParaEditar()" (close)="cerrarCrear()"
+    (save)="onActividadCreada($event)">
   </app-modal-crear-actividad>
   }
 
   @if (actividadSeleccionada()) {
-  <app-modal-detalle-actividad [act]="actividadSeleccionada()!" (close)="cerrarDetalle()">
+  <app-modal-detalle-actividad [act]="actividadSeleccionada()!" (close)="cerrarDetalle()"
+    (edit)="abrirEditar(actividadSeleccionada()!)" (deleted)="onActividadEliminada($event)">
   </app-modal-detalle-actividad>
   }
 
