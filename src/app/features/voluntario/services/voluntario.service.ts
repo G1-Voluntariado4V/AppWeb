@@ -460,7 +460,13 @@ export class VoluntarioService {
       }),
       map(response => ({ success: true, mensaje: response.mensaje || 'Inscripción realizada' })),
       catchError(err => {
-        const mensaje = err.error?.error || err.error?.mensaje || `Error al inscribirse (${err.status || 'desconocido'})`;
+        let mensaje = err.error?.error || err.error?.mensaje || `Error al inscribirse (${err.status || 'desconocido'})`;
+
+        // Forzar detección de conflicto
+        if (err.status === 409) {
+          mensaje = `409 Conflict: ${mensaje}`;
+        }
+
         return of({ success: false, mensaje });
       })
     );
@@ -493,7 +499,13 @@ export class VoluntarioService {
       }),
       map(response => ({ success: true, mensaje: response.mensaje || 'Te has desapuntado' })),
       catchError(err => {
-        const mensaje = err.error?.error || err.error?.mensaje || 'Error al desapuntarse';
+        let mensaje = err.error?.error || err.error?.mensaje || `Error al desapuntarse (${err.status || 'desconocido'})`;
+
+        // Forzar detección de 404
+        if (err.status === 404) {
+          mensaje = `404 Not Found: ${mensaje}`;
+        }
+
         return of({ success: false, mensaje });
       })
     );

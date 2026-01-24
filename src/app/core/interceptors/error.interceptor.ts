@@ -37,12 +37,18 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             }
 
             // Mostrar toast solo para errores relevantes (evitar spam si se manejan localmente)
-            // Por defecto mostramos todo excepto 404 (que a veces es esperado)
-            if (error.status !== 404 || req.method !== 'GET') {
+            // Ignoramos 409 y 404 que suelen ser de lógica de negocio (ya inscrito/no encontrado)
+            const esErrorEsperado = error.status === 409 || error.status === 404;
+
+            if (!esErrorEsperado && (error.status !== 404 || req.method !== 'GET')) {
                 toastService.error(errorMessage);
             }
 
-            console.error('❌ Interceptor Error:', error);
+            if (esErrorEsperado) {
+                console.warn(`⚠️ API Info (${error.status}):`, error.error?.mensaje || error.message);
+            } else {
+                console.error('❌ Interceptor Error:', error);
+            }
             return throwError(() => error);
         })
     );

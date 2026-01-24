@@ -279,8 +279,32 @@ export class ActividadesDisponibles implements OnInit {
 
         this.voluntarioService.inscribirse(actividad.id_actividad).subscribe({
             next: (result) => {
-                if (result.success) {
-                    this.mensaje.set({ tipo: 'success', texto: '¡Te has inscrito correctamente! Tu solicitud está pendiente de aprobación.' });
+                // Manejo especial para conflicto (ya inscrito)
+                const yaInscrito = !result.success && (
+                    (result.mensaje && (result.mensaje.includes('409') || result.mensaje.toLowerCase().includes('conflict') || result.mensaje.toLowerCase().includes('ya est')))
+                );
+
+                if (result.success || yaInscrito) {
+                    const texto = yaInscrito
+                        ? 'Ya estabas inscrito en esta actividad. Estado actualizado.'
+                        : '¡Te has inscrito correctamente! Tu solicitud está pendiente de aprobación.';
+
+                    this.mensaje.set({ type: 'success', texto: texto } as any); // Type cast rápido si la interfaz difiere
+
+                    // Si estaba ya inscrito, forzamos actualización visual local
+                    if (yaInscrito) {
+                        this.voluntarioService.actividadesDisponibles.update(acts =>
+                            acts.map(a => a.id_actividad === actividad.id_actividad
+                                ? { ...a, inscrito: true, estadoInscripcion: 'Pendiente' }
+                                : a
+                            )
+                        );
+                        // Y en la seleccionada
+                        if (this.actividadSeleccionada()?.id_actividad === actividad.id_actividad) {
+                            this.actividadSeleccionada.update(a => a ? ({ ...a, inscrito: true, estadoInscripcion: 'Pendiente' }) : null);
+                        }
+                    }
+
                     // Cerrar modal después de 2 segundos
                     setTimeout(() => this.cerrarModal(), 2000);
                 } else {
@@ -288,8 +312,9 @@ export class ActividadesDisponibles implements OnInit {
                 }
                 this.procesando.set(false);
             },
-            error: () => {
-                this.mensaje.set({ tipo: 'error', texto: 'Error al inscribirse. Intenta de nuevo.' });
+            error: (err) => {
+                console.error('Error en suscripción:', err);
+                this.mensaje.set({ tipo: 'error', texto: 'Error al procesar la inscripción.' });
                 this.procesando.set(false);
             }
         });
@@ -303,15 +328,39 @@ export class ActividadesDisponibles implements OnInit {
 
         this.voluntarioService.desapuntarse(actividad.id_actividad).subscribe({
             next: (result) => {
-                if (result.success) {
-                    this.mensaje.set({ tipo: 'success', texto: 'Te has desapuntado correctamente.' });
+                // Manejo especial para 404 (ya eliminado)
+                const yaEliminado = !result.success && (
+                    (result.mensaje && (result.mensaje.includes('404') || result.mensaje.toLowerCase().includes('not found') || result.mensaje.toLowerCase().includes('no encontrada')))
+                );
+
+                if (result.success || yaEliminado) {
+                    const texto = yaEliminado
+                        ? 'Ya no estabas inscrito en esta actividad. Estado actualizado.'
+                        : 'Te has desapuntado correctamente.';
+
+                    this.mensaje.set({ type: 'success', texto: texto } as any);
+
+                    // Forzar actualización visual local
+                    this.voluntarioService.actividadesDisponibles.update(acts =>
+                        acts.map(a => a.id_actividad === actividad.id_actividad
+                            ? { ...a, inscrito: false, estadoInscripcion: null }
+                            : a
+                        )
+                    );
+
+                    // Y en la seleccionada
+                    if (this.actividadSeleccionada()?.id_actividad === actividad.id_actividad) {
+                        this.actividadSeleccionada.update(a => a ? ({ ...a, inscrito: false, estadoInscripcion: null }) : null);
+                    }
+
                     setTimeout(() => this.cerrarModal(), 1500);
                 } else {
                     this.mensaje.set({ tipo: 'error', texto: result.mensaje });
                 }
                 this.procesando.set(false);
             },
-            error: () => {
+            error: (err) => {
+                console.error('Error desapuntándose:', err);
                 this.mensaje.set({ tipo: 'error', texto: 'Error al desapuntarse. Intenta de nuevo.' });
                 this.procesando.set(false);
             }
