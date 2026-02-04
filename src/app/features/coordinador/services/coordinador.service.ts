@@ -13,6 +13,7 @@ export interface DashboardStats {
     organizacionesActivas: number;
     actividadesTotales: number;
     usuariosPendientes: number;
+    actividadesPendientes?: number;
 }
 
 export interface Aviso {
@@ -39,6 +40,7 @@ export interface ODS {
     id: number;
     nombre: string;
     descripcion?: string;
+    imgUrl?: string;
 }
 
 export interface TipoVoluntariado {
@@ -54,6 +56,12 @@ export interface Curso {
     grado?: string;
 }
 
+export interface Idioma {
+    id: number;
+    nombre: string;
+    codigo_iso?: string;
+}
+
 export interface OrganizacionAdmin {
     id: number;
     nombre: string;
@@ -66,6 +74,7 @@ export interface OrganizacionAdmin {
     estado: 'Activa' | 'Pendiente' | 'Bloqueada' | 'Rechazada';
     fecha_registro?: string;
     actividadesCount?: number;
+    foto?: string | null;
 }
 
 export interface VoluntarioAdmin {
@@ -81,6 +90,7 @@ export interface VoluntarioAdmin {
     actividadesCount: number;
     foto?: string | null;
     descripcion?: string;
+    idiomas?: { id_idioma: number; idioma: string; nivel: string }[];
 }
 
 export interface ActividadAdmin {
@@ -98,6 +108,8 @@ export interface ActividadAdmin {
     estado: 'Publicada' | 'En revision' | 'Cancelada' | 'Rechazada' | 'Finalizada';
     ods?: ODS[];
     tipos?: TipoVoluntariado[];
+    imagen_actividad?: string;
+    img_organizacion?: string;
 }
 
 export interface UsuarioAdmin {
@@ -154,9 +166,11 @@ export class CoordinadorService {
     private _odsList = signal<ODS[]>([]);
     private _tiposList = signal<TipoVoluntariado[]>([]);
     private _cursosList = signal<Curso[]>([]);
+    private _idiomasList = signal<Idioma[]>([]);
     public odsList = this._odsList.asReadonly();
     public tiposList = this._tiposList.asReadonly();
     public cursosList = this._cursosList.asReadonly();
+    public idiomasList = this._idiomasList.asReadonly();
 
     constructor() {
         this.googlePhoto = this.authService.getGooglePhoto();
@@ -204,10 +218,18 @@ export class CoordinadorService {
 
     // --- CATÁLOGOS ---
     cargarCatalogos(): void {
+        // Evitar recargar si ya tenemos datos
+        if (this._odsList().length > 0) return;
+
         this.http.get<any[]>(`${this.apiUrl}/ods`).pipe(
             catchError(() => of([]))
         ).subscribe(data => {
-            const mapped = data.map(o => ({ id: o.id ?? o.id_ods, nombre: o.nombre, descripcion: o.descripcion }));
+            const mapped = data.map(o => ({
+                id: o.id ?? o.id_ods,
+                nombre: o.nombre,
+                descripcion: o.descripcion,
+                imgUrl: o.imgUrl ? `${this.apiUrl.replace(/\/api\/?$/, '')}${o.imgUrl}` : undefined
+            }));
             this._odsList.set(mapped);
         });
 
@@ -231,96 +253,92 @@ export class CoordinadorService {
             }));
             this._cursosList.set(mapped);
         });
+
+        this.http.get<any[]>(`${this.apiUrl}/catalogos/idiomas`).pipe(
+            catchError(() => of([]))
+        ).subscribe(data => {
+            this._idiomasList.set(data.map(i => ({ id: i.id, nombre: i.nombre, codigo_iso: i.codigo_iso })));
+        });
     }
 
     // --- DASHBOARD STATS ---
     getDashboardStats(): Observable<DashboardStats> {
-        return forkJoin({
-            voluntarios: this.http.get<any[]>(`${this.apiUrl}/voluntarios`).pipe(catchError(() => of([]))),
-            organizaciones: this.http.get<any[]>(`${this.apiUrl}/organizaciones`).pipe(catchError(() => of([]))),
-            actividades: this.http.get<any[]>(`${this.apiUrl}/actividades`).pipe(catchError(() => of([]))),
-            usuarios: this.http.get<any[]>(`${this.apiUrl}/usuarios`).pipe(catchError(() => of([])))
+        const userId = this.authService.getBackendUserSnapshot()?.id_usuario;
+        return this.http.get<any>(`${this.apiUrl}/coord/stats`, {
+            headers: { 'X-Admin-Id': userId?.toString() || '' }
         }).pipe(
-            map(({ voluntarios, organizaciones, actividades, usuarios }) => {
-                const voluntariosActivos = voluntarios.filter(v => v.estado_cuenta === 'Activa').length;
-                const organizacionesActivas = organizaciones.filter(o => o.estado_cuenta === 'Activa').length;
-                const actividadesTotales = actividades.length;
-                const usuariosPendientes = usuarios.filter(u => u.estado_cuenta === 'Pendiente').length;
-
+            map(response => {
+                const m = response.metricas;
                 return {
-                    voluntariosActivos,
-                    organizacionesActivas,
-                    actividadesTotales,
-                    usuariosPendientes
+                    voluntariosActivos: m.voluntarios_activos || 0,
+                    organizacionesActivas: m.organizaciones_activas || 0,
+                    actividadesTotales: m.actividades_publicadas || 0,
+                    usuariosPendientes: m.voluntarios_pendientes || 0,
+                    actividadesPendientes: m.actividades_pendientes || 0
                 };
+            }),
+            catchError(err => {
+                console.error('Error cargando stats:', err);
+                return of({
+                    voluntariosActivos: 0,
+                    organizacionesActivas: 0,
+                    actividadesTotales: 0,
+                    usuariosPendientes: 0
+                });
             })
         );
     }
 
     getAvisos(): Observable<Aviso[]> {
+        // En vez de hacer 4 llamadas pesadas, hacemos una llamada ligera de conteos si es necesario
+        // O mejor aún, usamos los stats que ya tenemos si el dashboard los cargó
         return forkJoin({
-            voluntarios: this.getSolicitudesVoluntarios().pipe(catchError(() => of([]))),
-            organizaciones: this.getSolicitudesOrganizaciones().pipe(catchError(() => of([]))),
-            actividades: this.getSolicitudesActividades().pipe(catchError(() => of([]))),
+            stats: this.getDashboardStats().pipe(catchError(() => of(null))),
             inscripciones: this.getInscripcionesPendientes().pipe(catchError(() => of([])))
         }).pipe(
-            map(({ voluntarios, organizaciones, actividades, inscripciones }) => {
+            map(({ stats, inscripciones }) => {
                 const avisos: Aviso[] = [];
                 let idCounter = 1;
 
-                // Voluntarios pendientes
-                const volPendientes = voluntarios.length;
-                if (volPendientes > 0) {
-                    avisos.push({
-                        id: idCounter++,
-                        titulo: 'Voluntarios pendientes',
-                        subtitulo: `${volPendientes} ${volPendientes === 1 ? 'solicitud' : 'solicitudes'} de registro`,
-                        tipo: 'alerta',
-                        ruta: '/coordinador/aprobaciones/voluntarios',
-                        icono: 'fa-user-clock'
-                    });
+                if (stats) {
+                    // Voluntarios pendientes
+                    if (stats.usuariosPendientes > 0) {
+                        avisos.push({
+                            id: idCounter++,
+                            titulo: 'Voluntarios pendientes',
+                            subtitulo: `${stats.usuariosPendientes} ${stats.usuariosPendientes === 1 ? 'solicitud' : 'solicitudes'} de registro`,
+                            tipo: 'alerta',
+                            ruta: '/coordinador/aprobaciones/voluntarios',
+                            icono: 'fa-user-clock'
+                        });
+                    }
+
+                    // Actividades en revisión
+                    if (stats.actividadesPendientes && stats.actividadesPendientes > 0) {
+                        avisos.push({
+                            id: idCounter++,
+                            titulo: 'Actividades en revisión',
+                            subtitulo: `${stats.actividadesPendientes} ${stats.actividadesPendientes === 1 ? 'actividad' : 'actividades'} por revisar`,
+                            tipo: 'info',
+                            ruta: '/coordinador/aprobaciones/actividades',
+                            icono: 'fa-calendar-check'
+                        });
+                    }
                 }
 
-                // Organizaciones pendientes
-                const orgPendientes = organizaciones.length;
-                if (orgPendientes > 0) {
-                    avisos.push({
-                        id: idCounter++,
-                        titulo: 'Organizaciones pendientes',
-                        subtitulo: `${orgPendientes} ${orgPendientes === 1 ? 'organización' : 'organizaciones'} por aprobar`,
-                        tipo: 'alerta',
-                        ruta: '/coordinador/aprobaciones/organizaciones',
-                        icono: 'fa-building-circle-exclamation'
-                    });
-                }
-
-                // Actividades en revisión
-                const actRevision = actividades.length;
-                if (actRevision > 0) {
-                    avisos.push({
-                        id: idCounter++,
-                        titulo: 'Actividades en revisión',
-                        subtitulo: `${actRevision} ${actRevision === 1 ? 'actividad' : 'actividades'} por revisar`,
-                        tipo: 'info',
-                        ruta: '/coordinador/aprobaciones/actividades',
-                        icono: 'fa-calendar-check'
-                    });
-                }
-
-                // Inscripciones pendientes
+                // Inscripciones pendientes (esta sigue siendo necesaria porque stats asumo que no las cuenta todas)
                 const inscripcionesPendientes = inscripciones.length;
                 if (inscripcionesPendientes > 0) {
                     avisos.push({
                         id: idCounter++,
                         titulo: 'Inscripciones nuevas',
                         subtitulo: `${inscripcionesPendientes} ${inscripcionesPendientes === 1 ? 'voluntario espera' : 'voluntarios esperan'} confirmación`,
-                        tipo: 'success', // Usamos success o info par diferenciar
-                        ruta: '/coordinador/aprobaciones/actividades', // Redirige a actividades donde se gestionan
+                        tipo: 'success',
+                        ruta: '/coordinador/aprobaciones/actividades',
                         icono: 'fa-clipboard-user'
                     });
                 }
 
-                // Si no hay nada pendiente
                 if (avisos.length === 0) {
                     avisos.push({
                         id: 0,
@@ -368,84 +386,42 @@ export class CoordinadorService {
                 estado: v.estado_cuenta || 'Pendiente',
                 descripcion: v.descripcion,
                 actividadesCount: 0,
-                foto: this.resolveImagenUrl(v.img_perfil || v.foto_perfil)
+                foto: this.resolveImagenUrl(v.img_perfil || v.foto_perfil),
+                idiomas: v.idiomas || []
             }))
         );
     }
 
     /**
-     * Obtiene la lista de voluntarios. 
+     * Obtiene la lista de voluntarios.
      * Optimizado: No carga el historial (actividadesCount) por defecto para evitar N peticiones.
      */
     getVoluntarios(enrich = false): Observable<VoluntarioAdmin[]> {
-        console.log(`DEBUG: getVoluntarios(enrich=${enrich})`);
+        return this.http.get<any[]>(`${this.apiUrl}/voluntarios`).pipe(
+            map(data => data.map(v => {
+                const rawFoto = v.foto_perfil;
+                const fotoUrl = rawFoto
+                    ? (rawFoto.startsWith('http') ? rawFoto : `http://localhost:8000${rawFoto}`)
+                    : null;
 
-        return forkJoin({
-            volAjax: this.http.get<any[]>(`${this.apiUrl}/voluntarios`).pipe(catchError(() => of([]))),
-            usrAjax: this.getUsuarios().pipe(catchError(() => of([])))
-        }).pipe(
-            switchMap(({ volAjax, usrAjax }) => {
-                if (!volAjax || volAjax.length === 0) return of([]);
-
-                if (!enrich) {
-                    const list = volAjax.map(v => {
-                        const userMatch = usrAjax.find(u => u.id === (v.id_usuario || v.id));
-                        const rawFoto = v.img_perfil || v.foto_perfil || v.foto || v.imagen || userMatch?.foto;
-
-                        return {
-                            id: v.id_usuario ?? v.id,
-                            nombre: v.nombre,
-                            apellidos: v.apellidos,
-                            email: v.correo_usuario || v.email || v.correo,
-                            dni: v.dni || 'N/A',
-                            telefono: v.telefono,
-                            curso: v.curso || v.curso_actual || v.nombre_curso || 'Sin asignar',
-                            fecha_nac: v.fecha_nac,
-                            estado: v.estado_cuenta,
-                            descripcion: '',
-                            actividadesCount: 0, // No cargamos si no se pide enrich
-                            foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(rawFoto || null)
-                        } as VoluntarioAdmin;
-                    });
-                    return of(list);
-                }
-
-                // Si se pide enrichment (solo para la vista principal de gestión quizás)
-                const peticiones = volAjax.map(v =>
-                    this.getHistorialVoluntario(v.id_usuario || v.id).pipe(
-                        map(historial => {
-                            const userMatch = usrAjax.find(u => u.id === (v.id_usuario || v.id));
-                            const rawFoto = v.img_perfil || v.foto_perfil || v.foto || v.imagen || userMatch?.foto;
-                            return {
-                                id: v.id_usuario ?? v.id,
-                                nombre: v.nombre,
-                                apellidos: v.apellidos,
-                                email: v.correo_usuario || v.email || v.correo,
-                                dni: v.dni || 'N/A',
-                                telefono: v.telefono,
-                                curso: v.curso || v.curso_actual || v.nombre_curso || 'Sin asignar',
-                                fecha_nac: v.fecha_nac,
-                                estado: v.estado_cuenta,
-                                actividadesCount: historial.resumen?.total_participaciones || 0,
-                                foto: rawFoto && rawFoto.startsWith('http') ? rawFoto : this.resolveImagenUrl(rawFoto || null)
-                            } as VoluntarioAdmin;
-                        }),
-                        catchError(() => of({
-                            id: v.id_usuario ?? v.id,
-                            nombre: v.nombre,
-                            apellidos: v.apellidos,
-                            email: v.correo_usuario || v.email || v.correo,
-                            dni: v.dni || 'N/A',
-                            telefono: v.telefono,
-                            curso: v.curso || v.curso_actual || v.nombre_curso || 'Sin asignar',
-                            fecha_nac: v.fecha_nac,
-                            estado: v.estado_cuenta,
-                            actividadesCount: 0,
-                            foto: this.resolveImagenUrl(null)
-                        } as VoluntarioAdmin))
-                    )
-                );
-                return forkJoin(peticiones);
+                return {
+                    id: v.id_usuario ?? v.id,
+                    nombre: v.nombre,
+                    apellidos: v.apellidos,
+                    email: v.correo_usuario,
+                    dni: v.dni || 'N/A',
+                    telefono: v.telefono,
+                    curso: v.curso_actual || 'Sin asignar',
+                    fecha_nac: v.fecha_nac,
+                    estado: v.estado_cuenta,
+                    descripcion: '',
+                    actividadesCount: v.actividades_count || 0,
+                    foto: fotoUrl
+                } as VoluntarioAdmin;
+            })),
+            catchError(err => {
+                console.error('Error fetching voluntarios:', err);
+                return of([]);
             })
         );
     }
@@ -460,27 +436,29 @@ export class CoordinadorService {
 
     // --- ORGANIZACIONES ---
     getOrganizaciones(): Observable<OrganizacionAdmin[]> {
-        return forkJoin({
-            orgs: this.http.get<any[]>(`${this.apiUrl}/organizaciones`, { headers: this.getAdminHeaders() }),
-            acts: this.getActividades(false).pipe(catchError(() => of([])))
-        }).pipe(
-            map(({ orgs, acts }) => orgs.map(o => {
+        return this.http.get<any[]>(`${this.apiUrl}/organizaciones`, { headers: this.getAdminHeaders() }).pipe(
+            map(data => data.map(o => {
                 const id = o.id_usuario || o.id;
-                // Calculamos el conteo en el frontend para no tocar la API ni la BD
-                const count = acts.filter(a => a.organizacionId === id && a.estado === 'Publicada').length;
+
+                // Mapeo seguro de la foto
+                const rawFoto = o.foto_perfil || o.foto;
+                const fotoUrl = rawFoto
+                    ? (rawFoto.startsWith('http') ? rawFoto : `http://localhost:8000${rawFoto}`)
+                    : null;
 
                 return {
                     id: id,
-                    nombre: o.nombre || o.nombre_organizacion || 'Sin nombre',
+                    nombre: o.nombre_organizacion || o.nombre || 'Sin nombre',
                     cif: o.cif || 'N/A',
-                    email: o.correo || o.correo_usuario || o.email || '',
+                    email: o.correo_usuario || o.email || '',
                     telefono: o.telefono,
                     direccion: o.direccion,
                     sitioWeb: o.sitio_web || o.sitioWeb,
                     descripcion: o.descripcion,
                     estado: o.estado_cuenta || o.estado || 'Pendiente',
                     fecha_registro: o.fecha_registro,
-                    actividadesCount: count
+                    actividadesCount: o.actividades_count || 0,
+                    foto: fotoUrl
                 } as OrganizacionAdmin;
             })),
             catchError(err => {
@@ -491,7 +469,7 @@ export class CoordinadorService {
     }
 
     /**
-     * Obtiene la lista de actividades. 
+     * Obtiene la lista de actividades.
      * Optimizado: No carga el detalle completo por defecto.
      */
     getActividades(enrich = false): Observable<ActividadAdmin[]> {
@@ -523,7 +501,8 @@ export class CoordinadorService {
                                 ubicacion: a.ubicacion,
                                 estado: this.normalizarEstado(a.estado_publicacion),
                                 ods: [],
-                                tipos: []
+                                tipos: a.tipos_nombres ? a.tipos_nombres.split(',').map((name: string) => ({ nombreTipo: name })) : [],
+                                img_organizacion: a.foto_organizacion ? (a.foto_organizacion.startsWith('http') ? a.foto_organizacion : `http://localhost:8000${a.foto_organizacion}`) : undefined
                             } as ActividadAdmin)));
                         }
 
@@ -588,7 +567,9 @@ export class CoordinadorService {
                 estado: this.normalizarEstado(a.estado_publicacion || a.estado),
                 // El endpoint público /actividades/{id} SÍ devuelve estos arrays
                 ods: a.ods || a.ODS || [],
-                tipos: a.tipos || a.tipos_voluntariado || []
+                tipos: a.tipos || a.tipos_voluntariado || [],
+                imagen_actividad: a.imagen_actividad || a.imagen,
+                img_organizacion: a.img_organizacion
             }))
         );
     }
@@ -613,7 +594,7 @@ export class CoordinadorService {
     }
 
     // --- CREAR ACTIVIDAD ---
-    crearActividad(datos: any): Observable<any> {
+    crearActividad(datos: any, imagen?: File): Observable<any> {
         const payload = {
             id_organizacion: datos.id_organizacion,
             titulo: datos.titulo,
@@ -623,9 +604,26 @@ export class CoordinadorService {
             cupo_maximo: datos.cupo_maximo,
             fecha_inicio: datos.fecha_inicio,
             odsIds: datos.odsIds || [],
-            tiposIds: datos.tiposIds || []
+            tiposIds: datos.tiposIds || [],
+            esPeriodica: datos.esPeriodica || false,
+            frecuencia: datos.frecuencia,
+            repeticiones: datos.repeticiones
         };
-        return this.http.post(`${this.apiUrl}/actividades`, payload);
+
+        return this.http.post<any>(`${this.apiUrl}/actividades`, payload).pipe(
+            switchMap(res => {
+                if (imagen && res.id) {
+                    return this.subirImagenActividad(res.id, imagen).pipe(map(() => res));
+                }
+                return of(res);
+            })
+        );
+    }
+
+    subirImagenActividad(id: number, archivo: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('imagen', archivo);
+        return this.http.post(`${this.apiUrl}/actividades/${id}/imagen`, formData);
     }
 
     // --- CAMBIAR ESTADO DE USUARIO (Aprobar/Rechazar/Bloquear) ---
@@ -660,12 +658,32 @@ export class CoordinadorService {
     }
 
     // --- EDITAR ACTIVIDAD ---
-    editarActividad(id: number, datos: any): Observable<any> {
-        return this.http.put(
-            `${this.apiUrl}/actividades/${id}`,
-            datos,
-            { headers: this.getAdminHeaders() }
+    actualizarActividad(id: number, datos: any, imagen?: File): Observable<any> {
+        // Usamos PUT con JSON para los datos (el endpoint debe soportarlo)
+        const payload = {
+            titulo: datos.titulo,
+            descripcion: datos.descripcion,
+            ubicacion: datos.ubicacion,
+            duracion_horas: datos.duracion_horas,
+            cupo_maximo: datos.cupo_maximo,
+            fecha_inicio: datos.fecha_inicio,
+            odsIds: datos.odsIds || [],
+            tiposIds: datos.tiposIds || []
+        };
+
+        return this.http.put<any>(`${this.apiUrl}/actividades/${id}`, payload, { headers: this.getAdminHeaders() }).pipe(
+            switchMap(res => {
+                if (imagen) {
+                    return this.subirImagenActividad(id, imagen).pipe(map(() => res));
+                }
+                return of(res);
+            })
         );
+    }
+
+    // Version antigua por compatibilidad
+    editarActividad(id: number, datos: any): Observable<any> {
+        return this.actualizarActividad(id, datos);
     }
 
     // --- SOLICITUDES PENDIENTES ---
@@ -731,6 +749,30 @@ export class CoordinadorService {
         return this.http.put(
             `${this.apiUrl}/organizaciones/${id}`,
             datos,
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    // --- GESTIÓN IDIOMAS VOLUNTARIO ---
+    addIdiomaVoluntario(idVoluntario: number, idIdioma: number, nivel: string): Observable<any> {
+        return this.http.post(
+            `${this.apiUrl}/voluntarios/${idVoluntario}/idiomas`,
+            { id_idioma: idIdioma, nivel },
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    updateIdiomaVoluntario(idVoluntario: number, idIdioma: number, nivel: string): Observable<any> {
+        return this.http.put(
+            `${this.apiUrl}/voluntarios/${idVoluntario}/idiomas/${idIdioma}`,
+            { nivel },
+            { headers: this.getAdminHeaders() }
+        );
+    }
+
+    removeIdiomaVoluntario(idVoluntario: number, idIdioma: number): Observable<any> {
+        return this.http.delete(
+            `${this.apiUrl}/voluntarios/${idVoluntario}/idiomas/${idIdioma}`,
             { headers: this.getAdminHeaders() }
         );
     }
@@ -869,6 +911,13 @@ export class CoordinadorService {
 
     private cargarPerfilDesdeBackend(backendUser: BackendUser, forzarRecarga = false) {
         if (!backendUser.id_usuario) return;
+
+        // VALIDACIÓN DE ROL: Si no es coordinador, no intentamos cargar perfil de coordinador
+        // Esto evita el error 403 cuando una Organización o Voluntario inicia sesión
+        if (backendUser.rol !== 'Coordinador') {
+            return;
+        }
+
         // Solo saltar si ya está cargado Y no estamos forzando recarga
         if (!forzarRecarga && this.perfilCargadoPara === backendUser.id_usuario) return;
 
