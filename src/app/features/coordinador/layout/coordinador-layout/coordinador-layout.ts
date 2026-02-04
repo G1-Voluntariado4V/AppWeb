@@ -54,7 +54,7 @@ export class CoordinadorLayout {
 
     return {
       nombre: nombreFull || 'Coordinador',
-      cargo: perfil.cargo,
+      rol: perfil.cargo,
       email: perfil.email,
       telefono: perfil.telefono,
       // PRIORIDAD: Google photo > Backend photo

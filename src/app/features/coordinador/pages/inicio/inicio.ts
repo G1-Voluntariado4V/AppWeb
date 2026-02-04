@@ -26,6 +26,7 @@ export class Inicio implements OnInit {
   avisos = signal<Aviso[]>([]);
   anioActual = signal(this.getAnioAcademico());
   cargando = signal(true);
+  cargandoAvisos = signal(true);
 
   // --- DATOS DEL PERFIL ---
   perfil = computed(() => this.coordinadorService.perfilUsuario());
@@ -46,18 +47,25 @@ export class Inicio implements OnInit {
 
   cargarDatos() {
     this.cargando.set(true);
+    this.cargandoAvisos.set(true);
 
+    // Al llamar a getAvisos, este ya llama internamente a getDashboardStats
+    // Por lo que podemos obtener ambos casi al mismo tiempo o dispararlos en paralelo
     this.coordinadorService.getDashboardStats().subscribe({
       next: (data) => {
         this.stats.set(data);
         this.cargando.set(false);
       },
-      error: () => {
-        this.cargando.set(false);
-      }
+      error: () => this.cargando.set(false)
     });
 
-    this.coordinadorService.getAvisos().subscribe(data => this.avisos.set(data));
+    this.coordinadorService.getAvisos().subscribe({
+      next: (data) => {
+        this.avisos.set(data);
+        this.cargandoAvisos.set(false);
+      },
+      error: () => this.cargandoAvisos.set(false)
+    });
   }
 
   // Navegar al hacer click en un aviso

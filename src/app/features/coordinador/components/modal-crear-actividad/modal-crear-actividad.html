@@ -1,168 +1,279 @@
-<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+<div class="fixed inset-0 bg-gray-600/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div
+    class="bg-white rounded-3xl shadow-xl w-full max-w-6xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in duration-300">
 
     <!-- Header -->
-    <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
-      <h2 class="text-2xl font-bold text-gray-900">Nueva Actividad</h2>
-      <button (click)="cerrar()" class="text-gray-400 hover:text-gray-600 transition-colors">
+    <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+      <div class="flex items-center gap-4">
+        <div
+          class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+          <i class="fa-solid" [class.fa-plus]="!modoEdicion()"
+            [class.fa-calendar-plus]="!modoEdicion() && esPeriodica()" [class.fa-pen-to-square]="modoEdicion()"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-black text-gray-900 leading-tight">
+            {{ modoEdicion() ? 'Editar Actividad' : (esPeriodica() ? 'Nueva Serie Periódica' : 'Nueva Actividad') }}
+          </h2>
+          <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+            {{ modoEdicion() ? 'Actualizando parámetros' : 'Configurando programa de impacto' }}
+          </p>
+        </div>
+      </div>
+      <button (click)="cerrar()"
+        class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all text-gray-400 hover:text-gray-900 border border-transparent hover:border-gray-200">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
     </div>
 
     <!-- Content -->
-    <div class="p-8 bg-gray-50/50 overflow-y-auto custom-scrollbar">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="p-8 overflow-y-auto flex-1 bg-gray-50/20 custom-scrollbar">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-        <!-- Columna Izquierda -->
-        <div class="lg:col-span-2 space-y-6">
+        <!-- PANEL IZQUIERDO: CONTENIDO -->
+        <div class="lg:col-span-12 xl:col-span-7 space-y-8">
 
-          <!-- Título -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-2">Título *</label>
-            <input type="text" [(ngModel)]="titulo"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400"
-              placeholder="Ej: Recogida de Alimentos">
-          </div>
-
-          <!-- Descripción -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
-            <textarea [(ngModel)]="descripcion" rows="4"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400 resize-none"
-              placeholder="Describe los detalles de la actividad..."></textarea>
-          </div>
-
-          <!-- Ubicación -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-2">Ubicación</label>
-            <input type="text" [(ngModel)]="ubicacion"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400"
-              placeholder="Ej: Centro Cívico de Pamplona">
-          </div>
-
-          <!-- ODS -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-4">
-              Selecciona los ODS
-              <span class="text-xs font-normal text-gray-400">({{ odsList().length }} disponibles)</span>
-            </label>
-
-            @if (odsList().length === 0) {
-            <p class="text-gray-400 text-sm">Cargando ODS...</p>
-            } @else {
-            <div class="flex flex-wrap gap-3">
-              @for (ods of odsList(); track ods.id) {
-              <div (click)="toggleOds(ods.id)"
-                class="cursor-pointer w-24 h-24 rounded-2xl flex flex-col items-start justify-between p-3 text-white transition-transform hover:scale-105 relative overflow-hidden shadow-md"
-                [class]="getOdsStyle(ods.id).color" [class.ring-4]="odsSeleccionados().includes(ods.id)"
-                [class.ring-blue-400]="odsSeleccionados().includes(ods.id)"
-                [class.opacity-60]="odsSeleccionados().length > 0 && !odsSeleccionados().includes(ods.id)">
-                <span class="text-xl font-black opacity-80">{{ ods.id }}</span>
-                <div>
-                  <i [class]="getOdsStyle(ods.id).icon + ' text-lg mb-1 block'"></i>
-                  <span class="text-[8px] font-bold uppercase leading-tight block truncate w-full">{{ ods.nombre
-                    }}</span>
-                </div>
+          <!-- Sección: Imagen de Portada -->
+          <div class="space-y-4">
+            <h3 class="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+              <span class="w-8 h-px bg-gray-100"></span> Imagen de Portada
+            </h3>
+            <div (click)="fileInput.click()"
+              class="relative bg-white rounded-3xl border-2 border-dashed border-gray-200 overflow-hidden aspect-video group cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all shadow-sm">
+              @if (previewUrl()) {
+              <img [src]="previewUrl()"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+              <div
+                class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                <span
+                  class="px-6 py-3 bg-white text-gray-900 text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl">Cambiar
+                  Portada</span>
+              </div>
+              } @else {
+              <div
+                class="w-full h-full flex flex-col items-center justify-center gap-4 text-gray-300 group-hover:text-blue-500 transition-colors">
+                <i class="fa-solid fa-cloud-arrow-up text-5xl"></i>
+                <p class="text-xs font-black uppercase tracking-widest">Sube una imagen impactante</p>
               </div>
               }
+              <input type="file" #fileInput (change)="onFileSelected($event)" class="hidden" accept="image/*">
+            </div>
+          </div>
+
+          <!-- Sección: Básicos -->
+          <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <h3 class="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+              <span class="w-8 h-px bg-gray-100"></span> Información Base
+            </h3>
+
+            <div class="space-y-6">
+              <!-- Fila: Organización y Ubicación -->
+              <div class="grid grid-cols-2 gap-6">
+                <!-- Organización -->
+                <div class="group">
+                  <label
+                    class="block text-xs font-black text-gray-400 uppercase mb-2 group-focus-within:text-blue-600 transition-colors">Entidad
+                    Responsable *</label>
+                  <select [ngModel]="organizacionId()" (ngModelChange)="organizacionId.set($event)"
+                    class="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-100 text-sm font-bold text-gray-700 outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all appearance-none cursor-pointer"
+                    [disabled]="modoEdicion()">
+                    <option [value]="null" disabled>Elegir entidad...</option>
+                    @for (org of organizaciones(); track org.id) {
+                    <option [ngValue]="org.id">{{ org.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <!-- Ubicación -->
+                <div class="group">
+                  <label
+                    class="block text-xs font-black text-gray-400 uppercase mb-2 group-focus-within:text-blue-600 transition-colors">Ubicación
+                    / Lugar *</label>
+                  <input type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)"
+                    class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-gray-700 font-bold outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all"
+                    placeholder="Lugar o remoto">
+                </div>
+              </div>
+
+              <div class="group">
+                <label
+                  class="block text-xs font-black text-gray-400 uppercase mb-2 group-focus-within:text-blue-600 transition-colors">Título
+                  del voluntariado *</label>
+                <input type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)"
+                  class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-gray-700 font-bold outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all"
+                  placeholder="Ej: Apoyo en Comedor Social">
+              </div>
+
+              <div class="group">
+                <label
+                  class="block text-xs font-black text-gray-400 uppercase mb-2 group-focus-within:text-blue-600 transition-colors">Propósito
+                  y Misión</label>
+                <textarea [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" rows="5"
+                  class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-gray-700 font-medium outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all resize-none"
+                  placeholder="Describe los objetivos de esta iniciativa..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: ODS Visual (MÁS GRANDES) -->
+          <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
+              <span class="w-10 h-1 bg-blue-600 rounded-full"></span> Objetivos de Impacto Social (ODS)
+            </h3>
+            <div class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+              @for (ods of odsList(); track ods.id) {
+              <button (click)="toggleOds(ods.id)"
+                class="group relative aspect-square rounded-2xl overflow-hidden transition-all duration-500 hover:scale-110 border-2"
+                [class.border-blue-600]="odsSeleccionados().includes(ods.id)"
+                [class.border-transparent]="!odsSeleccionados().includes(ods.id)" [title]="ods.nombre">
+                <img [src]="getOdsImageUrl(ods.id)" class="w-full h-full object-cover transition-all duration-300"
+                  [class.opacity-40]="!odsSeleccionados().includes(ods.id)"
+                  [class.grayscale]="!odsSeleccionados().includes(ods.id)"
+                  [class.scale-110]="odsSeleccionados().includes(ods.id)">
+                @if (odsSeleccionados().includes(ods.id)) {
+                <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center">
+                  <div
+                    class="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-[11px] text-white shadow-lg animate-in zoom-in-50">
+                    <i class="fa-solid fa-check"></i>
+                  </div>
+                </div>
+                }
+                <div
+                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-[9px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none font-black uppercase tracking-tight shadow-xl">
+                  {{ ods.nombre }}
+                </div>
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL DERECHO: CONFIGURACIÓN -->
+        <div class="lg:col-span-12 xl:col-span-5 space-y-8">
+
+          <!-- Card: Logística -->
+          <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <h3 class="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+              <span class="w-8 h-px bg-gray-100"></span> Logística y Tiempo
+            </h3>
+
+            <div class="grid grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Fecha Inicio</label>
+                <input type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)"
+                  class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border-none text-sm font-bold text-gray-700 outline-none">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Hora</label>
+                <input type="time" [ngModel]="horaInicio()" (ngModelChange)="horaInicio.set($event)"
+                  class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border-none text-sm font-bold text-gray-700 outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Max. Personas</label>
+                <div class="flex items-center bg-gray-50 rounded-2xl px-5 py-3.5">
+                  <input type="number" [ngModel]="cupoMaximo()" (ngModelChange)="cupoMaximo.set($event)"
+                    class="w-full bg-transparent text-sm font-bold text-gray-700 outline-none border-none">
+                  <i class="fa-solid fa-users text-gray-300 ml-2"></i>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Horas Estim.</label>
+                <div class="flex items-center bg-gray-50 rounded-2xl px-5 py-3.5">
+                  <input type="number" [ngModel]="duracionHoras()" (ngModelChange)="duracionHoras.set($event)"
+                    class="w-full bg-transparent text-sm font-bold text-gray-700 outline-none border-none">
+                  <span class="text-[10px] font-black text-gray-300 ml-2">HRS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Periodicidad -->
+          @if (!modoEdicion()) {
+          <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+                <span class="w-8 h-px bg-gray-100"></span> Programa Periódico
+              </h3>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" [ngModel]="esPeriodica()" (ngModelChange)="esPeriodica.set($event)"
+                  class="sr-only peer">
+                <div
+                  class="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                </div>
+              </label>
+            </div>
+
+            @if (esPeriodica()) {
+            <div class="space-y-6 animate-in slide-in-from-top-4 duration-500">
+              <div class="space-y-3">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Frecuencia de Repetición</label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button (click)="frecuencia.set('semanal')"
+                    class="px-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all"
+                    [class]="frecuencia() === 'semanal' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'">Semanal</button>
+                  <button (click)="frecuencia.set('quincenal')"
+                    class="px-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all"
+                    [class]="frecuencia() === 'quincenal' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'">15
+                    Días</button>
+                  <button (click)="frecuencia.set('mensual')"
+                    class="px-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all"
+                    [class]="frecuencia() === 'mensual' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'">Mensual</button>
+                  <button (click)="frecuencia.set('trimestral')"
+                    class="px-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all"
+                    [class]="frecuencia() === 'trimestral' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'">Trimest.</button>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <label class="text-[10px] font-black text-gray-400 uppercase">Número de Repeticiones</label>
+                </div>
+                <input type="range" [ngModel]="numRepeticiones()" (ngModelChange)="numRepeticiones.set($event)" min="2"
+                  max="15" step="1"
+                  class="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                <div class="flex justify-between text-[14px] font-black text-gray-900 px-1">
+                  <span>{{ numRepeticiones() }}</span>
+                  <span class="text-[10px] text-gray-400 uppercase">Actividades totales</span>
+                </div>
+              </div>
             </div>
             }
           </div>
+          }
 
-          <!-- Imagen -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-4">Imagen de Portada</label>
-
-            <input type="file" #fileInput (change)="onFileSelected($event)" class="hidden" accept="image/*">
-
-            <div (click)="fileInput.click()"
-              class="border-2 border-dashed border-gray-300 rounded-2xl h-32 flex flex-col items-center justify-center text-gray-400 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer group">
-
-              @if (imagenNombre()) {
-              <i class="fa-solid fa-check-circle text-3xl mb-2 text-green-500"></i>
-              <span class="text-sm font-bold text-gray-800">{{ imagenNombre() }}</span>
-              <span class="text-xs text-blue-500 mt-1">Clic para cambiar</span>
-              } @else {
-              <i class="fa-regular fa-image text-3xl mb-2 group-hover:text-blue-500 transition-colors"></i>
-              <span class="text-sm font-medium group-hover:text-blue-600 transition-colors">Subir imagen</span>
-              }
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Columna Derecha -->
-        <div class="space-y-6">
-
-          <!-- Organización -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-2">Organización *</label>
-            <select [(ngModel)]="organizacionId"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
-              <option [value]="null" disabled>Selecciona una organización</option>
-              @for (org of organizaciones(); track org.id) {
-              <option [value]="org.id">{{ org.nombre }}</option>
-              }
-            </select>
-          </div>
-
-          <!-- Tipos de Voluntariado -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-4">Tipos de Voluntariado</label>
-            <div class="space-y-3">
-              @if (tiposList().length === 0) {
-              <p class="text-gray-400 text-sm">Cargando tipos...</p>
-              } @else {
+          <!-- Sección: Categorías / Tipos de Voluntariado -->
+          <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+              <span class="w-8 h-px bg-gray-100"></span> Áreas de Voluntariado
+            </h3>
+            <div class="flex flex-wrap gap-2">
               @for (tipo of tiposList(); track tipo.id) {
-              <label
-                class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all hover:bg-gray-50"
-                [class.border-blue-500]="tiposSeleccionados().includes(tipo.id)"
-                [class.bg-blue-50]="tiposSeleccionados().includes(tipo.id)">
-                <input type="checkbox" [checked]="tiposSeleccionados().includes(tipo.id)" (change)="toggleTipo(tipo.id)"
-                  class="text-blue-600 focus:ring-blue-500 rounded">
-                <span class="text-sm font-medium text-gray-700">{{ tipo.nombreTipo }}</span>
-              </label>
-              }
+              <button (click)="toggleTipo(tipo.id)"
+                class="px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all border shadow-sm"
+                [class]="tiposSeleccionados().includes(tipo.id)
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100 ring-2 ring-blue-50'
+                    : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200 hover:text-gray-600'">
+                {{ tipo.nombreTipo }}
+              </button>
               }
             </div>
+            <p class="text-[9px] text-gray-300 font-bold uppercase tracking-wider pl-1">Selecciona los ámbitos que mejor
+              definen la actividad</p>
           </div>
-
-          <!-- Fecha -->
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <label class="block text-sm font-bold text-gray-700 mb-2">Fecha de Inicio *</label>
-            <input type="date" [(ngModel)]="fecha"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none cursor-pointer">
-          </div>
-
-          <!-- Duración y Cupo -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-              <label class="block text-sm font-bold text-gray-700 mb-2">Duración (h)</label>
-              <input type="number" [(ngModel)]="duracionHoras" min="1" max="24"
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
-            </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-              <label class="block text-sm font-bold text-gray-700 mb-2">Cupo máx.</label>
-              <input type="number" [(ngModel)]="cupoMaximo" min="1" max="100"
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
-            </div>
-          </div>
-
         </div>
-
       </div>
     </div>
 
     <!-- Footer -->
-    <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-end gap-3 shrink-0">
+    <div class="px-12 py-6 border-t border-gray-100 flex justify-end gap-4 bg-white sticky bottom-0">
       <button (click)="cerrar()"
-        class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+        class="px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-gray-900 transition-colors">
         Cancelar
       </button>
       <button (click)="guardar()"
-        class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-[#2563eb] hover:bg-blue-700 shadow-md transition-all transform hover:-translate-y-0.5">
-        Crear Actividad
+        class="px-10 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-gray-900 rounded-2xl shadow-xl shadow-blue-100 transition-all hover:-translate-y-1 active:scale-95">
+        {{ modoEdicion() ? 'Guardar Cambios' : (esPeriodica() ? 'Configurar Serie' : 'Crear Actividad') }}
       </button>
     </div>
 

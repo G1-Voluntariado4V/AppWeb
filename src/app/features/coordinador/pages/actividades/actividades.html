@@ -178,8 +178,12 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <div
-                  class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold">
+                  class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold overflow-hidden shadow-sm border border-gray-100 flex-shrink-0">
+                  @if (act.img_organizacion) {
+                  <img [src]="act.img_organizacion" class="w-full h-full object-cover">
+                  } @else {
                   {{ act.organizacion.substring(0,2).toUpperCase() }}
+                  }
                 </div>
                 <span class="text-sm font-medium text-gray-700">{{ act.organizacion }}</span>
               </div>
@@ -228,7 +232,7 @@
                   </svg>
                 </button>
 
-                <button (click)="editar(act.id, $event)"
+                <!-- <button (click)="editar(act.id, $event)"
                   class="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
                   title="Editar">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
@@ -237,7 +241,7 @@
                     <path
                       d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
                   </svg>
-                </button>
+                </button> -->
 
                 <button (click)="eliminar(act.id, $event)"
                   class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-500 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors border border-gray-200"
@@ -280,7 +284,8 @@
   </div>
 
   @if (modalCrearVisible()) {
-  <app-modal-crear-actividad (close)="cerrarModalCrear()" (save)="guardarNuevaActividad($event)">
+  <app-modal-crear-actividad [actividadEditar]="actividadParaEditar()" (close)="cerrarModalCrear()"
+    (save)="guardarNuevaActividad($event)">
   </app-modal-crear-actividad>
   }
 

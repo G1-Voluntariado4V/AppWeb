@@ -37,7 +37,7 @@
                         <div
                             class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors overflow-hidden shrink-0">
                             @if (vol.foto) {
-                            <img [src]="vol.foto" (error)="vol.foto = null" alt="Avatar"
+                            <img [src]="'http://localhost:8000' + vol.foto" (error)="vol.foto = null" alt="Avatar"
                                 class="w-full h-full object-cover">
                             } @else {
                             {{ vol.nombre.charAt(0) }}{{ vol.apellidos.charAt(0) }}

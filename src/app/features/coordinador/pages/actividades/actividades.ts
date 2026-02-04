@@ -169,12 +169,13 @@ export class Actividades implements OnInit {
     this.actividadParaEditar.set(null);
   }
 
-  guardarNuevaActividad(datos: any) {
+  guardarNuevaActividad(evento: { data: any, image: File | null }) {
+    const { data, image } = evento;
     const actividadEdit = this.actividadParaEditar();
 
     if (actividadEdit) {
       // Modo edición
-      this.coordinadorService.editarActividad(actividadEdit.id, datos).subscribe({
+      this.coordinadorService.actualizarActividad(actividadEdit.id, data, image || undefined).subscribe({
         next: () => {
           this.cargarDatos();
           this.toastService.success('Actividad actualizada correctamente');
@@ -186,7 +187,7 @@ export class Actividades implements OnInit {
       });
     } else {
       // Modo creación
-      this.coordinadorService.crearActividad(datos).subscribe({
+      this.coordinadorService.crearActividad(data, image || undefined).subscribe({
         next: () => {
           this.cargarDatos();
           this.toastService.success('Actividad creada correctamente');

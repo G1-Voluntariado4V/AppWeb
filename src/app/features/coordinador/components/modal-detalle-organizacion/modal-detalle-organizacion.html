@@ -1,245 +1,319 @@
-<div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity"
-  (click)="cerrar()">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="cerrar()">
+  <!-- Backdrop con blur moderno -->
+  <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-md transition-opacity"></div>
 
   <div
-    class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200"
+    class="relative bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300"
     (click)="$event.stopPropagation()">
 
-    <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-start bg-white shrink-0">
-      <div>
-        <h2 class="text-3xl font-bold text-gray-900">{{ org().nombre }}</h2>
-        <p class="text-gray-500 mt-1">{{ org().descripcion || 'Organización colaboradora' }}</p>
-
-        <div class="flex items-center gap-4 mt-3 text-sm text-gray-500">
-          <span class="px-2 py-0.5 rounded text-xs font-bold uppercase" [class]="getEstadoClase(org().estado)">
-            {{ org().estado }}
-          </span>
-          @if (org().direccion) {
-          <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot"></i> {{ org().direccion }}</span>
-          }
-          @if (org().sitioWeb) {
-          <span class="flex items-center gap-1"><i class="fa-solid fa-globe"></i> {{ org().sitioWeb }}</span>
-          }
-        </div>
+    <!-- Encabezado con degradado -->
+    <div class="relative bg-gradient-to-r from-slate-900 to-slate-800 shrink-0">
+      <!-- Patrón decorativo de fondo -->
+      <div
+        class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]">
       </div>
 
-      <div class="flex items-center gap-3">
-        @if (!editando()) {
-        <button (click)="iniciarEdicion()"
-          class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold hover:bg-violet-50 hover:border-violet-200 hover:text-violet-600 transition-colors">
-          <i class="fa-solid fa-pen mr-1"></i> Editar
-        </button>
-        }
-        <button (click)="cerrar()"
-          class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+      <div class="relative px-8 py-8 flex flex-col md:flex-row gap-6 items-start justify-between">
+        <div class="flex items-center gap-6">
+          <!-- Avatar con anillo -->
+          <div class="relative group">
+            <div
+              class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-200">
+            </div>
+            <div class="relative w-24 h-24 rounded-2xl bg-white p-1 shadow-xl">
+              @if (org().foto) {
+              <img [src]="org().foto" class="w-full h-full object-cover rounded-xl" alt="Logo">
+              } @else {
+              <div
+                class="w-full h-full rounded-xl bg-slate-100 flex items-center justify-center text-3xl font-black text-slate-300">
+                {{ org().nombre.substring(0,2).toUpperCase() }}
+              </div>
+              }
+            </div>
+          </div>
+
+          <div class="text-white space-y-2">
+            <h2 class="text-3xl font-black tracking-tight leading-none">{{ org().nombre }}</h2>
+            <div class="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-300">
+              <span class="px-2.5 py-1 rounded-lg bg-white/10 border border-white/10 backdrop-blur-sm text-white">
+                {{ org().estado }}
+              </span>
+              @if (org().direccion) {
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-blue-400"></i> {{
+                org().direccion }}</span>
+              }
+              @if (org().sitioWeb) {
+              <a [href]="org().sitioWeb" target="_blank"
+                class="flex items-center gap-1.5 hover:text-blue-400 transition-colors">
+                <i class="fa-solid fa-link text-blue-400"></i> Website
+              </a>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción en el header -->
+        <div class="flex items-center gap-3 self-start md:self-center">
+          @if (!editando()) {
+          <button (click)="iniciarEdicion()"
+            class="group flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md rounded-xl text-white text-sm font-bold transition-all hover:scale-105 active:scale-95">
+            <i class="fa-solid fa-pen-to-square group-hover:rotate-12 transition-transform"></i>
+            <span>Editar</span>
+          </button>
+          }
+          <button (click)="cerrar()"
+            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all hover:rotate-90">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
       </div>
     </div>
 
-    <div class="p-8 bg-gray-50/50 overflow-y-auto flex-1">
-      <!-- Vista de solo lectura -->
+    <!-- Contenido Scrollable -->
+    <div class="flex-1 overflow-y-auto bg-gray-50/50 p-6 md:p-8">
+
       @if (!editando()) {
-      <div class="flex flex-col lg:flex-row gap-6">
+      <!-- VISTA DE LECTURA -->
+      <div class="flex flex-col xl:flex-row gap-8">
 
-        <!-- Información de contacto -->
-        <div class="w-full lg:w-1/3 space-y-6">
-          <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-bold text-gray-900 mb-6">Información de Contacto</h3>
-            <div class="space-y-5">
-              <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">EMAIL</p>
-                <p class="font-bold text-gray-900 text-sm break-all">{{ org().email }}</p>
+        <!-- Columna Izquierda: Info y Stats -->
+        <div class="w-full xl:w-80 space-y-6 shrink-0">
+
+          <!-- Tarjeta de Contacto -->
+          <div class="bg-white p-6 rounded-3xl shadow-[0_2px_20px_-4px_rgba(0,0,0,0.1)] border border-gray-100">
+            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Contacto Directo</h3>
+            <div class="space-y-6">
+              <div class="group flex items-start gap-4">
+                <div
+                  class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <i class="fa-regular fa-envelope text-lg"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-gray-400 mb-0.5">CORREO ELECTRÓNICO</p>
+                  <p class="text-sm font-bold text-gray-800 break-all select-all">{{ org().email }}</p>
+                </div>
               </div>
-              <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">TELÉFONO</p>
-                <p class="font-bold text-gray-900 text-sm">{{ org().telefono || 'No proporcionado' }}</p>
+
+              <div class="group flex items-start gap-4">
+                <div
+                  class="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-phone text-lg"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-gray-400 mb-0.5">TELÉFONO</p>
+                  <p class="text-sm font-bold text-gray-800">{{ org().telefono || 'Sin asignar' }}</p>
+                </div>
               </div>
-              @if (org().cif) {
-              <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CIF</p>
-                <p class="font-bold text-gray-900 text-sm">{{ org().cif }}</p>
+
+              <div class="pt-4 border-t border-gray-50">
+                <div class="flex justify-between items-center bg-gray-50 rounded-xl p-3">
+                  <span class="text-xs font-bold text-gray-500">CIF</span>
+                  <span class="text-sm font-mono font-bold text-gray-800">{{ org().cif || '---' }}</span>
+                </div>
               </div>
-              }
-              @if (org().fecha_registro) {
-              <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">FECHA DE REGISTRO</p>
-                <p class="font-bold text-gray-900 text-sm">{{ org().fecha_registro }}</p>
-              </div>
-              }
             </div>
           </div>
 
-          <!-- Estadísticas -->
-          <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Estadísticas</h3>
-            <div class="space-y-3">
-              <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                <span class="text-sm text-gray-600">Actividades publicadas</span>
-                <span class="text-lg font-bold text-blue-600">{{ org().actividadesCount || 0 }}</span>
+          <!-- Quick Stats -->
+          <div class="grid grid-cols-1 gap-4">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-2xl font-black text-gray-900">{{ org().actividadesCount || 0 }}</p>
+                <p class="text-xs font-bold text-gray-400 uppercase">Actividades</p>
+              </div>
+              <div
+                class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-layer-group"></i>
               </div>
             </div>
           </div>
+
         </div>
 
-        <!-- Descripción y más info -->
-        <div class="w-full lg:w-2/3 space-y-6">
-          <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Acerca de la organización</h3>
-            <p class="text-gray-600 text-sm leading-relaxed mb-6">
-              {{ org().descripcion || 'No hay descripción disponible para esta organización.' }}
+        <!-- Columna Derecha: Descripción y Actividades -->
+        <div class="flex-1 space-y-6 min-w-0">
+
+          <!-- Acerca de -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
+            <div
+              class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full pointer-events-none">
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-4 relative z-10">Sobre la organización</h3>
+            <p class="text-gray-600 leading-relaxed relative z-10">
+              {{ org().descripcion || 'La organización no ha proporcionado una descripción detallada.' }}
             </p>
-
-            @if (org().direccion) {
-            <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-              <p class="text-xs text-blue-600 font-bold uppercase mb-1">DIRECCIÓN</p>
-              <p class="text-sm font-bold text-gray-900">
-                <i class="fa-solid fa-location-dot mr-2 text-blue-500"></i>{{ org().direccion }}
-              </p>
-            </div>
-            }
-
-            @if (org().sitioWeb) {
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <p class="text-xs text-gray-500 font-bold uppercase mb-1">SITIO WEB</p>
-              <a [href]="org().sitioWeb" target="_blank" class="text-sm font-bold text-blue-600 hover:underline">
-                <i class="fa-solid fa-globe mr-2"></i>{{ org().sitioWeb }}
-              </a>
-            </div>
-            }
           </div>
 
-          <!-- Listado de Actividades -->
-          <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <div class="flex justify-between items-center mb-6">
-              <h3 class="text-lg font-bold text-gray-900">Actividades ({{ actividades().length }})</h3>
-              @if (cargandoActividades()) {
-              <i class="fa-solid fa-circle-notch fa-spin text-violet-500"></i>
-              }
+          <!-- Lista de Actividades -->
+          <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+              <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                <i class="fa-solid fa-calendar-days text-gray-400"></i> Historial de Actividades
+              </h3>
+              <span class="px-2.5 py-0.5 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-600">
+                {{ actividades().length }}
+              </span>
             </div>
 
-            @if (actividades().length > 0) {
-            <div class="space-y-3">
+            <div class="divide-y divide-gray-50 max-h-[400px] overflow-y-auto">
+              @if (cargandoActividades()) {
+              <div class="p-10 flex flex-col items-center justify-center text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-blue-500"></i>
+                <p class="text-sm animate-pulse">Cargando historial...</p>
+              </div>
+              } @else if (actividades().length > 0) {
               @for (act of actividades(); track act.id) {
               <div (click)="verActividad(act)"
-                class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-transparent hover:border-violet-200 hover:bg-violet-50/30 transition-all cursor-pointer group">
-                <div class="flex-1 min-w-0 pr-4">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase" [ngClass]="{
-                          'bg-green-100 text-green-700': act.estado === 'Publicada',
-                          'bg-blue-100 text-blue-700': act.estado === 'Finalizada',
-                          'bg-orange-100 text-orange-700': act.estado === 'En revision',
-                          'bg-red-100 text-red-700': act.estado === 'Cancelada' || act.estado === 'Rechazada'
+                class="group p-5 hover:bg-blue-50/30 transition-all cursor-pointer flex gap-4 items-start">
+
+                <div
+                  class="w-12 h-12 rounded-2xl bg-gray-100 text-gray-500 flex flex-col items-center justify-center shrink-0 border border-gray-200 group-hover:border-blue-200 group-hover:bg-white group-hover:text-blue-600 transition-colors">
+                  <span class="text-[10px] font-bold uppercase leading-none">{{ act.fecha_inicio | date:'MMM' }}</span>
+                  <span class="text-lg font-black leading-none">{{ act.fecha_inicio | date:'dd' }}</span>
+                </div>
+
+                <div class="flex-1 min-w-0 pt-0.5">
+                  <h4 class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{{ act.titulo
+                    }}</h4>
+                  <div class="flex items-center gap-3 mt-1.5">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
+                      [ngClass]="{
+                           'bg-green-50 text-green-700 border-green-100': act.estado === 'Publicada',
+                           'bg-blue-50 text-blue-700 border-blue-100': act.estado === 'Finalizada',
+                           'bg-orange-50 text-orange-700 border-orange-100': act.estado === 'En revision',
+                           'bg-red-50 text-red-700 border-red-100': act.estado === 'Cancelada' || act.estado === 'Rechazada'
                         }">
                       {{ act.estado }}
                     </span>
-                    <span class="text-xs text-gray-400 font-medium">
-                      {{ act.fecha_inicio | date:'dd MMM yyyy' }}
+                    <span class="text-xs text-gray-400 flex items-center gap-1">
+                      <i class="fa-solid fa-users text-[10px]"></i>
+                      {{ act.inscritos_confirmados || 0 }} voluntarios
                     </span>
                   </div>
-                  <h4 class="font-bold text-gray-900 truncate group-hover:text-violet-600 transition-colors">
-                    {{ act.titulo }}
-                  </h4>
                 </div>
-                <div class="flex items-center gap-4 shrink-0">
-                  <div class="text-right hidden sm:block">
-                    <p class="text-xs font-bold text-gray-900">{{ act.inscritos_confirmados || 0 }} / {{ act.cupo_maximo
-                      ||
-                      '∞' }}</p>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">VOLUNTARIOS</p>
-                  </div>
-                  <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-violet-400 transition-colors"></i>
+
+                <div
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all">
+                  <i class="fa-solid fa-chevron-right"></i>
                 </div>
               </div>
               }
-            </div>
-            } @else if (!cargandoActividades()) {
-            <div class="text-center py-8">
-              <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <i class="fa-solid fa-calendar-xmark text-gray-400"></i>
+              } @else {
+              <div class="p-12 text-center">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fa-regular fa-folder-open text-2xl text-gray-300"></i>
+                </div>
+                <h4 class="text-gray-900 font-bold mb-1">Sin actividades</h4>
+                <p class="text-gray-500 text-sm">Esta organización no ha creado actividades aún.</p>
               </div>
-              <p class="text-gray-500 text-sm">Esta organización aún no ha publicado ninguna actividad.</p>
+              }
             </div>
-            }
           </div>
         </div>
       </div>
       }
 
-      <!-- Vista de edición -->
       @if (editando()) {
-      <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 class="text-lg font-bold text-gray-900 mb-6">Editar información</h3>
+      <!-- MODO EDICIÓN -->
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-white p-8 rounded-3xl shadow-[0_2px_20px_-4px_rgba(0,0,0,0.1)] border border-gray-100">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="md:col-span-2">
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">
-              Nombre de la organización <span class="text-red-500">*</span>
-            </label>
-            <input type="text" [(ngModel)]="nombreEditable"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500">
+          <div class="mb-8 pb-6 border-b border-gray-50">
+            <h3 class="text-2xl font-black text-gray-900">Editar Perfil</h3>
+            <p class="text-gray-500 text-sm mt-1">Actualiza la información pública de la organización.</p>
           </div>
 
-          <div>
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Teléfono</label>
-            <input type="tel" [(ngModel)]="telefonoEditable"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+
+            <!-- Nombre -->
+            <div class="md:col-span-2 space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre Oficial <span
+                  class="text-red-500">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-building absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" [(ngModel)]="nombreEditable"
+                  class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-gray-900 font-bold text-sm transition-all"
+                  placeholder="Nombre de la ONG">
+              </div>
+            </div>
+
+            <!-- Teléfono -->
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Teléfono</label>
+              <div class="relative">
+                <i class="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="tel" [(ngModel)]="telefonoEditable"
+                  class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-gray-900 text-sm transition-all"
+                  placeholder="+34 600 000 000">
+              </div>
+            </div>
+
+            <!-- Sitio Web -->
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Web</label>
+              <div class="relative">
+                <i class="fa-solid fa-globe absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" [(ngModel)]="sitioWebEditable"
+                  class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-gray-900 text-sm transition-all"
+                  placeholder="https://ejemplo.org">
+              </div>
+            </div>
+
+            <!-- Dirección -->
+            <div class="md:col-span-2 space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Dirección Física</label>
+              <div class="relative">
+                <i class="fa-solid fa-map-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" [(ngModel)]="direccionEditable"
+                  class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-gray-900 text-sm transition-all"
+                  placeholder="Calle Principal 123, Ciudad">
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="md:col-span-2 space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Descripción</label>
+              <textarea [(ngModel)]="descripcionEditable" rows="5"
+                class="w-full p-4 bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-gray-900 text-sm transition-all resize-none"
+                placeholder="Describe la misión y visión de la organización..."></textarea>
+            </div>
+
+            <!-- Campo Readonly de Email -->
+            <div class="md:col-span-2 mt-2 p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                <i class="fa-solid fa-lock text-sm"></i>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">EMAIL REGISTRADO</p>
+                <p class="text-sm font-bold text-blue-900">{{ org().email }}</p>
+              </div>
+            </div>
+
           </div>
 
-          <div>
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Email</label>
-            <p class="text-gray-500 text-sm py-3">{{ org().email }} <span class="text-xs text-gray-400">(no
-                editable)</span></p>
+          <!-- Botones de Acción Formulario -->
+          <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-50">
+            <button (click)="cancelarEdicion()"
+              class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors text-sm">
+              Cancelar
+            </button>
+            <button (click)="guardarCambios()" [disabled]="guardando()"
+              class="px-8 py-3 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-black hover:to-slate-900 text-white rounded-xl font-bold shadow-lg shadow-blue-900/10 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (guardando()) {
+              <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Guardando...
+              } @else {
+              Guardar Cambios
+              }
+            </button>
           </div>
 
-          <div class="md:col-span-2">
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Dirección</label>
-            <input type="text" [(ngModel)]="direccionEditable"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500">
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Sitio Web</label>
-            <input type="text" [(ngModel)]="sitioWebEditable" placeholder="https://..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500">
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Descripción</label>
-            <textarea [(ngModel)]="descripcionEditable" rows="4" placeholder="Describe la organización..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-violet-500 focus:ring-violet-500 resize-none"></textarea>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-100">
-          <button (click)="cancelarEdicion()"
-            class="px-6 py-2.5 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition-colors">
-            Cancelar
-          </button>
-          <button (click)="guardarCambios()" [disabled]="guardando()"
-            class="px-6 py-2.5 bg-violet-600 text-white font-bold rounded-xl shadow-sm hover:bg-violet-700 transition-all disabled:opacity-50">
-            @if (guardando()) {
-            <i class="fa-solid fa-spinner fa-spin mr-2"></i> Guardando...
-            } @else {
-            <i class="fa-solid fa-check mr-2"></i> Guardar cambios
-            }
-          </button>
         </div>
       </div>
       }
-    </div>
 
-    @if (!editando()) {
-    <div class="px-8 py-4 bg-white border-t border-gray-100 flex justify-end">
-      <button (click)="cerrar()"
-        class="px-6 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
-        Cerrar
-      </button>
     </div>
-    }
-
   </div>
-
   @if (actividadSeleccionada()) {
   <app-modal-detalle-actividad [act]="actividadSeleccionada()!"
     (close)="cerrarModalActividad()"></app-modal-detalle-actividad>

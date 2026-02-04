@@ -85,7 +85,7 @@
       <div class="absolute right-0 top-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8"></div>
       <div class="flex justify-between items-start">
         <div>
-          <p class="text-xs font-bold uppercase tracking-wider text-amber-100 mb-1">Pendientes</p>
+          <p class="text-xs font-bold uppercase tracking-wider text-amber-100 mb-1">Voluntarios Pendientes</p>
           @if (cargando()) {
           <span class="text-4xl font-bold animate-pulse">...</span>
           } @else {
@@ -164,6 +164,12 @@
       </div>
 
       <div class="space-y-3">
+        @if (cargandoAvisos()) {
+        <div class="flex flex-col items-center justify-center py-8 text-gray-400 gap-3">
+          <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-500"></i>
+          <p class="text-sm animate-pulse">Buscando avisos...</p>
+        </div>
+        } @else {
         @for (aviso of avisos(); track aviso.id) {
         <div class="p-3 rounded-xl flex items-start gap-3 transition-all cursor-pointer"
           [class.bg-orange-50]="aviso.tipo === 'alerta'" [class.hover:bg-orange-100]="aviso.tipo === 'alerta'"
@@ -193,6 +199,7 @@
           <i class="fa-solid fa-bell-slash text-3xl mb-2"></i>
           <p class="text-sm">Sin avisos</p>
         </div>
+        }
         }
       </div>
     </div>

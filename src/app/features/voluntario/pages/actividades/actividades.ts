@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VoluntarioService, ActividadDisponible } from '../../services/voluntario.service';
 import { environment } from '../../../../../environments/environment';
+import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/modal-detalle-actividad';
 
 @Component({
     selector: 'app-actividades-disponibles',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ModalDetalleActividad],
     templateUrl: './actividades.html',
 })
 export class ActividadesDisponibles implements OnInit {
@@ -33,9 +34,7 @@ export class ActividadesDisponibles implements OnInit {
     cargando = computed(() => this.voluntarioService.cargando());
     modalAbierto = signal(false);
     actividadSeleccionada = signal<ActividadDisponible | null>(null);
-    cargandoDetalle = signal(false);
-    procesando = signal(false);
-    mensaje = signal<{ tipo: 'success' | 'error'; texto: string } | null>(null);
+    // cargandoDetalle, procesando y mensaje se mueven al componente modal
 
     // Modal de Organización
     modalOrgAbierto = signal(false);
@@ -202,10 +201,9 @@ export class ActividadesDisponibles implements OnInit {
     }));
 
     ngOnInit() {
-        // Los datos ya se cargan automáticamente desde el servicio
-        // pero podemos forzar una recarga si es necesario
+        // Cargar actividades si no hay ninguna
         if (this.actividadesBase().length === 0) {
-            this.voluntarioService.cargarTodo();
+            this.voluntarioService.cargarActividadesDisponibles();
         }
     }
 
@@ -220,39 +218,21 @@ export class ActividadesDisponibles implements OnInit {
     }
 
     abrirModal(actividad: ActividadDisponible) {
-        // Mostrar el modal inmediatamente con los datos básicos
         this.actividadSeleccionada.set(actividad);
         this.modalAbierto.set(true);
-        this.mensaje.set(null);
-        this.cargandoDetalle.set(true);
-
-        // Cargar los detalles completos (incluyendo ODS y tipos)
-        this.voluntarioService.getDetalleActividad(actividad.id_actividad).subscribe({
-            next: (detalleCompleto) => {
-                if (detalleCompleto) {
-                    // Preservar el estado de inscripción de la actividad original
-                    detalleCompleto.inscrito = actividad.inscrito;
-                    detalleCompleto.estadoInscripcion = actividad.estadoInscripcion;
-
-                    // Preservar imagen si el detalle no la trae
-                    if (!detalleCompleto.imagen && actividad.imagen) {
-                        detalleCompleto.imagen = actividad.imagen;
-                    }
-
-                    this.actividadSeleccionada.set(detalleCompleto);
-                }
-                this.cargandoDetalle.set(false);
-            },
-            error: () => {
-                this.cargandoDetalle.set(false);
-            }
-        });
     }
 
     cerrarModal() {
         this.modalAbierto.set(false);
         this.actividadSeleccionada.set(null);
-        this.mensaje.set(null);
+    }
+
+    alCambiarEstado() {
+        // Si usamos filtros locales, no hace falta recargar todo salvo que queramos info fresca del backend
+        // Pero como inscribirse actualiza el servicio localmente, el efecto debería propagarse.
+        // Si queremos forzar recarga del catálogo:
+        // this.voluntarioService.cargarActividadesDisponibles();
+        // O dejar que el servicio maneje la consistencia.
     }
 
     abrirModalOrg(idOrganizacion: number) {
@@ -271,100 +251,6 @@ export class ActividadesDisponibles implements OnInit {
     cerrarModalOrg() {
         this.modalOrgAbierto.set(false);
         this.orgSeleccionada.set(null);
-    }
-
-    inscribirse(actividad: ActividadDisponible) {
-        this.procesando.set(true);
-        this.mensaje.set(null);
-
-        this.voluntarioService.inscribirse(actividad.id_actividad).subscribe({
-            next: (result) => {
-                // Manejo especial para conflicto (ya inscrito)
-                const yaInscrito = !result.success && (
-                    (result.mensaje && (result.mensaje.includes('409') || result.mensaje.toLowerCase().includes('conflict') || result.mensaje.toLowerCase().includes('ya est')))
-                );
-
-                if (result.success || yaInscrito) {
-                    const texto = yaInscrito
-                        ? 'Ya estabas inscrito en esta actividad. Estado actualizado.'
-                        : '¡Te has inscrito correctamente! Tu solicitud está pendiente de aprobación.';
-
-                    this.mensaje.set({ type: 'success', texto: texto } as any); // Type cast rápido si la interfaz difiere
-
-                    // Si estaba ya inscrito, forzamos actualización visual local
-                    if (yaInscrito) {
-                        this.voluntarioService.actividadesDisponibles.update(acts =>
-                            acts.map(a => a.id_actividad === actividad.id_actividad
-                                ? { ...a, inscrito: true, estadoInscripcion: 'Pendiente' }
-                                : a
-                            )
-                        );
-                        // Y en la seleccionada
-                        if (this.actividadSeleccionada()?.id_actividad === actividad.id_actividad) {
-                            this.actividadSeleccionada.update(a => a ? ({ ...a, inscrito: true, estadoInscripcion: 'Pendiente' }) : null);
-                        }
-                    }
-
-                    // Cerrar modal después de 2 segundos
-                    setTimeout(() => this.cerrarModal(), 2000);
-                } else {
-                    this.mensaje.set({ tipo: 'error', texto: result.mensaje });
-                }
-                this.procesando.set(false);
-            },
-            error: (err) => {
-                console.error('Error en suscripción:', err);
-                this.mensaje.set({ tipo: 'error', texto: 'Error al procesar la inscripción.' });
-                this.procesando.set(false);
-            }
-        });
-    }
-
-    desapuntarse(actividad: ActividadDisponible) {
-        if (!confirm('¿Seguro que quieres desapuntarte de esta actividad?')) return;
-
-        this.procesando.set(true);
-        this.mensaje.set(null);
-
-        this.voluntarioService.desapuntarse(actividad.id_actividad).subscribe({
-            next: (result) => {
-                // Manejo especial para 404 (ya eliminado)
-                const yaEliminado = !result.success && (
-                    (result.mensaje && (result.mensaje.includes('404') || result.mensaje.toLowerCase().includes('not found') || result.mensaje.toLowerCase().includes('no encontrada')))
-                );
-
-                if (result.success || yaEliminado) {
-                    const texto = yaEliminado
-                        ? 'Ya no estabas inscrito en esta actividad. Estado actualizado.'
-                        : 'Te has desapuntado correctamente.';
-
-                    this.mensaje.set({ type: 'success', texto: texto } as any);
-
-                    // Forzar actualización visual local
-                    this.voluntarioService.actividadesDisponibles.update(acts =>
-                        acts.map(a => a.id_actividad === actividad.id_actividad
-                            ? { ...a, inscrito: false, estadoInscripcion: null }
-                            : a
-                        )
-                    );
-
-                    // Y en la seleccionada
-                    if (this.actividadSeleccionada()?.id_actividad === actividad.id_actividad) {
-                        this.actividadSeleccionada.update(a => a ? ({ ...a, inscrito: false, estadoInscripcion: null }) : null);
-                    }
-
-                    setTimeout(() => this.cerrarModal(), 1500);
-                } else {
-                    this.mensaje.set({ tipo: 'error', texto: result.mensaje });
-                }
-                this.procesando.set(false);
-            },
-            error: (err) => {
-                console.error('Error desapuntándose:', err);
-                this.mensaje.set({ tipo: 'error', texto: 'Error al desapuntarse. Intenta de nuevo.' });
-                this.procesando.set(false);
-            }
-        });
     }
 
     getPlazasTexto(act: ActividadDisponible): string {

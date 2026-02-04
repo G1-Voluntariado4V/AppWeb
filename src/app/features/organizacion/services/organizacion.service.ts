@@ -50,6 +50,7 @@ export interface ODS {
   id: number;
   nombre: string;
   color?: string;
+  imgUrl?: string;
 }
 
 export interface TipoVoluntariado {
@@ -278,6 +279,9 @@ export class OrganizacionService {
 
   // --- CARGAR CATÁLOGOS (ODS y Tipos) ---
   private cargarCatalogos() {
+    // Evitar recargar si ya tenemos datos
+    if (this._odsList().length > 0) return;
+
     // ODS - Ruta correcta: /ods (no /catalogos/ods)
     this.http.get<any[]>(`${this.apiUrl}/ods`)
       .pipe(catchError(() => of([])))
@@ -285,7 +289,8 @@ export class OrganizacionService {
         this._odsList.set(data.map(o => ({
           id: o.id || o.id_ods,
           nombre: o.nombre,
-          color: this.getOdsColor(o.id || o.id_ods)
+          color: this.getOdsColor(o.id || o.id_ods),
+          imgUrl: o.imgUrl ? `${this.apiUrl.replace(/\/api\/?$/, '')}${o.imgUrl}` : undefined
         })));
       });
 

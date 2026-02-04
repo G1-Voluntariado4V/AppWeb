@@ -198,18 +198,43 @@
             <!-- ODS -->
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-3">ODS Relacionados</label>
-              <div class="flex flex-wrap gap-2">
+              <div class="flex flex-wrap gap-3">
                 @for (ods of odsList(); track ods.id) {
-                <button type="button" (click)="toggleOds(ods.id)"
-                  class="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
-                  [class.opacity-40]="!odsSeleccionados().includes(ods.id)"
-                  [class.ring-2]="odsSeleccionados().includes(ods.id)"
-                  [class.ring-offset-2]="odsSeleccionados().includes(ods.id)" [style.background-color]="ods.color"
-                  [style.color]="'white'">
-                  <span class="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-[10px]">{{ ods.id
-                    }}</span>
-                  <span class="hidden sm:inline">{{ ods.nombre }}</span>
-                </button>
+                <div (click)="toggleOds(ods.id)"
+                  class="cursor-pointer w-20 h-20 rounded-xl overflow-hidden transition-transform hover:scale-105 relative shadow-md border-2"
+                  [class.ring-4]="odsSeleccionados().includes(ods.id)"
+                  [class.ring-blue-500]="odsSeleccionados().includes(ods.id)"
+                  [class.border-blue-500]="odsSeleccionados().includes(ods.id)"
+                  [class.border-gray-200]="!odsSeleccionados().includes(ods.id)"
+                  [class.opacity-40]="odsSeleccionados().length > 0 && !odsSeleccionados().includes(ods.id)">
+
+                  @if (ods.imgUrl) {
+                  <!-- Imagen del ODS desde el backend -->
+                  <img [src]="ods.imgUrl" [alt]="ods.nombre" class="w-full h-full object-cover"
+                    (error)="$any($event.target).style.display='none'; $any($event.target).nextElementSibling.style.display='flex'">
+                  <!-- Fallback oculto que se muestra si la imagen falla -->
+                  <div class="w-full h-full flex-col items-center justify-center p-2 text-white hidden"
+                    [style.background-color]="ods.color">
+                    <span class="text-lg font-black">{{ ods.id }}</span>
+                    <span class="text-[7px] font-bold uppercase text-center leading-tight">{{ ods.nombre }}</span>
+                  </div>
+                  } @else {
+                  <!-- Fallback: color de fondo -->
+                  <div class="w-full h-full flex flex-col items-center justify-center p-2 text-white"
+                    [style.background-color]="ods.color">
+                    <span class="text-lg font-black">{{ ods.id }}</span>
+                    <span class="text-[7px] font-bold uppercase text-center leading-tight">{{ ods.nombre }}</span>
+                  </div>
+                  }
+
+                  <!-- Indicador de selección -->
+                  @if (odsSeleccionados().includes(ods.id)) {
+                  <div
+                    class="absolute top-1 right-1 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-check text-xs"></i>
+                  </div>
+                  }
+                </div>
                 } @empty {
                 <p class="text-gray-400 text-sm">Cargando ODS...</p>
                 }

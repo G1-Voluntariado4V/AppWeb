@@ -1,80 +1,82 @@
 <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-    (click)="close.emit()">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
-        (click)="$event.stopPropagation()">
+  (click)="close.emit()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200"
+    (click)="$event.stopPropagation()">
 
-        <!-- Header -->
-        <div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white text-center">
-            <button (click)="close.emit()"
-                class="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
-                <i class="fa-solid fa-xmark text-2xl"></i>
-            </button>
-            <div
-                class="w-20 h-20 bg-white text-blue-600 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-3 shadow-lg">
-                {{ vol().nombre.charAt(0) }}{{ vol().apellidos.charAt(0) }}
-            </div>
-            <h2 class="text-xl font-bold">{{ vol().nombre }} {{ vol().apellidos }}</h2>
-            <p class="text-blue-100 text-sm">{{ vol().email }}</p>
+    <!-- Header -->
+    <div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white text-center">
+      <button (click)="close.emit()" class="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
+        <i class="fa-solid fa-xmark text-2xl"></i>
+      </button>
+      <div
+        class="w-24 h-24 bg-white text-blue-600 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-3 shadow-lg overflow-hidden border-4 border-white/30">
+        @if (vol().foto) {
+        <img [src]="'http://localhost:8000' + vol().foto" class="w-full h-full object-cover">
+        } @else {
+        {{ vol().nombre.charAt(0) }}{{ vol().apellidos.charAt(0) }}
+        }
+      </div>
+      <h2 class="text-xl font-bold">{{ vol().nombre }} {{ vol().apellidos }}</h2>
+      <p class="text-blue-100 text-sm">{{ vol().email }}</p>
 
-            <div class="mt-4 flex justify-center">
-                <span
-                    class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-white/20 backdrop-blur-sm">
-                    {{ vol().estado_solicitud }}
-                </span>
-            </div>
-        </div>
-
-        <!-- Body -->
-        <div class="p-6 space-y-6">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <p class="text-xs text-gray-500 mb-1">Teléfono</p>
-                    <p class="font-medium text-gray-900">{{ vol().telefono || 'No disponible' }}</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <p class="text-xs text-gray-500 mb-1">DNI</p>
-                    <p class="font-medium text-gray-900">{{ vol().dni || 'No disponible' }}</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <p class="text-xs text-gray-500 mb-1">Fecha Nacimiento</p>
-                    <p class="font-medium text-gray-900">{{ formatearFecha(vol().fecha_nac) }}</p>
-                </div>
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <p class="text-xs text-gray-500 mb-1">Solicitado el</p>
-                    <p class="font-medium text-gray-900">{{ formatearFecha(vol().fecha_solicitud) }}</p>
-                </div>
-            </div>
-
-            @if (vol().bio) {
-            <div>
-                <h3 class="text-sm font-bold text-gray-900 mb-2">Sobre mí</h3>
-                <p class="text-sm text-gray-600 bg-gray-50 p-4 rounded-xl leading-relaxed">
-                    {{ vol().bio }}
-                </p>
-            </div>
-            }
-        </div>
-
-        <!-- Actions -->
-        <div class="p-6 bg-gray-50 border-t flex gap-3">
-            @if (vol().estado_solicitud === 'Pendiente') {
-            <button (click)="gestionar('Rechazada')" [disabled]="procesando()"
-                class="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-colors disabled:opacity-50">
-                Rechazar
-            </button>
-            <button (click)="gestionar('Aceptada')" [disabled]="procesando()"
-                class="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-200 disabled:opacity-50">
-                @if (procesando()) {
-                <i class="fa-solid fa-spinner fa-spin mr-2"></i>
-                }
-                Aceptar Solicitud
-            </button>
-            } @else {
-            <button (click)="close.emit()"
-                class="w-full py-2.5 bg-white border border-gray-300 rounded-xl font-bold text-gray-700 hover:bg-gray-50">
-                Cerrar
-            </button>
-            }
-        </div>
+      <div class="mt-4 flex justify-center">
+        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-white/20 backdrop-blur-sm">
+          {{ vol().estado_solicitud }}
+        </span>
+      </div>
     </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-6">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <p class="text-xs text-gray-500 mb-1">Teléfono</p>
+          <p class="font-medium text-gray-900">{{ vol().telefono || 'No disponible' }}</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <p class="text-xs text-gray-500 mb-1">DNI</p>
+          <p class="font-medium text-gray-900">{{ vol().dni || 'No disponible' }}</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <p class="text-xs text-gray-500 mb-1">Fecha Nacimiento</p>
+          <p class="font-medium text-gray-900">{{ formatearFecha(vol().fecha_nac) }}</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <p class="text-xs text-gray-500 mb-1">Solicitado el</p>
+          <p class="font-medium text-gray-900">{{ formatearFecha(vol().fecha_solicitud) }}</p>
+        </div>
+      </div>
+
+      @if (vol().bio) {
+      <div>
+        <h3 class="text-sm font-bold text-gray-900 mb-2">Sobre mí</h3>
+        <p class="text-sm text-gray-600 bg-gray-50 p-4 rounded-xl leading-relaxed">
+          {{ vol().bio }}
+        </p>
+      </div>
+      }
+    </div>
+
+    <!-- Actions -->
+    <div class="p-6 bg-gray-50 border-t flex gap-3">
+      @if (vol().estado_solicitud === 'Pendiente') {
+      <button (click)="gestionar('Rechazada')" [disabled]="procesando()"
+        class="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-colors disabled:opacity-50">
+        Rechazar
+      </button>
+      <button (click)="gestionar('Aceptada')" [disabled]="procesando()"
+        class="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-200 disabled:opacity-50">
+        @if (procesando()) {
+        <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+        }
+        Aceptar Solicitud
+      </button>
+      } @else {
+      <button (click)="close.emit()"
+        class="w-full py-2.5 bg-white border border-gray-300 rounded-xl font-bold text-gray-700 hover:bg-gray-50">
+        Cerrar
+      </button>
+      }
+    </div>
+  </div>
 </div>

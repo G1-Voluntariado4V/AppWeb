@@ -1,13 +1,14 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { VoluntarioService } from '../../services/voluntario.service';
+import { VoluntarioService, ActividadDisponible, MiActividad } from '../../services/voluntario.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/modal-detalle-actividad';
 
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ModalDetalleActividad],
   templateUrl: './inicio.html',
 })
 export class Inicio implements OnInit {
@@ -16,6 +17,10 @@ export class Inicio implements OnInit {
   private authService = inject(AuthService);
 
   cargando = computed(() => this.voluntarioService.cargando());
+
+  // Estado del modal
+  modalAbierto = signal(false);
+  actividadSeleccionada = signal<ActividadDisponible | null>(null);
 
   // Perfil del usuario
   perfil = computed(() => {
@@ -91,6 +96,41 @@ export class Inicio implements OnInit {
 
   ngOnInit() {
     // Siempre recargar datos al entrar para tener info actualizada
+    this.voluntarioService.cargarTodo();
+  }
+
+  abrirModal(miActividad: MiActividad) {
+    // Convertir MiActividad a ActividadDisponible para el modal
+    const actividad: ActividadDisponible = {
+      id_actividad: miActividad.id_actividad,
+      titulo: miActividad.titulo,
+      descripcion: miActividad.descripcion,
+      organizacion: miActividad.organizacion,
+      id_organizacion: 0, // No lo tenemos, el modal cargará detalles si faltan
+      ubicacion: miActividad.ubicacion,
+      fecha_inicio: miActividad.fecha_inicio,
+      duracion_horas: miActividad.duracion_horas,
+      cupo_maximo: 0, // Desconocido
+      voluntarios_inscritos: 0, // Desconocido
+      estado_publicacion: 'Publicada',
+      tipos: miActividad.tipos || [],
+      ods: miActividad.ods ? miActividad.ods.map(o => ({ ...o, color: '' })) : [],
+      inscrito: true,
+      estadoInscripcion: miActividad.estado_solicitud,
+      imagen: miActividad.imagen
+    };
+
+    this.actividadSeleccionada.set(actividad);
+    this.modalAbierto.set(true);
+  }
+
+  cerrarModal() {
+    this.modalAbierto.set(false);
+    this.actividadSeleccionada.set(null);
+  }
+
+  alCambiarEstado() {
+    // Recargar datos si hubo cambios (desapuntarse, etc)
     this.voluntarioService.cargarTodo();
   }
 
