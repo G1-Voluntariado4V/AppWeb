@@ -51,7 +51,7 @@ export class ModalDetalleActividad implements OnInit {
   cargarDetalleCompleto() {
     this.coordinadorService.getActividadDetalle(this.act().id).subscribe({
       next: (data) => {
-        console.log('Detalle completo cargado:', data);
+
         this.actLoaded.set(data);
       },
       error: (err) => console.error('Error cargando detalle actividad', err)
@@ -69,6 +69,25 @@ export class ModalDetalleActividad implements OnInit {
         this.cargandoInscritos.set(false);
       }
     });
+  }
+
+  getImagenActividadUrl(): string {
+    const act = this.actividadDisplay();
+    const url = act.imagen_actividad || (act as any).imagen;
+    if (!url) return '';
+    return url.startsWith('http') ? url : `http://localhost:8000/uploads/actividades/${url}`;
+  }
+
+  getImagenOrganizacionUrl(): string {
+    const url = this.actividadDisplay().img_organizacion;
+    if (!url) return '';
+    return url.startsWith('http') ? url : `http://localhost:8000${url}`;
+  }
+
+  getOdsImageUrl(id: number): string {
+    // Usamos el ID para obtener la imagen local mapeada en el service
+    const ods = this.coordinadorService.odsList().find(o => o.id === id);
+    return ods?.imgUrl || '';
   }
 
   // --- ACCIONES ---
@@ -111,10 +130,10 @@ export class ModalDetalleActividad implements OnInit {
   getEstadoClase(): string {
     const estado = this.act().estado;
     const clases: Record<string, string> = {
-      'Publicada': 'bg-green-100 text-green-700',
-      'En revision': 'bg-orange-100 text-orange-700',
-      'Cancelada': 'bg-gray-100 text-gray-600',
-      'Rechazada': 'bg-red-100 text-red-700'
+      'Publicada': 'bg-emerald-100 text-emerald-700',
+      'En revision': 'bg-amber-100 text-amber-700',
+      'Cancelada': 'bg-gray-200 text-gray-700',
+      'Rechazada': 'bg-rose-100 text-rose-700'
     };
     return clases[estado] || 'bg-gray-100 text-gray-600';
   }
@@ -122,9 +141,9 @@ export class ModalDetalleActividad implements OnInit {
   // Helper para clase de estado solicitud
   getEstadoSolicitudClase(estado: string): string {
     const clases: Record<string, string> = {
-      'Aceptada': 'bg-green-50 text-green-600 border-green-100',
-      'Pendiente': 'bg-orange-50 text-orange-600 border-orange-100',
-      'Rechazada': 'bg-red-50 text-red-600 border-red-100',
+      'Aceptada': 'bg-emerald-50 text-emerald-600 border-emerald-100',
+      'Pendiente': 'bg-amber-50 text-amber-600 border-amber-100',
+      'Rechazada': 'bg-rose-50 text-rose-600 border-rose-100',
       'Finalizada': 'bg-blue-50 text-blue-600 border-blue-100',
       'Cancelada': 'bg-gray-50 text-gray-500 border-gray-100'
     };

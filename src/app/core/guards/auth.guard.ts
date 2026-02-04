@@ -78,7 +78,7 @@ function handleBackendError(error: any, router: Router): UrlTree {
 
     // Usuario no registrado
     if (status === 404) {
-        console.log('📝 Guard: Usuario no registrado, redirigiendo a registro');
+
         return router.createUrlTree(['/auth/register']);
     }
 
@@ -100,6 +100,6 @@ function handleBackendError(error: any, router: Router): UrlTree {
     }
 
     // Error genérico
-    console.log('❌ Guard: Error desconocido');
+
     return router.createUrlTree(['/auth/login']);
 }

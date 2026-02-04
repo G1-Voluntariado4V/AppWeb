@@ -310,7 +310,7 @@ export class ModalCrearActividad implements OnInit {
       tiposIds: this.tiposSeleccionados()
     };
 
-    console.log('📤 Enviando datos de actividad:', datos);
+
     const imagen = this.archivoImagen();
 
     this.orgService.crearActividad(datos, imagen).subscribe({
@@ -370,7 +370,7 @@ export class ModalCrearActividad implements OnInit {
         const fallidas = resultados.filter(r => !r.success).length;
 
         if (fallidas === 0) {
-          console.log(`✅ ${exitosas} actividades creadas correctamente`);
+
           this.save.emit({ total: exitosas, periodica: true });
           this.close.emit();
         } else if (exitosas > 0) {

@@ -45,7 +45,7 @@ export class Register implements OnInit {
       if (user === null) {
         this.router.navigate(['/auth/login']);
       } else {
-        console.log('✅ Sesión recuperada en registro:', user.email);
+
         // Usuario autenticado, cargamos los cursos
         this.loadCoursesInBackground();
       }
@@ -84,16 +84,13 @@ export class Register implements OnInit {
           const levels = [...new Set(courses.map(c => c.cursoLevel))].sort((a, b) => a - b);
           this.availableLevels.set(levels);
 
-          console.log('✅ Cursos cargados correctamente:', {
-            total: courses.length,
-            levels: levels
-          });
+
 
           this.cdr.markForCheck();
         }
       },
       error: (err) => {
-        console.log('❌ Error cargando cursos desde API:', err);
+
       }
     });
   }
@@ -109,10 +106,10 @@ export class Register implements OnInit {
     // We group by 'siglas' (or name) to ensure only ONE option appears per cycle type.
     const uniqueMap = new Map();
     coursesForLevel.forEach(c => {
-        // Use siglas as the unique key for the dropdown option
-        if (!uniqueMap.has(c.siglas)) {
-            uniqueMap.set(c.siglas, c);
-        }
+      // Use siglas as the unique key for the dropdown option
+      if (!uniqueMap.has(c.siglas)) {
+        uniqueMap.set(c.siglas, c);
+      }
     });
 
     const uniqueCycles = Array.from(uniqueMap.values()).sort((a, b) => a.siglas.localeCompare(b.siglas));

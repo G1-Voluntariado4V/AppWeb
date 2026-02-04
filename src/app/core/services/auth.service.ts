@@ -109,7 +109,7 @@ export class AuthService {
 
             if (accessToken) {
                 const photoUrl = await this.getGooglePhotoFromApi(accessToken);
-                console.log("Foto actualizada (People API):", photoUrl);
+
 
                 if (photoUrl) {
                     this.persistGooglePhoto(photoUrl);
@@ -180,7 +180,7 @@ export class AuthService {
     // Sube la foto de Google al backend simulando un form upload
     private async uploadGooglePhotoToBackend(userId: number, photoUrl: string): Promise<void> {
         try {
-            console.log('Sincronizando foto de Google al backend...');
+
             const response = await fetch(photoUrl);
             const blob = await response.blob();
 
@@ -197,7 +197,7 @@ export class AuthService {
             await firstValueFrom(
                 this.http.post(`${environment.apiUrl}/usuarios/${userId}/imagen`, formData)
             );
-            console.log('Foto de Google sincronizada correctamente.');
+
         } catch (error) {
             console.error('Error al sincronizar foto de Google:', error);
         }

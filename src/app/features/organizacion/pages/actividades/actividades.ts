@@ -67,7 +67,7 @@ export class Actividades {
 
 
   onActividadCreada(respuesta: any) {
-    console.log('Actividad guardada:', respuesta);
+
     // El servicio ya recarga las actividades automáticamente
     this.actividadParaEditar.set(null); // Limpiar edición
   }

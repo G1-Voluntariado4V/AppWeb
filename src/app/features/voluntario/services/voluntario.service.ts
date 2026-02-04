@@ -189,16 +189,11 @@ export class VoluntarioService {
 
     forkJoin({
       perfil: this.cargarPerfilAPI(),
-      actividades: this.cargarActividadesDisponiblesAPI(),
-      historial: this.cargarHistorialAPI(),
-      horas: this.cargarHorasTotalesAPI()
+      historial: this.cargarHistorialAPI()
     }).subscribe({
       next: (results) => {
         if (results.perfil) {
           this.perfil.set(results.perfil);
-        }
-        if (results.actividades) {
-          this.actividadesDisponibles.set(results.actividades);
         }
         if (results.historial) {
           const historial = results.historial;
@@ -210,18 +205,14 @@ export class VoluntarioService {
             horasTotales: historial.resumen?.horas_acumuladas || 0
           }));
         }
-        if (results.horas !== null) {
-          this.estadisticas.update(stats => ({
-            ...stats,
-            horasTotales: results.horas || 0
-          }));
-        }
 
         // Calcular estadísticas adicionales
         this.calcularEstadisticas();
 
-        // Marcar actividades en las que ya está inscrito
-        this.marcarActividadesInscritas();
+        // Si ya había actividades cargadas, actualizar su estado de inscripción
+        if (this.actividadesDisponibles().length > 0) {
+          this.marcarActividadesInscritas();
+        }
 
         this.cargando.set(false);
       },
@@ -230,6 +221,15 @@ export class VoluntarioService {
         this.error.set('Error al cargar los datos. Intenta recargar la página.');
         this.cargando.set(false);
       }
+    });
+  }
+
+  cargarActividadesDisponibles(): void {
+    this.cargando.set(true);
+    this.cargarActividadesDisponiblesAPI().subscribe(actividades => {
+      this.actividadesDisponibles.set(actividades);
+      this.marcarActividadesInscritas();
+      this.cargando.set(false);
     });
   }
 
@@ -284,11 +284,7 @@ export class VoluntarioService {
   private cargarActividadesDisponiblesAPI(): Observable<ActividadDisponible[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/actividades`).pipe(
       map(response => {
-        console.log('=== RESPUESTA CRUDA DE /actividades ===');
-        console.log('Respuesta completa:', response);
-        if (response && response.length > 0) {
-          console.log('Primera actividad cruda:', JSON.stringify(response[0], null, 2));
-        }
+
         return response.map(act => this.mapearActividadDisponible(act));
       }),
       catchError(err => {
@@ -314,12 +310,12 @@ export class VoluntarioService {
       url += '?' + params.join('&');
     }
 
-    console.log('Cargando actividades con filtros:', url);
+
 
     return this.http.get<any[]>(url).pipe(
       map(response => {
         const actividades = response.map(act => this.mapearActividadDisponible(act));
-        console.log(`Actividades cargadas con filtros: ${actividades.length}`);
+
         return actividades;
       }),
       catchError(err => {
@@ -333,7 +329,7 @@ export class VoluntarioService {
   getDetalleActividad(idActividad: number): Observable<ActividadDisponible | null> {
     return this.http.get<any>(`${environment.apiUrl}/actividades/${idActividad}`).pipe(
       map(response => {
-        console.log('Detalle actividad crudo:', response);
+
         // Mapear tipos (vienen como array de objetos {id, nombre})
         const tipos: string[] = [];
         if (response.tipos && Array.isArray(response.tipos)) {
@@ -614,12 +610,12 @@ export class VoluntarioService {
         return of([]);
       })
     ).subscribe(data => {
-      console.log('Tipos de voluntariado cargados:', data);
+
       const tipos = data.map(t => ({
         id: Number(t.id),
         nombreTipo: t.nombreTipo || t.nombre || ''
       })).filter(t => t.nombreTipo.length > 0);
-      console.log('Tipos procesados:', tipos);
+
       this.tiposCatalogo.set(tipos);
     });
 
@@ -630,13 +626,13 @@ export class VoluntarioService {
         return of([]);
       })
     ).subscribe(data => {
-      console.log('ODS cargados:', data);
+
       const ods = data.map(o => ({
         id: Number(o.id),
         nombre: o.nombre || '',
         descripcion: o.descripcion || ''
       })).filter(o => o.nombre.length > 0);
-      console.log('ODS procesados:', ods);
+
       this.odsCatalogo.set(ods);
     });
   }

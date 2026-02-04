@@ -43,8 +43,7 @@ export class OrganizacionLayout {
     const userProfile = this.authService.userProfile(); // Este es reactivo
 
     // Debug
-    console.log('🔍 Layout: userProfile.foto =', userProfile.foto);
-    console.log('🔍 Layout: perfil.foto =', perfil.foto);
+
 
     return {
       nombre: perfil.nombre || userProfile.nombre || 'Organización',
