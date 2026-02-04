@@ -16,9 +16,6 @@
         } @else {
         <span class="text-3xl font-bold text-gray-400">{{ vData().nombre.substring(0,2).toUpperCase() }}</span>
         }
-        <div class="absolute bottom-1 right-1 w-5 h-5 border-4 border-white rounded-full z-10 shadow-sm"
-          [ngClass]="vData().estado === 'Activa' ? 'bg-green-500' : vData().estado === 'Pendiente' ? 'bg-orange-500' : 'bg-red-500'">
-        </div>
       </div>
 
       <h2 class="text-lg font-bold text-gray-900 leading-tight mb-1">{{ vData().nombre }}</h2>
@@ -109,6 +106,21 @@
           <p class="font-bold text-gray-900 text-sm">{{ vData().fecha_nac || 'No registrada' }}</p>
         </div>
 
+        <div class="col-span-2">
+          <p class="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-wider">Idiomas</p>
+          <div class="flex flex-wrap gap-2">
+            @for (lang of getIdiomasVoluntario(); track lang.id_idioma) {
+            <div class="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-100 flex items-center gap-2">
+              <span class="text-sm font-semibold text-gray-700">{{ lang.idioma }}</span>
+              <span class="text-xs font-bold text-white bg-violet-500 rounded px-1.5 py-0.5">{{ lang.nivel }}</span>
+            </div>
+            }
+            @if (getIdiomasVoluntario().length === 0) {
+            <span class="text-xs text-gray-400 italic">No hay idiomas registrados</span>
+            }
+          </div>
+        </div>
+
         @if (vData().descripcion) {
         <div class="col-span-2">
           <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Descripción / Notas</p>
@@ -183,6 +195,54 @@
           </select>
         </div>
 
+        <div class="col-span-2 mt-4 pt-4 border-t border-gray-100">
+          <label class="text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-wider block">Gestión de
+            Idiomas</label>
+
+          <!-- Lista de idiomas actuales -->
+          <div class="space-y-3 mb-4">
+            @for (lang of getIdiomasVoluntario(); track lang.id_idioma) {
+            <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200">
+              <div class="flex-1 font-medium text-sm text-gray-700 ml-2">{{ lang.idioma }}</div>
+              <select [ngModel]="lang.nivel" (ngModelChange)="actualizarNivelIdioma(lang.id_idioma, $event)"
+                class="bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold px-2 py-1 outline-none focus:border-violet-500">
+                @for (opt of nivelesIdiomas; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+              <button (click)="eliminarIdioma(lang.id_idioma)"
+                class="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                  <path fill-rule="evenodd"
+                    d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 001.5.06l.3-7.5z"
+                    clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            }
+          </div>
+
+          <!-- Añadir nuevo idioma -->
+          <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-xl border border-gray-200 border-dashed">
+            <select [(ngModel)]="nuevoIdiomaId"
+              class="flex-1 bg-transparent text-sm font-medium outline-none px-2 py-1">
+              <option [ngValue]="null">Añadir idioma...</option>
+              @for (ii of idiomasDisponibles(); track ii.id) {
+              <option [ngValue]="ii.id">{{ ii.nombre }}</option>
+              }
+            </select>
+            <select [(ngModel)]="nuevoIdiomaNivel"
+              class="w-20 bg-white border border-gray-200 rounded-lg text-xs font-bold px-2 py-1 outline-none">
+              @for (opt of nivelesIdiomas; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+            <button (click)="agregarIdioma()" [disabled]="!nuevoIdiomaId"
+              class="px-3 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-bold hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              Añadir
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="mb-6 animate-in slide-in-from-right-4 duration-200 delay-75">

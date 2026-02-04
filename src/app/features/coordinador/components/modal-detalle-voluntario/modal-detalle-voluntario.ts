@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
-import { CoordinadorService, VoluntarioAdmin, ActividadAdmin } from '../../services/coordinador';
+import { CoordinadorService, VoluntarioAdmin, ActividadAdmin, Idioma } from '../../services/coordinador';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ModalDetalleActividad } from '../modal-detalle-actividad/modal-detalle-actividad';
 
@@ -55,12 +55,19 @@ export class ModalDetalleVoluntario implements OnInit {
   allCourses: any[] = [];
   availableLevels = signal<number[]>([]);
   availableCycles = signal<any[]>([]);
+  idiomasDisponibles = signal<Idioma[]>([]);
+
+  // Estado nuevo idioma
+  nuevoIdiomaId: number | null = null;
+  nuevoIdiomaNivel: string = 'B1';
+  nivelesIdiomas = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];
 
   ngOnInit() {
     this.volCompleto.set(this.vol());
     this.cargarHistorial();
     this.cargarDetalleCompleto();
     this.cargarCursosBackend();
+    this.cargarIdiomasBackend();
   }
 
   cargarDetalleCompleto() {
@@ -77,7 +84,7 @@ export class ModalDetalleVoluntario implements OnInit {
         } : fullData;
 
         this.volCompleto.set(merged);
-        console.log('DEBUG MODAL - Detalle cargado. Foto:', merged.foto);
+
       },
       error: (err) => console.error('Error cargando detalle voluntario:', err)
     });
@@ -102,6 +109,10 @@ export class ModalDetalleVoluntario implements OnInit {
       },
       error: (err) => console.error('Error cargando cursos en modal:', err)
     });
+  }
+
+  cargarIdiomasBackend() {
+    this.idiomasDisponibles.set(this.coordinadorService.idiomasList());
   }
 
   cargarHistorial() {
@@ -244,5 +255,62 @@ export class ModalDetalleVoluntario implements OnInit {
       'Rechazada': 'bg-red-100 text-red-700 border-red-200',
     };
     return clases[estado] || 'bg-gray-50 text-gray-600 border-gray-200';
+    return clases[estado] || 'bg-gray-50 text-gray-600 border-gray-200';
+  }
+
+  // --- ARREGLO IDIOMAS ---
+  getIdiomasVoluntario() {
+    return this.volCompleto()?.idiomas || [];
+  }
+
+  agregarIdioma() {
+    if (!this.nuevoIdiomaId || !this.nuevoIdiomaNivel) return;
+
+    this.coordinadorService.addIdiomaVoluntario(this.vol().id, this.nuevoIdiomaId, this.nuevoIdiomaNivel)
+      .subscribe({
+        next: () => {
+          this.toastService.success('Idioma añadido');
+          // Actualizar localmente
+          const idiomaObj = this.idiomasDisponibles().find(i => i.id == this.nuevoIdiomaId);
+          if (idiomaObj) {
+            const nuevo = { id_idioma: this.nuevoIdiomaId!, idioma: idiomaObj.nombre, nivel: this.nuevoIdiomaNivel };
+            this.volCompleto.update(v => v ? { ...v, idiomas: [...(v.idiomas || []), nuevo] } : null);
+          }
+          this.nuevoIdiomaId = null;
+          this.nuevoIdiomaNivel = 'B1';
+        },
+        error: (err) => this.toastService.error('Error al añadir idioma')
+      });
+  }
+
+  actualizarNivelIdioma(idIdioma: number, nuevoNivel: string) {
+    this.coordinadorService.updateIdiomaVoluntario(this.vol().id, idIdioma, nuevoNivel)
+      .subscribe({
+        next: () => {
+          this.toastService.success('Nivel actualizado');
+          this.volCompleto.update(v => {
+            if (!v) return null;
+            const nuevosIdiomas = v.idiomas?.map(i => i.id_idioma === idIdioma ? { ...i, nivel: nuevoNivel } : i) || [];
+            return { ...v, idiomas: nuevosIdiomas };
+          });
+        },
+        error: () => this.toastService.error('Error al actualizar nivel')
+      });
+  }
+
+  eliminarIdioma(idIdioma: number) {
+    if (!confirm('¿Eliminar idioma?')) return;
+
+    this.coordinadorService.removeIdiomaVoluntario(this.vol().id, idIdioma)
+      .subscribe({
+        next: () => {
+          this.toastService.success('Idioma eliminado');
+          this.volCompleto.update(v => {
+            if (!v) return null;
+            return { ...v, idiomas: v.idiomas?.filter(i => i.id_idioma !== idIdioma) || [] };
+          });
+        },
+        error: () => this.toastService.error('Error al eliminar idioma')
+      });
   }
 }
