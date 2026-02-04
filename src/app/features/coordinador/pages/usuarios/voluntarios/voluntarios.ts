@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoordinadorService, VoluntarioAdmin } from '../../../services/coordinador';
 import { ModalDetalleVoluntario } from '../../../components/modal-detalle-voluntario/modal-detalle-voluntario';
+
+import { ConfirmModalComponent } from '../../../../../shared/components/confirm-modal/confirm-modal';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-voluntarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalDetalleVoluntario],
+  imports: [CommonModule, FormsModule, ModalDetalleVoluntario, ConfirmModalComponent],
   templateUrl: './voluntarios.html',
 })
 export class Voluntarios implements OnInit {
@@ -32,6 +34,13 @@ export class Voluntarios implements OnInit {
 
   // Modal de detalle
   voluntarioSeleccionado = signal<VoluntarioAdmin | null>(null);
+
+  // Confirm Modal State
+  confirmModalOpen = signal(false);
+  confirmModalTitle = signal('');
+  confirmModalMessage = signal('');
+  pendingConfirmAction: (() => void) | null = null;
+  pendingConfirmText = signal('Confirmar');
 
   // Filtrado
   voluntariosFiltrados = computed(() => {
@@ -85,56 +94,98 @@ export class Voluntarios implements OnInit {
   }
 
   // Acciones
+  // Acciones
   activar(vol: VoluntarioAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Activar cuenta de ${vol.nombre}?`)) {
-      this.coordinadorService.cambiarEstadoUsuario(vol.id, 'voluntarios', 'Activa').subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.openConfirmModal(
+      'Activar cuenta',
+      `¿Activar cuenta de ${vol.nombre}?`,
+      'Activar',
+      () => {
+        this.coordinadorService.cambiarEstadoUsuario(vol.id, 'voluntarios', 'Activa').subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   bloquear(vol: VoluntarioAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Bloquear cuenta de ${vol.nombre}?`)) {
-      this.coordinadorService.bloquearUsuario(vol.id, 'voluntarios').subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.openConfirmModal(
+      'Bloquear cuenta',
+      `¿Bloquear cuenta de ${vol.nombre}?`,
+      'Bloquear',
+      () => {
+        this.coordinadorService.bloquearUsuario(vol.id, 'voluntarios').subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   rechazar(vol: VoluntarioAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Rechazar cuenta de ${vol.nombre}?`)) {
-      this.coordinadorService.rechazarVoluntario(vol.id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.openConfirmModal(
+      'Rechazar cuenta',
+      `¿Rechazar cuenta de ${vol.nombre}?`,
+      'Rechazar',
+      () => {
+        this.coordinadorService.rechazarVoluntario(vol.id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   eliminar(vol: VoluntarioAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Eliminar permanentemente a ${vol.nombre}? Esta acción no se puede deshacer.`)) {
-      this.coordinadorService.eliminarUsuario(vol.id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
+    this.openConfirmModal(
+      'Eliminar usuario',
+      `¿Eliminar permanentemente a ${vol.nombre}? Esta acción no se puede deshacer.`,
+      'Eliminar',
+      () => {
+        this.coordinadorService.eliminarUsuario(vol.id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
+  }
+
+  // Confirm Modal Helpers
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void) {
+    this.confirmModalTitle.set(title);
+    this.confirmModalMessage.set(message);
+    this.pendingConfirmText.set(confirmText);
+    this.pendingConfirmAction = action;
+    this.confirmModalOpen.set(true);
+  }
+
+  onConfirmModal() {
+    if (this.pendingConfirmAction) {
+      this.pendingConfirmAction();
     }
+    this.closeConfirmModal();
+  }
+
+  closeConfirmModal() {
+    this.confirmModalOpen.set(false);
+    this.pendingConfirmAction = null;
   }
 
   // Detalle

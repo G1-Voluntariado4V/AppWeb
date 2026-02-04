@@ -229,4 +229,10 @@
   </app-modal-detalle-voluntario>
   }
 
+  <!-- Modal Confirmación -->
+  <app-confirm-modal [isOpen]="confirmModalOpen()" [title]="confirmModalTitle()" [message]="confirmModalMessage()"
+    [confirmText]="pendingConfirmText()" cancelText="Cancelar" (confirm)="onConfirmModal()"
+    (cancel)="closeConfirmModal()">
+  </app-confirm-modal>
+
 </div>
