@@ -6,11 +6,12 @@ import { ModalCrearActividad } from '../../components/modal-crear-actividad/moda
 import { ModalDetalleActividad } from '../../components/modal-detalle-actividad/modal-detalle-actividad';
 import { ModalParticipantes } from '../../components/modal-participantes/modal-participantes';
 import { ToastService } from '../../../../core/services/toast.service';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-actividades',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalCrearActividad, ModalDetalleActividad, ModalParticipantes],
+  imports: [CommonModule, FormsModule, ModalCrearActividad, ModalDetalleActividad, ModalParticipantes, ConfirmModalComponent],
   templateUrl: './actividades.html',
 })
 export class Actividades implements OnInit {
@@ -37,6 +38,13 @@ export class Actividades implements OnInit {
   actividadSeleccionada = signal<ActividadAdmin | null>(null);
   actividadParaEditar = signal<ActividadAdmin | null>(null);
   actividadParaVerParticipantes = signal<ActividadAdmin | null>(null);
+
+  // Modal de confirmación
+  confirmModalVisible = signal(false);
+  confirmModalTitle = signal('');
+  confirmModalMessage = signal('');
+  confirmModalButtonText = signal('Confirmar');
+  confirmModalAction = signal<(() => void) | null>(null);
 
   // Listas para filtros (Computed)
   estadosDisponibles = ['Todos', 'Publicada', 'En revision', 'Cancelada', 'Rechazada', 'Finalizada'];
@@ -217,41 +225,75 @@ export class Actividades implements OnInit {
   // Aprobar / Rechazar
   aprobar(id: number, event: Event) {
     event.stopPropagation();
-    if (confirm('¿Publicar esta actividad?')) {
-      this.coordinadorService.aprobarActividad(id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.toastService.success('Actividad publicada');
-        },
-        error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.showConfirmModal(
+      '¿Publicar actividad?',
+      'Esta actividad será visible para todos los voluntarios.',
+      'Publicar',
+      () => {
+        this.coordinadorService.aprobarActividad(id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.toastService.success('Actividad publicada');
+          },
+          error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   rechazar(id: number, event: Event) {
     event.stopPropagation();
-    if (confirm('¿Rechazar esta actividad?')) {
-      this.coordinadorService.rechazarActividad(id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.toastService.success('Actividad rechazada');
-        },
-        error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.showConfirmModal(
+      '¿Rechazar actividad?',
+      'Esta actividad será rechazada y no se publicará.',
+      'Rechazar',
+      () => {
+        this.coordinadorService.rechazarActividad(id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.toastService.success('Actividad rechazada');
+          },
+          error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   eliminar(id: number, event: Event) {
     event.stopPropagation();
-    if (confirm('¿Eliminar esta actividad? Esta acción no se puede deshacer.')) {
-      this.coordinadorService.eliminarActividad(id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.toastService.success('Actividad eliminada');
-        },
-        error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.showConfirmModal(
+      '¿Eliminar actividad?',
+      'Esta acción no se puede deshacer. La actividad será eliminada permanentemente.',
+      'Eliminar',
+      () => {
+        this.coordinadorService.eliminarActividad(id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.toastService.success('Actividad eliminada');
+          },
+          error: (err) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
+  }
+
+  // Modal de confirmación
+  showConfirmModal(title: string, message: string, buttonText: string, action: () => void) {
+    this.confirmModalTitle.set(title);
+    this.confirmModalMessage.set(message);
+    this.confirmModalButtonText.set(buttonText);
+    this.confirmModalAction.set(action);
+    this.confirmModalVisible.set(true);
+  }
+
+  onConfirmModalConfirm() {
+    const action = this.confirmModalAction();
+    if (action) action();
+    this.confirmModalVisible.set(false);
+  }
+
+  onConfirmModalCancel() {
+    this.confirmModalVisible.set(false);
   }
 
   verParticipantes(act: ActividadAdmin, event: Event) {

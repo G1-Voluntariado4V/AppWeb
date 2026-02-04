@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { CoordinadorService, InscripcionPendiente } from '../../../services/coordinador';
 import { ModalDetalleInscripcion } from '../../../components/modal-detalle-inscripcion/modal-detalle-inscripcion';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { ConfirmModalComponent } from '../../../../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
     selector: 'app-aprob-inscripciones',
     standalone: true,
-    imports: [CommonModule, RouterModule, ModalDetalleInscripcion],
+    imports: [CommonModule, RouterModule, ModalDetalleInscripcion, ConfirmModalComponent],
     templateUrl: './aprob-inscripciones.html',
 })
 export class AprobInscripciones implements OnInit {
@@ -28,6 +29,13 @@ export class AprobInscripciones implements OnInit {
 
     // Modal de detalle
     inscripcionSeleccionada = signal<InscripcionPendiente | null>(null);
+
+    // Modal de confirmación
+    confirmModalVisible = signal(false);
+    confirmModalTitle = signal('');
+    confirmModalMessage = signal('');
+    confirmModalButtonText = signal('Confirmar');
+    confirmModalAction = signal<(() => void) | null>(null);
 
     ngOnInit() {
         this.cargarDatos();
@@ -72,42 +80,52 @@ export class AprobInscripciones implements OnInit {
         event?.stopPropagation();
         const key = `${inscripcion.id_actividad}-${inscripcion.id_voluntario}`;
 
-        if (confirm(`¿Aprobar la inscripción de ${inscripcion.nombre_voluntario} en "${inscripcion.titulo_actividad}"?`)) {
-            this.procesando.set(key);
-            this.coordinadorService.aprobarInscripcion(inscripcion.id_actividad, inscripcion.id_voluntario).subscribe({
-                next: () => {
-                    this.procesando.set(null);
-                    this.toastService.success(`Inscripción de ${inscripcion.nombre_voluntario} aprobada`);
-                    this.cerrarDetalle();
-                    this.cargarDatos();
-                },
-                error: (err: any) => {
-                    this.procesando.set(null);
-                    this.toastService.error(err.error?.error || 'No se pudo aprobar la inscripción');
-                }
-            });
-        }
+        this.showConfirmModal(
+            `¿Aprobar inscripción?`,
+            `Se aprobará la inscripción de ${inscripcion.nombre_voluntario} en "${inscripcion.titulo_actividad}".`,
+            'Aprobar',
+            () => {
+                this.procesando.set(key);
+                this.coordinadorService.aprobarInscripcion(inscripcion.id_actividad, inscripcion.id_voluntario).subscribe({
+                    next: () => {
+                        this.procesando.set(null);
+                        this.toastService.success(`Inscripción de ${inscripcion.nombre_voluntario} aprobada`);
+                        this.cerrarDetalle();
+                        this.cargarDatos();
+                    },
+                    error: (err: any) => {
+                        this.procesando.set(null);
+                        this.toastService.error(err.error?.error || 'No se pudo aprobar la inscripción');
+                    }
+                });
+            }
+        );
     }
 
     rechazar(inscripcion: InscripcionPendiente, event?: Event) {
         event?.stopPropagation();
         const key = `${inscripcion.id_actividad}-${inscripcion.id_voluntario}`;
 
-        if (confirm(`¿Rechazar la inscripción de ${inscripcion.nombre_voluntario}?`)) {
-            this.procesando.set(key);
-            this.coordinadorService.rechazarInscripcion(inscripcion.id_actividad, inscripcion.id_voluntario).subscribe({
-                next: () => {
-                    this.procesando.set(null);
-                    this.toastService.info(`Inscripción de ${inscripcion.nombre_voluntario} rechazada`);
-                    this.cerrarDetalle();
-                    this.cargarDatos();
-                },
-                error: (err: any) => {
-                    this.procesando.set(null);
-                    this.toastService.error(err.error?.error || 'No se pudo rechazar la inscripción');
-                }
-            });
-        }
+        this.showConfirmModal(
+            `¿Rechazar inscripción?`,
+            `Se rechazará la inscripción de ${inscripcion.nombre_voluntario}.`,
+            'Rechazar',
+            () => {
+                this.procesando.set(key);
+                this.coordinadorService.rechazarInscripcion(inscripcion.id_actividad, inscripcion.id_voluntario).subscribe({
+                    next: () => {
+                        this.procesando.set(null);
+                        this.toastService.info(`Inscripción de ${inscripcion.nombre_voluntario} rechazada`);
+                        this.cerrarDetalle();
+                        this.cargarDatos();
+                    },
+                    error: (err: any) => {
+                        this.procesando.set(null);
+                        this.toastService.error(err.error?.error || 'No se pudo rechazar la inscripción');
+                    }
+                });
+            }
+        );
     }
 
     aprobarDesdeModal() {
@@ -136,5 +154,24 @@ export class AprobInscripciones implements OnInit {
         } catch {
             return fecha;
         }
+    }
+
+    // Modal de confirmación
+    showConfirmModal(title: string, message: string, buttonText: string, action: () => void) {
+        this.confirmModalTitle.set(title);
+        this.confirmModalMessage.set(message);
+        this.confirmModalButtonText.set(buttonText);
+        this.confirmModalAction.set(action);
+        this.confirmModalVisible.set(true);
+    }
+
+    onConfirmModalConfirm() {
+        const action = this.confirmModalAction();
+        if (action) action();
+        this.confirmModalVisible.set(false);
+    }
+
+    onConfirmModalCancel() {
+        this.confirmModalVisible.set(false);
     }
 }

@@ -4,11 +4,12 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { VoluntarioService, MiActividad } from '../../services/voluntario.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { environment } from '../../../../../environments/environment';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-actividad',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ConfirmModalComponent],
   templateUrl: './actividad.html',
 })
 export class Actividad implements OnInit {
@@ -59,6 +60,13 @@ export class Actividad implements OnInit {
   cargando = computed(() => this.voluntarioService.cargando());
   procesando = signal(false);
 
+  // Modal de confirmación
+  confirmModalVisible = signal(false);
+  confirmModalTitle = signal('');
+  confirmModalMessage = signal('');
+  confirmModalButtonText = signal('Confirmar');
+  confirmModalAction = signal<(() => void) | null>(null);
+
   baseUrl = `${environment.apiUrl}/uploads/actividades/`;
 
   ngOnInit() {
@@ -80,24 +88,29 @@ export class Actividad implements OnInit {
   }
 
   desapuntarse() {
-    if (!confirm('¿Seguro que quieres desapuntarte de esta actividad?')) return;
+    this.showConfirmModal(
+      '¿Desapuntarse?',
+      '¿Seguro que quieres desapuntarte de esta actividad?',
+      'Desapuntarse',
+      () => {
+        this.procesando.set(true);
 
-    this.procesando.set(true);
-
-    this.voluntarioService.desapuntarse(this.currentId()).subscribe({
-      next: (result) => {
-        if (result.success) {
-          this.toastService.success('Te has desapuntado correctamente.');
-          setTimeout(() => this.router.navigate(['/voluntario/historial']), 1000);
-        } else {
-          this.toastService.error(result.mensaje);
-        }
-        this.procesando.set(false);
-      },
-      error: () => {
-        this.procesando.set(false);
+        this.voluntarioService.desapuntarse(this.currentId()).subscribe({
+          next: (result) => {
+            if (result.success) {
+              this.toastService.success('Te has desapuntado correctamente.');
+              setTimeout(() => this.router.navigate(['/voluntario/historial']), 1000);
+            } else {
+              this.toastService.error(result.mensaje);
+            }
+            this.procesando.set(false);
+          },
+          error: () => {
+            this.procesando.set(false);
+          }
+        });
       }
-    });
+    );
   }
 
   inscribirse() {
@@ -116,6 +129,25 @@ export class Actividad implements OnInit {
         this.procesando.set(false);
       }
     });
+  }
+
+  // Modal de confirmación
+  showConfirmModal(title: string, message: string, buttonText: string, action: () => void) {
+    this.confirmModalTitle.set(title);
+    this.confirmModalMessage.set(message);
+    this.confirmModalButtonText.set(buttonText);
+    this.confirmModalAction.set(action);
+    this.confirmModalVisible.set(true);
+  }
+
+  onConfirmModalConfirm() {
+    const action = this.confirmModalAction();
+    if (action) action();
+    this.confirmModalVisible.set(false);
+  }
+
+  onConfirmModalCancel() {
+    this.confirmModalVisible.set(false);
   }
 
   getEstadoClass(estado: string): string {

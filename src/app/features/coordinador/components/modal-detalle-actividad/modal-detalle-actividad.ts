@@ -2,11 +2,12 @@ import { Component, input, output, computed, signal, inject, OnInit } from '@ang
 import { CommonModule } from '@angular/common';
 import { ActividadAdmin, CoordinadorService } from '../../services/coordinador';
 import { ToastService } from '../../../../core/services/toast.service';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-modal-detalle-actividad',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmModalComponent],
   templateUrl: './modal-detalle-actividad.html',
 })
 export class ModalDetalleActividad implements OnInit {
@@ -23,6 +24,13 @@ export class ModalDetalleActividad implements OnInit {
 
   // Signal para almacenar la data completa cargada del servidor
   actLoaded = signal<ActividadAdmin | null>(null);
+
+  // Modal de confirmación
+  confirmModalVisible = signal(false);
+  confirmModalTitle = signal('');
+  confirmModalMessage = signal('');
+  confirmModalButtonText = signal('Confirmar');
+  confirmModalAction = signal<(() => void) | null>(null);
 
   // Computed que usa la data cargada si existe, o el input inicial por defecto
   actividadDisplay = computed(() => this.actLoaded() || this.act());
@@ -110,20 +118,45 @@ export class ModalDetalleActividad implements OnInit {
 
   eliminarInscripcion(idVoluntario: number) {
     if (this.procesandoAccion()) return;
-    if (!confirm('¿Estás seguro de quitar a este voluntario?')) return;
-
-    this.procesandoAccion.set(true);
-    this.coordinadorService.eliminarInscripcion(this.act().id, idVoluntario).subscribe({
-      next: () => {
-        this.toastService.success('Voluntario eliminado de la actividad');
-        this.cargarInscritos();
-        this.procesandoAccion.set(false);
-      },
-      error: () => {
-        this.toastService.error('Error al eliminar voluntario');
-        this.procesandoAccion.set(false);
+    
+    this.showConfirmModal(
+      '¿Quitar voluntario?',
+      'El voluntario será eliminado de esta actividad.',
+      'Quitar',
+      () => {
+        this.procesandoAccion.set(true);
+        this.coordinadorService.eliminarInscripcion(this.act().id, idVoluntario).subscribe({
+          next: () => {
+            this.toastService.success('Voluntario eliminado de la actividad');
+            this.cargarInscritos();
+            this.procesandoAccion.set(false);
+          },
+          error: () => {
+            this.toastService.error('Error al eliminar voluntario');
+            this.procesandoAccion.set(false);
+          }
+        });
       }
-    });
+    );
+  }
+
+  // Modal de confirmación
+  showConfirmModal(title: string, message: string, buttonText: string, action: () => void) {
+    this.confirmModalTitle.set(title);
+    this.confirmModalMessage.set(message);
+    this.confirmModalButtonText.set(buttonText);
+    this.confirmModalAction.set(action);
+    this.confirmModalVisible.set(true);
+  }
+
+  onConfirmModalConfirm() {
+    const action = this.confirmModalAction();
+    if (action) action();
+    this.confirmModalVisible.set(false);
+  }
+
+  onConfirmModalCancel() {
+    this.confirmModalVisible.set(false);
   }
 
   // Helper para clase de estado actividad

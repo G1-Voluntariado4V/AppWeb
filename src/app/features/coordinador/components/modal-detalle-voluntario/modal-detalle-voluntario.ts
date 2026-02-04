@@ -7,11 +7,12 @@ import { environment } from '../../../../../environments/environment';
 import { CoordinadorService, VoluntarioAdmin, ActividadAdmin, Idioma } from '../../services/coordinador';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ModalDetalleActividad } from '../modal-detalle-actividad/modal-detalle-actividad';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-modal-detalle-voluntario',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalDetalleActividad],
+  imports: [CommonModule, FormsModule, ModalDetalleActividad, ConfirmModalComponent],
   templateUrl: './modal-detalle-voluntario.html',
 })
 export class ModalDetalleVoluntario implements OnInit {
@@ -61,6 +62,13 @@ export class ModalDetalleVoluntario implements OnInit {
   nuevoIdiomaId: number | null = null;
   nuevoIdiomaNivel: string = 'B1';
   nivelesIdiomas = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo'];
+
+  // Modal de confirmación
+  confirmModalVisible = signal(false);
+  confirmModalTitle = signal('');
+  confirmModalMessage = signal('');
+  confirmModalButtonText = signal('Confirmar');
+  confirmModalAction = signal<(() => void) | null>(null);
 
   ngOnInit() {
     this.volCompleto.set(this.vol());
@@ -299,18 +307,42 @@ export class ModalDetalleVoluntario implements OnInit {
   }
 
   eliminarIdioma(idIdioma: number) {
-    if (!confirm('¿Eliminar idioma?')) return;
-
-    this.coordinadorService.removeIdiomaVoluntario(this.vol().id, idIdioma)
-      .subscribe({
-        next: () => {
-          this.toastService.success('Idioma eliminado');
-          this.volCompleto.update(v => {
-            if (!v) return null;
-            return { ...v, idiomas: v.idiomas?.filter(i => i.id_idioma !== idIdioma) || [] };
+    this.showConfirmModal(
+      '¿Eliminar idioma?',
+      'Este idioma será eliminado del perfil del voluntario.',
+      'Eliminar',
+      () => {
+        this.coordinadorService.removeIdiomaVoluntario(this.vol().id, idIdioma)
+          .subscribe({
+            next: () => {
+              this.toastService.success('Idioma eliminado');
+              this.volCompleto.update(v => {
+                if (!v) return null;
+                return { ...v, idiomas: v.idiomas?.filter(i => i.id_idioma !== idIdioma) || [] };
+              });
+            },
+            error: () => this.toastService.error('Error al eliminar idioma')
           });
-        },
-        error: () => this.toastService.error('Error al eliminar idioma')
-      });
+      }
+    );
+  }
+
+  // Modal de confirmación
+  showConfirmModal(title: string, message: string, buttonText: string, action: () => void) {
+    this.confirmModalTitle.set(title);
+    this.confirmModalMessage.set(message);
+    this.confirmModalButtonText.set(buttonText);
+    this.confirmModalAction.set(action);
+    this.confirmModalVisible.set(true);
+  }
+
+  onConfirmModalConfirm() {
+    const action = this.confirmModalAction();
+    if (action) action();
+    this.confirmModalVisible.set(false);
+  }
+
+  onConfirmModalCancel() {
+    this.confirmModalVisible.set(false);
   }
 }

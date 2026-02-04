@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { CoordinadorService, ActividadAdmin } from '../../../services/coordinador';
 import { ModalDetalleActividad } from '../../../components/modal-detalle-actividad/modal-detalle-actividad';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { ConfirmModalComponent } from '../../../../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-aprob-actividades',
   standalone: true,
-  imports: [CommonModule, RouterModule, ModalDetalleActividad],
+  imports: [CommonModule, RouterModule, ModalDetalleActividad, ConfirmModalComponent],
   templateUrl: './aprob-actividades.html',
 })
 export class AprobActividades implements OnInit {
@@ -25,6 +26,13 @@ export class AprobActividades implements OnInit {
 
   // Modal de detalle
   actParaVer = signal<ActividadAdmin | null>(null);
+
+  // Modal de confirmación
+  confirmModalVisible = signal(false);
+  confirmModalTitle = signal('');
+  confirmModalMessage = signal('');
+  confirmModalButtonText = signal('Confirmar');
+  confirmModalAction = signal<(() => void) | null>(null);
 
   ngOnInit() {
     this.cargarDatos();
@@ -56,28 +64,38 @@ export class AprobActividades implements OnInit {
 
   aprobar(id: number, event: Event) {
     event.stopPropagation();
-    if (confirm('¿Publicar esta actividad? Será visible para los voluntarios.')) {
-      this.coordinadorService.aprobarActividad(id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.toastService.success('Actividad publicada');
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.showConfirmModal(
+      '¿Publicar actividad?',
+      'Esta actividad será visible para los voluntarios.',
+      'Publicar',
+      () => {
+        this.coordinadorService.aprobarActividad(id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.toastService.success('Actividad publicada');
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   rechazar(id: number, event: Event) {
     event.stopPropagation();
-    if (confirm('¿Rechazar propuesta de actividad?')) {
-      this.coordinadorService.rechazarActividad(id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.toastService.success('Actividad rechazada');
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.showConfirmModal(
+      '¿Rechazar actividad?',
+      'Esta propuesta de actividad será rechazada.',
+      'Rechazar',
+      () => {
+        this.coordinadorService.rechazarActividad(id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.toastService.success('Actividad rechazada');
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   verDetalle(act: ActividadAdmin) {
@@ -100,5 +118,24 @@ export class AprobActividades implements OnInit {
     } catch {
       return fecha;
     }
+  }
+
+  // Modal de confirmación
+  showConfirmModal(title: string, message: string, buttonText: string, action: () => void) {
+    this.confirmModalTitle.set(title);
+    this.confirmModalMessage.set(message);
+    this.confirmModalButtonText.set(buttonText);
+    this.confirmModalAction.set(action);
+    this.confirmModalVisible.set(true);
+  }
+
+  onConfirmModalConfirm() {
+    const action = this.confirmModalAction();
+    if (action) action();
+    this.confirmModalVisible.set(false);
+  }
+
+  onConfirmModalCancel() {
+    this.confirmModalVisible.set(false);
   }
 }

@@ -2,11 +2,12 @@ import { Component, input, output, inject, signal, OnInit, effect } from '@angul
 import { CommonModule } from '@angular/common';
 import { VoluntarioService, ActividadDisponible } from '../../services/voluntario.service';
 import { environment } from '../../../../../environments/environment';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal';
 
 @Component({
     selector: 'app-modal-detalle-actividad',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, ConfirmModalComponent],
     templateUrl: './modal-detalle-actividad.html',
 })
 export class ModalDetalleActividad implements OnInit {
@@ -27,6 +28,13 @@ export class ModalDetalleActividad implements OnInit {
     cargandoDetalle = signal(true);
     procesando = signal(false);
     mensaje = signal<{ tipo: 'success' | 'error'; texto: string } | null>(null);
+
+    // Modal de confirmación
+    confirmModalVisible = signal(false);
+    confirmModalTitle = signal('');
+    confirmModalMessage = signal('');
+    confirmModalButtonText = signal('Confirmar');
+    confirmModalAction = signal<(() => void) | null>(null);
 
     constructor() {
         effect(() => {
@@ -123,35 +131,59 @@ export class ModalDetalleActividad implements OnInit {
         const actividad = this.act();
         if (!actividad) return;
 
-        if (!confirm('¿Seguro que quieres desapuntarte?')) return;
+        this.showConfirmModal(
+            '¿Desapuntarse?',
+            '¿Seguro que quieres desapuntarte de esta actividad?',
+            'Desapuntarse',
+            () => {
+                this.procesando.set(true);
+                this.mensaje.set(null);
 
-        this.procesando.set(true);
-        this.mensaje.set(null);
+                this.voluntarioService.desapuntarse(actividad.id_actividad).subscribe({
+                    next: (result) => {
+                        const yaEliminado = !result.success && (
+                            (result.mensaje && (result.mensaje.includes('404') || result.mensaje.toLowerCase().includes('not found') || result.mensaje.toLowerCase().includes('no encontrada')))
+                        );
 
-        this.voluntarioService.desapuntarse(actividad.id_actividad).subscribe({
-            next: (result) => {
-                const yaEliminado = !result.success && (
-                    (result.mensaje && (result.mensaje.includes('404') || result.mensaje.toLowerCase().includes('not found') || result.mensaje.toLowerCase().includes('no encontrada')))
-                );
+                        if (result.success || yaEliminado) {
+                            this.mensaje.set({ tipo: 'success', texto: 'Te has desapuntado correctamente.' });
 
-                if (result.success || yaEliminado) {
-                    this.mensaje.set({ tipo: 'success', texto: 'Te has desapuntado correctamente.' });
+                            this.act.update(a => a ? ({ ...a, inscrito: false, estadoInscripcion: null }) : null);
 
-                    this.act.update(a => a ? ({ ...a, inscrito: false, estadoInscripcion: null }) : null);
+                            this.estadoCambiado.emit();
 
-                    this.estadoCambiado.emit();
-
-                    setTimeout(() => this.close.emit(), 1500);
-                } else {
-                    this.mensaje.set({ tipo: 'error', texto: result.mensaje });
-                }
-                this.procesando.set(false);
-            },
-            error: () => {
-                this.mensaje.set({ tipo: 'error', texto: 'Error al desapuntarse.' });
-                this.procesando.set(false);
+                            setTimeout(() => this.close.emit(), 1500);
+                        } else {
+                            this.mensaje.set({ tipo: 'error', texto: result.mensaje });
+                        }
+                        this.procesando.set(false);
+                    },
+                    error: () => {
+                        this.mensaje.set({ tipo: 'error', texto: 'Error al desapuntarse.' });
+                        this.procesando.set(false);
+                    }
+                });
             }
-        });
+        );
+    }
+
+    // Modal de confirmación
+    showConfirmModal(title: string, message: string, buttonText: string, action: () => void) {
+        this.confirmModalTitle.set(title);
+        this.confirmModalMessage.set(message);
+        this.confirmModalButtonText.set(buttonText);
+        this.confirmModalAction.set(action);
+        this.confirmModalVisible.set(true);
+    }
+
+    onConfirmModalConfirm() {
+        const action = this.confirmModalAction();
+        if (action) action();
+        this.confirmModalVisible.set(false);
+    }
+
+    onConfirmModalCancel() {
+        this.confirmModalVisible.set(false);
     }
 
     // Helpers de vista

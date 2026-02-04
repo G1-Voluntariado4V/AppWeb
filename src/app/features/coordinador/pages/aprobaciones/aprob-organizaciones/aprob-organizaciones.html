@@ -118,4 +118,14 @@
   </app-modal-detalle-organizacion>
   }
 
+  <!-- Modal de confirmación -->
+  <app-confirm-modal
+    [isOpen]="confirmModalVisible()"
+    [title]="confirmModalTitle()"
+    [message]="confirmModalMessage()"
+    [confirmText]="confirmModalButtonText()"
+    (confirm)="onConfirmModalConfirm()"
+    (cancel)="onConfirmModalCancel()">
+  </app-confirm-modal>
+
 </div>

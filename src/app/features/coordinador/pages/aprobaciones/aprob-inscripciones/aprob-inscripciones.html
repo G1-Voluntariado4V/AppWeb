@@ -153,3 +153,13 @@
         (rechazar)="rechazarDesdeModal()">
     </app-modal-detalle-inscripcion>
 }
+
+<!-- Modal de confirmación -->
+<app-confirm-modal
+    [isOpen]="confirmModalVisible()"
+    [title]="confirmModalTitle()"
+    [message]="confirmModalMessage()"
+    [confirmText]="confirmModalButtonText()"
+    (confirm)="onConfirmModalConfirm()"
+    (cancel)="onConfirmModalCancel()">
+</app-confirm-modal>
