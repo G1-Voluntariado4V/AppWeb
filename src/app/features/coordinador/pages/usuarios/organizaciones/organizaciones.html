@@ -70,10 +70,15 @@
 
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm"
+                <div
+                  class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm overflow-hidden"
                   [class.bg-purple-100]="org.id % 2 === 0" [class.text-purple-600]="org.id % 2 === 0"
                   [class.bg-orange-100]="org.id % 2 !== 0" [class.text-orange-600]="org.id % 2 !== 0">
+                  @if (org.foto) {
+                  <img [src]="org.foto" class="w-full h-full object-cover">
+                  } @else {
                   {{ org.nombre.substring(0,2).toUpperCase() }}
+                  }
                 </div>
                 <div>
                   <p class="font-bold text-gray-900 text-sm">{{ org.nombre }}</p>
@@ -183,5 +188,11 @@
     (updated)="onOrganizacionActualizada()">
   </app-modal-detalle-organizacion>
   }
+
+  <!-- Modal Confirmación -->
+  <app-confirm-modal [isOpen]="confirmModalOpen()" [title]="confirmModalTitle()" [message]="confirmModalMessage()"
+    [confirmText]="pendingConfirmText()" cancelText="Cancelar" (confirm)="onConfirmModal()"
+    (cancel)="closeConfirmModal()">
+  </app-confirm-modal>
 
 </div>

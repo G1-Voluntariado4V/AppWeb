@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CoordinadorService, OrganizacionAdmin } from '../../../services/coordinador';
 import { ModalDetalleOrganizacion } from '../../../components/modal-detalle-organizacion/modal-detalle-organizacion';
+
+import { ConfirmModalComponent } from '../../../../../shared/components/confirm-modal/confirm-modal';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-organizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalDetalleOrganizacion],
+  imports: [CommonModule, FormsModule, ModalDetalleOrganizacion, ConfirmModalComponent],
   templateUrl: './organizaciones.html',
 })
 export class Organizaciones implements OnInit {
@@ -32,6 +34,13 @@ export class Organizaciones implements OnInit {
 
   // Modal de detalle
   orgSeleccionada = signal<OrganizacionAdmin | null>(null);
+
+  // Confirm Modal State
+  confirmModalOpen = signal(false);
+  confirmModalTitle = signal('');
+  confirmModalMessage = signal('');
+  pendingConfirmAction: (() => void) | null = null;
+  pendingConfirmText = signal('Confirmar');
 
   // Filtrado
   organizacionesFiltradas = computed(() => {
@@ -85,56 +94,98 @@ export class Organizaciones implements OnInit {
   }
 
   // Acciones
+  // Acciones
   activar(org: OrganizacionAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Activar cuenta de ${org.nombre}?`)) {
-      this.coordinadorService.cambiarEstadoUsuario(org.id, 'organizaciones', 'Activa').subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.openConfirmModal(
+      'Activar cuenta',
+      `¿Activar cuenta de ${org.nombre}?`,
+      'Activar',
+      () => {
+        this.coordinadorService.cambiarEstadoUsuario(org.id, 'organizaciones', 'Activa').subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   bloquear(org: OrganizacionAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Bloquear cuenta de ${org.nombre}?`)) {
-      this.coordinadorService.bloquearUsuario(org.id, 'organizaciones').subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.openConfirmModal(
+      'Bloquear cuenta',
+      `¿Bloquear cuenta de ${org.nombre}?`,
+      'Bloquear',
+      () => {
+        this.coordinadorService.bloquearUsuario(org.id, 'organizaciones').subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   rechazar(org: OrganizacionAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Rechazar cuenta de ${org.nombre}?`)) {
-      this.coordinadorService.rechazarOrganizacion(org.id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
-    }
+    this.openConfirmModal(
+      'Rechazar cuenta',
+      `¿Rechazar cuenta de ${org.nombre}?`,
+      'Rechazar',
+      () => {
+        this.coordinadorService.rechazarOrganizacion(org.id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
   }
 
   eliminar(org: OrganizacionAdmin, event: Event) {
     event.stopPropagation();
-    if (confirm(`¿Eliminar permanentemente a ${org.nombre}? Esta acción no se puede deshacer.`)) {
-      this.coordinadorService.eliminarUsuario(org.id).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.cerrarMenuAcciones();
-        },
-        error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
-      });
+    this.openConfirmModal(
+      'Eliminar registro',
+      `¿Eliminar permanentemente a ${org.nombre}? Esta acción no se puede deshacer.`,
+      'Eliminar',
+      () => {
+        this.coordinadorService.eliminarUsuario(org.id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            this.cerrarMenuAcciones();
+          },
+          error: (err: any) => this.toastService.error('Error: ' + (err.error?.error || 'Error desconocido'))
+        });
+      }
+    );
+  }
+
+  // Confirm Modal Helpers
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void) {
+    this.confirmModalTitle.set(title);
+    this.confirmModalMessage.set(message);
+    this.pendingConfirmText.set(confirmText);
+    this.pendingConfirmAction = action;
+    this.confirmModalOpen.set(true);
+  }
+
+  onConfirmModal() {
+    if (this.pendingConfirmAction) {
+      this.pendingConfirmAction();
     }
+    this.closeConfirmModal();
+  }
+
+  closeConfirmModal() {
+    this.confirmModalOpen.set(false);
+    this.pendingConfirmAction = null;
   }
 
   // Detalle
