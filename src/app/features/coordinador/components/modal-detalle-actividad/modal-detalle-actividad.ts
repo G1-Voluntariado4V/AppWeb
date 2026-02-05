@@ -118,7 +118,7 @@ export class ModalDetalleActividad implements OnInit {
 
   eliminarInscripcion(idVoluntario: number) {
     if (this.procesandoAccion()) return;
-    
+
     this.showConfirmModal(
       '¿Quitar voluntario?',
       'El voluntario será eliminado de esta actividad.',

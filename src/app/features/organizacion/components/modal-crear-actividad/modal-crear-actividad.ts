@@ -47,6 +47,9 @@ export class ModalCrearActividad implements OnInit {
   odsSeleccionados = signal<number[]>([]);
   tiposSeleccionados = signal<number[]>([]);
 
+  // Control de errores de imágenes ODS
+  odsImageError = signal<Set<number>>(new Set());
+
   // Estado
   guardando = signal(false);
   error = signal<string | null>(null);
@@ -132,6 +135,20 @@ export class ModalCrearActividad implements OnInit {
     this.tiposSeleccionados.update(lista =>
       lista.includes(id) ? lista.filter(x => x !== id) : [...lista, id]
     );
+  }
+
+  // Marcar imagen ODS como error
+  onOdsImageError(odsId: number) {
+    this.odsImageError.update(set => {
+      const newSet = new Set(set);
+      newSet.add(odsId);
+      return newSet;
+    });
+  }
+
+  // Verificar si una imagen ODS tiene error
+  hasOdsImageError(odsId: number): boolean {
+    return this.odsImageError().has(odsId);
   }
 
   // Obtener fecha mínima (hoy)

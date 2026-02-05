@@ -627,11 +627,16 @@ export class VoluntarioService {
       })
     ).subscribe(data => {
 
-      const ods = data.map(o => ({
-        id: Number(o.id),
-        nombre: o.nombre || '',
-        descripcion: o.descripcion || ''
-      })).filter(o => o.nombre.length > 0);
+      const ods = data.map(o => {
+        // Usar el ID real del backend para las operaciones
+        const idReal = o.id ?? o.id_ods;
+
+        return {
+          id: idReal, // ID real de la BD para operaciones
+          nombre: o.nombre || '',
+          descripcion: o.descripcion || ''
+        };
+      }).filter(o => o.nombre.length > 0);
 
       this.odsCatalogo.set(ods);
     });

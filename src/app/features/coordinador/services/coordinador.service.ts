@@ -224,12 +224,17 @@ export class CoordinadorService {
         this.http.get<any[]>(`${this.apiUrl}/ods`).pipe(
             catchError(() => of([]))
         ).subscribe(data => {
-            const mapped = data.map(o => ({
-                id: o.id ?? o.id_ods,
-                nombre: o.nombre,
-                descripcion: o.descripcion,
-                imgUrl: o.imgUrl ? `${this.apiUrl.replace(/\/api\/?$/, '')}${o.imgUrl}` : undefined
-            }));
+            const mapped = data.map((o, index) => {
+                // Usar el ID real del backend para las operaciones
+                const idReal = o.id ?? o.id_ods;
+
+                return {
+                    id: idReal, // ID real de la BD para operaciones
+                    nombre: o.nombre,
+                    descripcion: o.descripcion,
+                    imgUrl: o.imgUrl ? `http://localhost:8000${o.imgUrl}` : undefined
+                };
+            });
             this._odsList.set(mapped);
         });
 

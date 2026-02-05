@@ -286,12 +286,26 @@ export class OrganizacionService {
     this.http.get<any[]>(`${this.apiUrl}/ods`)
       .pipe(catchError(() => of([])))
       .subscribe(data => {
-        this._odsList.set(data.map(o => ({
-          id: o.id || o.id_ods,
-          nombre: o.nombre,
-          color: this.getOdsColor(o.id || o.id_ods),
-          imgUrl: o.imgUrl ? `${this.apiUrl.replace(/\/api\/?$/, '')}${o.imgUrl}` : undefined
-        })));
+        this._odsList.set(data.map((o, index) => {
+          // Usar el ID real del backend para las operaciones
+          const idReal = o.id ?? o.id_ods;
+          
+          // Extraer número ODS (1-17) del nombre de la imagen solo para colores/visualización
+          let numeroOdsVisual = index + 1;
+          if (o.imgOds) {
+            const match = o.imgOds.match(/^(\d+)\./);
+            if (match) {
+              numeroOdsVisual = parseInt(match[1], 10);
+            }
+          }
+
+          return {
+            id: idReal, // ID real de la BD para operaciones
+            nombre: o.nombre,
+            color: this.getOdsColor(numeroOdsVisual),
+            imgUrl: o.imgUrl ? `http://localhost:8000${o.imgUrl}` : undefined
+          };
+        }));
       });
 
     // Tipos de Voluntariado

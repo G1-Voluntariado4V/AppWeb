@@ -32,70 +32,6 @@
       <!-- ... (código existente de progreso) ... -->
       }
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- ... -->
-      </div>
-
-      <!-- ... -->
-      <!-- Actividad Periódica (SOLO EN CREACIÓN) -->
-      @if (!actividadEditar()) {
-      <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-        <!-- ... código existente periodica ... -->
-        <div class="flex items-center justify-between mb-4">
-          <label class="text-sm font-bold text-gray-700">
-            <i class="fa-solid fa-repeat mr-2 text-indigo-500"></i>
-            Actividad Periódica
-          </label>
-          <button type="button" (click)="esPeriodica.set(!esPeriodica())"
-            class="relative w-12 h-6 rounded-full transition-colors" [class.bg-indigo-500]="esPeriodica()"
-            [class.bg-gray-300]="!esPeriodica()">
-            <span class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
-              [class.left-1]="!esPeriodica()" [class.left-7]="esPeriodica()"></span>
-          </button>
-        </div>
-
-        @if (esPeriodica()) {
-        <!-- ... contenido de periódica ... -->
-        <div class="space-y-3 pt-3 border-t border-gray-100">
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Frecuencia</label>
-            <select [ngModel]="frecuencia()" (ngModelChange)="frecuencia.set($event)"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500">
-              <option value="semanal">Semanal</option>
-              <option value="quincenal">Quincenal</option>
-              <option value="mensual">Mensual</option>
-            </select>
-          </div>
-          <!-- ... -->
-        </div>
-        }
-      </div>
-      }
-      <!-- ... -->
-
-      <!-- Footer -->
-      <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-between items-center shrink-0">
-        <p class="text-xs text-gray-400">
-          <span class="text-red-500">*</span> Campos obligatorios
-        </p>
-        <div class="flex gap-3">
-          <button (click)="close.emit()" [disabled]="guardando()"
-            class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50">
-            Cancelar
-          </button>
-          <button (click)="guardar()" [disabled]="guardando()"
-            class="px-8 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
-            @if (guardando()) {
-            <i class="fa-solid fa-spinner fa-spin"></i>
-            {{ actividadEditar() ? 'Guardando...' : 'Enviando...' }}
-            } @else {
-            <i class="fa-solid fa-paper-plane"></i>
-            {{ actividadEditar() ? 'Guardar Cambios' : 'Enviar Solicitud' }}
-            }
-          </button>
-        </div>
-      </div>
-
       <!-- Body -->
       <div class="p-8 bg-gray-50/50 overflow-y-auto flex-1">
 
@@ -208,16 +144,10 @@
                   [class.border-gray-200]="!odsSeleccionados().includes(ods.id)"
                   [class.opacity-40]="odsSeleccionados().length > 0 && !odsSeleccionados().includes(ods.id)">
 
-                  @if (ods.imgUrl) {
+                  @if (ods.imgUrl && !hasOdsImageError(ods.id)) {
                   <!-- Imagen del ODS desde el backend -->
                   <img [src]="ods.imgUrl" [alt]="ods.nombre" class="w-full h-full object-cover"
-                    (error)="$any($event.target).style.display='none'; $any($event.target).nextElementSibling.style.display='flex'">
-                  <!-- Fallback oculto que se muestra si la imagen falla -->
-                  <div class="w-full h-full flex-col items-center justify-center p-2 text-white hidden"
-                    [style.background-color]="ods.color">
-                    <span class="text-lg font-black">{{ ods.id }}</span>
-                    <span class="text-[7px] font-bold uppercase text-center leading-tight">{{ ods.nombre }}</span>
-                  </div>
+                    (error)="onOdsImageError(ods.id)">
                   } @else {
                   <!-- Fallback: color de fondo -->
                   <div class="w-full h-full flex flex-col items-center justify-center p-2 text-white"
